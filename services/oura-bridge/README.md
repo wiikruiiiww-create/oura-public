@@ -31,7 +31,7 @@
    ```bash
    pnpm --filter @oura/bridge mint-key
    ```
-   Команда выведет `OURA_SERVICE_NSEC` и `OURA_SERVICE_PUBKEY` — сохрани их.
+   Команда выведет JSON `{nsec, pubkeyHex}` — присвой `nsec` → `OURA_SERVICE_NSEC`, `pubkeyHex` → `OURA_SERVICE_PUBKEY`.
 
 4. Экспортируй ключи в окружение:
    ```bash

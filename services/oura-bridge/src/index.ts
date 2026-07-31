@@ -49,10 +49,11 @@ async function main(): Promise<void> {
   });
 
   let polling = false;
+  let pollPromise: Promise<void> = Promise.resolve();
   const timer = setInterval(() => {
     if (polling) return;
     polling = true;
-    router
+    pollPromise = router
       .pollOutbound()
       .catch((e) => console.error("[poll] ошибка:", e))
       .finally(() => {
@@ -62,9 +63,15 @@ async function main(): Promise<void> {
 
   const shutdown = async (): Promise<void> => {
     clearInterval(timer);
-    await stub.stop();
-    await state.save();
-    process.exit(0);
+    try {
+      await pollPromise;
+      await stub.stop();
+      await state.save();
+      process.exit(0);
+    } catch (e) {
+      console.error("[oura-bridge] ошибка при остановке:", e);
+      process.exit(1);
+    }
   };
   process.on("SIGINT", () => void shutdown());
   process.on("SIGTERM", () => void shutdown());
