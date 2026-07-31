@@ -1,5 +1,5 @@
 import { mintIdentity } from "./identity.js";
-import type { StateStore } from "./state.js";
+import type { LeadRecord, StateStore } from "./state.js";
 import type { BuzzApi, InboundMessage, OutboundSink } from "./types.js";
 
 export interface RouterDeps {
@@ -18,39 +18,58 @@ function channelName(m: InboundMessage): string {
 }
 
 export class Router {
+  private readonly onboarding = new Map<string, Promise<LeadRecord>>();
+
   constructor(private readonly deps: RouterDeps) {}
 
   /** Входящее из внешнего канала → сообщение лида в его комнате buzz. */
   async handleInbound(m: InboundMessage): Promise<void> {
-    const { buzz, state, serviceNsec, operatorPubkeyHex } = this.deps;
-    let lead = state.getLead(m.chatId);
-    if (!lead) {
-      const id = mintIdentity();
-      const channelId = await buzz.createChannel(serviceNsec, channelName(m));
-      await buzz.addMember(serviceNsec, channelId, id.pubkeyHex);
-      if (operatorPubkeyHex) await buzz.addMember(serviceNsec, channelId, operatorPubkeyHex);
-      await buzz.trySetProfile(id.nsec, m.name);
-      lead = { chatId: m.chatId, name: m.name, nsec: id.nsec, pubkeyHex: id.pubkeyHex, channelId };
-      state.putLead(lead);
-      await state.save();
-    }
-    await buzz.sendMessage(lead.nsec, lead.channelId, m.text);
+    const lead = await this.ensureLead(m);
+    await this.deps.buzz.sendMessage(lead.nsec, lead.channelId, m.text);
   }
 
-  /** Ответы операторов из комнат → внешний канал. Фильтруем лида и сервис. */
+  /** Гард от гонки: конкурентные первые сообщения одного чата ждут один онбординг. */
+  private ensureLead(m: InboundMessage): Promise<LeadRecord> {
+    const existing = this.deps.state.getLead(m.chatId);
+    if (existing) return Promise.resolve(existing);
+    const inflight = this.onboarding.get(m.chatId);
+    if (inflight) return inflight;
+    const p = this.onboardLead(m).finally(() => this.onboarding.delete(m.chatId));
+    this.onboarding.set(m.chatId, p);
+    return p;
+  }
+
+  private async onboardLead(m: InboundMessage): Promise<LeadRecord> {
+    const { buzz, state, serviceNsec, operatorPubkeyHex } = this.deps;
+    const id = mintIdentity();
+    const channelId = await buzz.createChannel(serviceNsec, channelName(m));
+    await buzz.addMember(serviceNsec, channelId, id.pubkeyHex);
+    if (operatorPubkeyHex) await buzz.addMember(serviceNsec, channelId, operatorPubkeyHex);
+    await buzz.trySetProfile(id.nsec, m.name);
+    const lead: LeadRecord = { chatId: m.chatId, name: m.name, nsec: id.nsec, pubkeyHex: id.pubkeyHex, channelId };
+    state.putLead(lead);
+    await state.save();
+    return lead;
+  }
+
+  /** Ответы операторов из комнат → внешний канал. markSeen только ПОСЛЕ доставки; сбой одного лида не прерывает остальных. */
   async pollOutbound(): Promise<void> {
     const { buzz, state, sink, serviceNsec, servicePubkeyHex } = this.deps;
     for (const lead of state.allLeads()) {
-      const msgs = await buzz.getMessages(serviceNsec, lead.channelId, 50);
-      let dirty = false;
-      for (const msg of msgs) {
-        if (msg.authorPubkey === lead.pubkeyHex || msg.authorPubkey === servicePubkeyHex) continue;
-        if (state.hasSeen(msg.id)) continue;
-        state.markSeen(msg.id);
-        dirty = true;
-        await sink.deliver({ chatId: lead.chatId, text: msg.content });
+      try {
+        const msgs = await buzz.getMessages(serviceNsec, lead.channelId, 50);
+        let dirty = false;
+        for (const msg of msgs) {
+          if (msg.authorPubkey === lead.pubkeyHex || msg.authorPubkey === servicePubkeyHex) continue;
+          if (state.hasSeen(msg.id)) continue;
+          await sink.deliver({ chatId: lead.chatId, text: msg.content });
+          state.markSeen(msg.id);
+          dirty = true;
+        }
+        if (dirty) await state.save();
+      } catch (e) {
+        console.error(`[poll] лид ${lead.chatId}: ошибка, продолжаем со следующими:`, e);
       }
-      if (dirty) await state.save();
     }
   }
 }

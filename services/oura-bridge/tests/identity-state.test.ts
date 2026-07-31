@@ -38,4 +38,13 @@ describe("StateStore", () => {
     expect(s.hasSeen("ev0")).toBe(false);
     expect(s.hasSeen("ev5099")).toBe(true);
   });
+
+  it("конкурентные save сериализуются и не портят файл", async () => {
+    const path = join(mkdtempSync(join(tmpdir(), "oura-state-")), "bridge.state.json");
+    const s = await StateStore.load(path);
+    s.putLead({ chatId: "1", name: "a", nsec: "nsec1a", pubkeyHex: "a".repeat(64), channelId: "c1" });
+    await Promise.all([s.save(), s.save(), s.save()]);
+    const s2 = await StateStore.load(path);
+    expect(s2.getLead("1")?.channelId).toBe("c1");
+  });
 });

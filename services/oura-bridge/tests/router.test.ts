@@ -77,3 +77,45 @@ describe("pollOutbound", () => {
     expect(delivered).toEqual([{ chatId: "42", text: "Добрый день!" }]);
   });
 });
+
+describe("устойчивость", () => {
+  it("два конкурентных первых сообщения одного чата не создают два канала", async () => {
+    const r = makeRouter();
+    let resolveCreate!: (v: string) => void;
+    buzz.createChannel.mockImplementation(() => new Promise((res) => { resolveCreate = res; }));
+    const p1 = r.handleInbound({ chatId: "42", name: "Иван", text: "раз" });
+    const p2 = r.handleInbound({ chatId: "42", name: "Иван", text: "два" });
+    resolveCreate("chan-new");
+    await Promise.all([p1, p2]);
+    expect(buzz.createChannel).toHaveBeenCalledTimes(1);
+    expect(buzz.sendMessage).toHaveBeenCalledTimes(2);
+  });
+
+  it("сбой доставки не помечает сообщение просмотренным — повторный поллинг доставляет", async () => {
+    let fail = true;
+    const r = new Router({
+      buzz: buzz as unknown as BuzzApi,
+      state,
+      sink: { deliver: async (m) => { if (fail) throw new Error("tg down"); delivered.push(m); } },
+      serviceNsec: "nsec1service",
+      servicePubkeyHex: "svc".padEnd(64, "0"),
+    });
+    await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
+    buzz.getMessages.mockResolvedValue([
+      { id: "e3", authorPubkey: "operator-pk", content: "Добрый день!", createdAt: 3 },
+    ]);
+    await r.pollOutbound();
+    expect(delivered).toEqual([]);
+    fail = false;
+    await r.pollOutbound();
+    expect(delivered).toEqual([{ chatId: "42", text: "Добрый день!" }]);
+  });
+
+  it("санитизация имени канала: спецсимволы → дефисы, пустое имя → lead", async () => {
+    const r = makeRouter();
+    await r.handleInbound({ chatId: "1", name: "Иван Петров!!!", text: "а" });
+    expect(buzz.createChannel).toHaveBeenLastCalledWith("nsec1service", "inbox-иван-петров-1");
+    await r.handleInbound({ chatId: "2", name: "@@@", text: "б" });
+    expect(buzz.createChannel).toHaveBeenLastCalledWith("nsec1service", "inbox-lead-2");
+  });
+});
