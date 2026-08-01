@@ -78,9 +78,9 @@ export class Router {
             msg.authorPubkey === servicePubkeyHex
           )
             continue;
-          if (state.hasSeen(msg.id)) continue;
+          if (state.hasSeen(lead.chatId, msg.id)) continue;
           await sink.deliver({ chatId: lead.chatId, text: msg.content });
-          state.markSeen(msg.id);
+          state.markSeen(lead.chatId, msg.id);
           dirty = true;
         }
         if (dirty) await state.save();

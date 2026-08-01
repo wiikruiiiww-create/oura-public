@@ -1,9 +1,14 @@
 import { mkdtempSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { mintIdentity } from "../src/identity.js";
 import { StateStore } from "../src/state.js";
+
+function tmpStatePath(): string {
+  return join(mkdtempSync(join(tmpdir(), "oura-state-")), "bridge.state.json");
+}
 
 describe("mintIdentity", () => {
   it("выдаёт nsec и 64-символьный hex-pubkey, ключи уникальны", () => {
@@ -30,25 +35,25 @@ describe("StateStore", () => {
       pubkeyHex: "ab".repeat(32),
       channelId: "chan-1",
     });
-    s1.markSeen("ev1");
+    s1.markSeen("42", "ev1");
     await s1.save();
 
     const s2 = await StateStore.load(path);
     expect(s2.getLead("42")?.channelId).toBe("chan-1");
     expect(s2.allLeads()).toHaveLength(1);
-    expect(s2.hasSeen("ev1")).toBe(true);
-    expect(s2.hasSeen("ev2")).toBe(false);
+    expect(s2.hasSeen("42", "ev1")).toBe(true);
+    expect(s2.hasSeen("42", "ev2")).toBe(false);
   });
 
-  it("ограничивает seen-множество последними 5000 id", async () => {
+  it("ограничивает seen-множество последними 500 id на лид", async () => {
     const path = join(
       mkdtempSync(join(tmpdir(), "oura-state-")),
       "bridge.state.json",
     );
     const s = await StateStore.load(path);
-    for (let i = 0; i < 5100; i++) s.markSeen(`ev${i}`);
-    expect(s.hasSeen("ev0")).toBe(false);
-    expect(s.hasSeen("ev5099")).toBe(true);
+    for (let i = 0; i < 501; i++) s.markSeen("42", `ev${i}`);
+    expect(s.hasSeen("42", "ev0")).toBe(false);
+    expect(s.hasSeen("42", "ev500")).toBe(true);
   });
 
   it("конкурентные save сериализуются и не портят файл", async () => {
@@ -67,5 +72,44 @@ describe("StateStore", () => {
     await Promise.all([s.save(), s.save(), s.save()]);
     const s2 = await StateStore.load(path);
     expect(s2.getLead("1")?.channelId).toBe("c1");
+  });
+
+  describe("per-lead seen (I4)", () => {
+    it("markSeen/hasSeen изолированы по лидам", async () => {
+      const state = await StateStore.load(tmpStatePath());
+      state.markSeen("42", "ev-1");
+      expect(state.hasSeen("42", "ev-1")).toBe(true);
+      expect(state.hasSeen("99", "ev-1")).toBe(false);
+    });
+
+    it("кап 500 вытесняет старые id только внутри своего лида", async () => {
+      const state = await StateStore.load(tmpStatePath());
+      state.markSeen("other", "keep-me");
+      for (let i = 0; i < 501; i++) state.markSeen("42", `ev-${i}`);
+      expect(state.hasSeen("42", "ev-0")).toBe(false); // вытеснен
+      expect(state.hasSeen("42", "ev-500")).toBe(true);
+      expect(state.hasSeen("other", "keep-me")).toBe(true); // сосед не пострадал
+    });
+
+    it("legacy seenEventIds из файла Фазы 0 продолжают считаться seen у любого лида", async () => {
+      const path = tmpStatePath();
+      await writeFile(
+        path,
+        JSON.stringify({ leads: {}, seenEventIds: ["legacy-ev"] }),
+        "utf8",
+      );
+      const state = await StateStore.load(path);
+      expect(state.hasSeen("42", "legacy-ev")).toBe(true);
+      expect(state.hasSeen("99", "legacy-ev")).toBe(true);
+    });
+
+    it("per-lead seen переживает save/load", async () => {
+      const path = tmpStatePath();
+      const state = await StateStore.load(path);
+      state.markSeen("42", "ev-1");
+      await state.save();
+      const reloaded = await StateStore.load(path);
+      expect(reloaded.hasSeen("42", "ev-1")).toBe(true);
+    });
   });
 });
