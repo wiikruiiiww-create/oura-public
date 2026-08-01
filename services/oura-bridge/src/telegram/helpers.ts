@@ -45,6 +45,32 @@ export function isRetryable(err: unknown): boolean {
   return false;
 }
 
+/** 403 всегда значит «бот заблокирован/удалён из чата» — перечислен целиком. */
+const PERMANENT_STATUS = new Set([403]);
+
+/**
+ * 400 перманентен только для конкретных, узнаваемых причин — не целиком:
+ * чат/пользователь физически не существуют. Любое другое описание 400
+ * остаётся временным.
+ */
+const PERMANENT_400_DESCRIPTION =
+  /chat not found|user is deactivated|bot was blocked|PEER_ID_INVALID/i;
+
+/**
+ * Перманентная недоставляемость конкретному чату (бот заблокирован, чат
+ * удалён). В отличие от `isRetryable`, дефолт здесь — «временная»: 401
+ * (отозванный/неверный токен — поломка конфигурации, не чата), прочие 400,
+ * HttpError и любые нераспознанные ошибки классифицируются как временные,
+ * чтобы поллер их повторил, а не терял сообщение навсегда.
+ */
+export function isPermanentDeliveryFailure(err: unknown): boolean {
+  if (!(err instanceof GrammyError)) return false;
+  if (PERMANENT_STATUS.has(err.error_code)) return true;
+  return (
+    err.error_code === 400 && PERMANENT_400_DESCRIPTION.test(err.description)
+  );
+}
+
 export interface RetryOpts {
   maxAttempts?: number;
   baseDelayMs?: number;

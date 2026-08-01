@@ -6,7 +6,12 @@ import type {
   OutboundSink,
 } from "../types.js";
 import { PermanentDeliveryError } from "../types.js";
-import { chunkText, isRetryable, sendWithRetry, toInbound } from "./helpers.js";
+import {
+  chunkText,
+  isPermanentDeliveryFailure,
+  sendWithRetry,
+  toInbound,
+} from "./helpers.js";
 
 /**
  * Реальный Telegram-канал (long-polling через grammy). Реализует те же интерфейсы, что StubTelegram.
@@ -64,8 +69,8 @@ export class TelegramChannel implements InboundSource, OutboundSink {
       try {
         await sendWithRetry(() => this.bot.api.sendMessage(m.chatId, part));
       } catch (e) {
-        if (!isRetryable(e)) {
-          // 403 bot blocked / 400 chat not found — повторять бессмысленно
+        if (isPermanentDeliveryFailure(e)) {
+          // 403 bot blocked / точечные 400 (chat not found и т.п.) — повторять бессмысленно
           throw new PermanentDeliveryError(
             `Telegram отверг сообщение для чата ${m.chatId}: ${
               e instanceof Error ? e.message : String(e)
@@ -73,7 +78,9 @@ export class TelegramChannel implements InboundSource, OutboundSink {
             e,
           );
         }
-        throw e; // временная ошибка после исчерпания ретраев — повторит поллер
+        // временная ошибка (в т.ч. 401 — поломка токена, прочие 400,
+        // неизвестные ошибки) после исчерпания ретраев — повторит поллер
+        throw e;
       }
     }
   }

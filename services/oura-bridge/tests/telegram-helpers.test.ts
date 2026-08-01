@@ -2,6 +2,7 @@ import { GrammyError, HttpError } from "grammy";
 import { describe, expect, it } from "vitest";
 import {
   chunkText,
+  isPermanentDeliveryFailure,
   isRetryable,
   sendWithRetry,
   toInbound,
@@ -48,13 +49,17 @@ describe("chunkText", () => {
 
 // Если сигнатура конструктора GrammyError/HttpError в установленной версии
 // отличается — поправь конструирование здесь, контракт isRetryable не меняй.
-function grammyErr(code: number, retryAfter?: number): GrammyError {
+function grammyErr(
+  code: number,
+  retryAfter?: number,
+  description = "test",
+): GrammyError {
   return new GrammyError(
     `test ${code}`,
     {
       ok: false,
       error_code: code,
-      description: "test",
+      description,
       ...(retryAfter !== undefined
         ? { parameters: { retry_after: retryAfter } }
         : {}),
@@ -77,6 +82,44 @@ describe("isRetryable", () => {
     expect(isRetryable(grammyErr(403))).toBe(false);
     expect(isRetryable(grammyErr(400))).toBe(false);
     expect(isRetryable(new Error("что угодно"))).toBe(false);
+  });
+});
+
+describe("isPermanentDeliveryFailure", () => {
+  it("403 (бот заблокирован) — перманентная", () => {
+    expect(isPermanentDeliveryFailure(grammyErr(403))).toBe(true);
+  });
+
+  it('400 с распознанным описанием ("chat not found") — перманентная', () => {
+    expect(
+      isPermanentDeliveryFailure(
+        grammyErr(400, undefined, "Bad Request: chat not found"),
+      ),
+    ).toBe(true);
+  });
+
+  it("401 (отозванный/неверный токен) — временная, не перманентная", () => {
+    expect(isPermanentDeliveryFailure(grammyErr(401))).toBe(false);
+  });
+
+  it("400 с нераспознанным описанием — временная", () => {
+    expect(
+      isPermanentDeliveryFailure(
+        grammyErr(400, undefined, "Bad Request: message text is empty"),
+      ),
+    ).toBe(false);
+  });
+
+  it("HttpError (сетевой сбой) — не перманентная", () => {
+    expect(
+      isPermanentDeliveryFailure(
+        new HttpError("boom", new Error("ECONNRESET")),
+      ),
+    ).toBe(false);
+  });
+
+  it("обычный Error — не перманентная", () => {
+    expect(isPermanentDeliveryFailure(new Error("что угодно"))).toBe(false);
   });
 });
 
