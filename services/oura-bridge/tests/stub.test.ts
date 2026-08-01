@@ -17,27 +17,40 @@ describe("StubTelegram", () => {
     const res = await fetch(`http://127.0.0.1:${stub.port}/simulate`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ chatId: "42", name: "Иван", text: "Здравствуйте!" }),
+      body: JSON.stringify({
+        chatId: "42",
+        name: "Иван",
+        text: "Здравствуйте!",
+      }),
     });
     expect(res.status).toBe(202);
-    expect(got).toEqual([{ chatId: "42", name: "Иван", text: "Здравствуйте!" }]);
+    expect(got).toEqual([
+      { chatId: "42", name: "Иван", text: "Здравствуйте!" },
+    ]);
   });
 
   it("deliver кладёт исходящее в outbox, DELETE очищает", async () => {
     stub = new StubTelegram(0);
     await stub.start(async () => {});
     await stub.deliver({ chatId: "42", text: "Добрый день, чем помочь?" });
-    const out = await (await fetch(`http://127.0.0.1:${stub.port}/outbox`)).json();
+    const out = await (
+      await fetch(`http://127.0.0.1:${stub.port}/outbox`)
+    ).json();
     expect(out).toEqual([{ chatId: "42", text: "Добрый день, чем помочь?" }]);
     await fetch(`http://127.0.0.1:${stub.port}/outbox`, { method: "DELETE" });
-    const empty = await (await fetch(`http://127.0.0.1:${stub.port}/outbox`)).json();
+    const empty = await (
+      await fetch(`http://127.0.0.1:${stub.port}/outbox`)
+    ).json();
     expect(empty).toEqual([]);
   });
 
   it("битый JSON и не те поля дают 400", async () => {
     stub = new StubTelegram(0);
     await stub.start(async () => {});
-    const bad = await fetch(`http://127.0.0.1:${stub.port}/simulate`, { method: "POST", body: "не json" });
+    const bad = await fetch(`http://127.0.0.1:${stub.port}/simulate`, {
+      method: "POST",
+      body: "не json",
+    });
     expect(bad.status).toBe(400);
     const missing = await fetch(`http://127.0.0.1:${stub.port}/simulate`, {
       method: "POST",

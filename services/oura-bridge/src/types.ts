@@ -38,6 +38,10 @@ export interface BuzzApi {
   createChannel(nsec: string, name: string): Promise<string>;
   addMember(nsec: string, channelId: string, pubkeyHex: string): Promise<void>;
   sendMessage(nsec: string, channelId: string, content: string): Promise<void>;
-  getMessages(nsec: string, channelId: string, limit?: number): Promise<BuzzMessage[]>;
+  getMessages(
+    nsec: string,
+    channelId: string,
+    limit?: number,
+  ): Promise<BuzzMessage[]>;
   trySetProfile(nsec: string, name: string): Promise<void>;
 }

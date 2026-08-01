@@ -28,7 +28,9 @@ function makeRouter(operatorPubkeyHex?: string): Router {
 }
 
 beforeEach(async () => {
-  state = await StateStore.load(join(mkdtempSync(join(tmpdir(), "oura-router-")), "s.json"));
+  state = await StateStore.load(
+    join(mkdtempSync(join(tmpdir(), "oura-router-")), "s.json"),
+  );
   delivered = [];
   buzz = {
     createChannel: vi.fn().mockResolvedValue("chan-new"),
@@ -41,16 +43,35 @@ beforeEach(async () => {
 
 describe("handleInbound", () => {
   it("первое сообщение: минтит лида, создаёт канал, добавляет участников, шлёт от имени лида", async () => {
-    await makeRouter("op".padEnd(64, "1")).handleInbound({ chatId: "42", name: "Иван", text: "Здравствуйте!" });
-    expect(buzz.createChannel).toHaveBeenCalledWith("nsec1service", expect.stringContaining("42"));
+    await makeRouter("op".padEnd(64, "1")).handleInbound({
+      chatId: "42",
+      name: "Иван",
+      text: "Здравствуйте!",
+    });
+    expect(buzz.createChannel).toHaveBeenCalledWith(
+      "nsec1service",
+      expect.stringContaining("42"),
+    );
     const lead = state.getLead("42");
     expect(lead).toBeDefined();
     expect(lead?.channelId).toBe("chan-new");
     // участники: лид и оператор
-    expect(buzz.addMember).toHaveBeenCalledWith("nsec1service", "chan-new", lead?.pubkeyHex);
-    expect(buzz.addMember).toHaveBeenCalledWith("nsec1service", "chan-new", "op".padEnd(64, "1"));
+    expect(buzz.addMember).toHaveBeenCalledWith(
+      "nsec1service",
+      "chan-new",
+      lead?.pubkeyHex,
+    );
+    expect(buzz.addMember).toHaveBeenCalledWith(
+      "nsec1service",
+      "chan-new",
+      "op".padEnd(64, "1"),
+    );
     // сообщение ушло от имени лида
-    expect(buzz.sendMessage).toHaveBeenCalledWith(lead?.nsec, "chan-new", "Здравствуйте!");
+    expect(buzz.sendMessage).toHaveBeenCalledWith(
+      lead?.nsec,
+      "chan-new",
+      "Здравствуйте!",
+    );
   });
 
   it("повторное сообщение того же чата не создаёт второй канал", async () => {
@@ -68,9 +89,24 @@ describe("pollOutbound", () => {
     await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
     const lead = state.getLead("42");
     buzz.getMessages.mockResolvedValue([
-      { id: "e1", authorPubkey: lead?.pubkeyHex, content: "вопрос", createdAt: 1 },
-      { id: "e2", authorPubkey: "svc".padEnd(64, "0"), content: "служебное", createdAt: 2 },
-      { id: "e3", authorPubkey: "operator-pk", content: "Добрый день!", createdAt: 3 },
+      {
+        id: "e1",
+        authorPubkey: lead?.pubkeyHex,
+        content: "вопрос",
+        createdAt: 1,
+      },
+      {
+        id: "e2",
+        authorPubkey: "svc".padEnd(64, "0"),
+        content: "служебное",
+        createdAt: 2,
+      },
+      {
+        id: "e3",
+        authorPubkey: "operator-pk",
+        content: "Добрый день!",
+        createdAt: 3,
+      },
     ]);
     await r.pollOutbound();
     await r.pollOutbound(); // повторный поллинг не должен дублировать
@@ -82,7 +118,12 @@ describe("устойчивость", () => {
   it("два конкурентных первых сообщения одного чата не создают два канала", async () => {
     const r = makeRouter();
     let resolveCreate!: (v: string) => void;
-    buzz.createChannel.mockImplementation(() => new Promise((res) => { resolveCreate = res; }));
+    buzz.createChannel.mockImplementation(
+      () =>
+        new Promise((res) => {
+          resolveCreate = res;
+        }),
+    );
     const p1 = r.handleInbound({ chatId: "42", name: "Иван", text: "раз" });
     const p2 = r.handleInbound({ chatId: "42", name: "Иван", text: "два" });
     resolveCreate("chan-new");
@@ -96,13 +137,23 @@ describe("устойчивость", () => {
     const r = new Router({
       buzz: buzz as unknown as BuzzApi,
       state,
-      sink: { deliver: async (m) => { if (fail) throw new Error("tg down"); delivered.push(m); } },
+      sink: {
+        deliver: async (m) => {
+          if (fail) throw new Error("tg down");
+          delivered.push(m);
+        },
+      },
       serviceNsec: "nsec1service",
       servicePubkeyHex: "svc".padEnd(64, "0"),
     });
     await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
     buzz.getMessages.mockResolvedValue([
-      { id: "e3", authorPubkey: "operator-pk", content: "Добрый день!", createdAt: 3 },
+      {
+        id: "e3",
+        authorPubkey: "operator-pk",
+        content: "Добрый день!",
+        createdAt: 3,
+      },
     ]);
     await r.pollOutbound();
     expect(delivered).toEqual([]);
@@ -114,8 +165,14 @@ describe("устойчивость", () => {
   it("санитизация имени канала: спецсимволы → дефисы, пустое имя → lead", async () => {
     const r = makeRouter();
     await r.handleInbound({ chatId: "1", name: "Иван Петров!!!", text: "а" });
-    expect(buzz.createChannel).toHaveBeenLastCalledWith("nsec1service", "inbox-иван-петров-1");
+    expect(buzz.createChannel).toHaveBeenLastCalledWith(
+      "nsec1service",
+      "inbox-иван-петров-1",
+    );
     await r.handleInbound({ chatId: "2", name: "@@@", text: "б" });
-    expect(buzz.createChannel).toHaveBeenLastCalledWith("nsec1service", "inbox-lead-2");
+    expect(buzz.createChannel).toHaveBeenLastCalledWith(
+      "nsec1service",
+      "inbox-lead-2",
+    );
   });
 });

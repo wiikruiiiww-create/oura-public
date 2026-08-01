@@ -12,7 +12,9 @@ function env(name: string): string | undefined {
 function requireEnv(name: string): string {
   const v = env(name);
   if (!v) {
-    console.error(`[oura-bridge] не задан обязательный env ${name} (сгенерируй пару: pnpm --filter @oura/bridge mint-key)`);
+    console.error(
+      `[oura-bridge] не задан обязательный env ${name} (сгенерируй пару: pnpm --filter @oura/bridge mint-key)`,
+    );
     process.exit(1);
   }
   return v;
@@ -22,9 +24,12 @@ async function main(): Promise<void> {
   const serviceNsec = requireEnv("OURA_SERVICE_NSEC");
   const servicePubkeyHex = requireEnv("OURA_SERVICE_PUBKEY");
   const relayUrl = env("OURA_RELAY_URL") ?? "http://localhost:3000";
-  const binPath = env("OURA_BUZZ_BIN") ?? resolve(import.meta.dirname, "../../../target/debug/buzz");
+  const binPath =
+    env("OURA_BUZZ_BIN") ??
+    resolve(import.meta.dirname, "../../../target/debug/buzz");
   const stubPort = Number(env("OURA_STUB_PORT") ?? "8787");
-  const statePath = env("OURA_STATE_FILE") ?? resolve(process.cwd(), "bridge.state.json");
+  const statePath =
+    env("OURA_STATE_FILE") ?? resolve(process.cwd(), "bridge.state.json");
   const pollMs = Number(env("OURA_POLL_MS") ?? "2000");
 
   const state = await StateStore.load(statePath);
@@ -76,8 +81,12 @@ async function main(): Promise<void> {
   process.on("SIGINT", () => void shutdown());
   process.on("SIGTERM", () => void shutdown());
 
-  console.log(`[oura-bridge] заглушка Telegram: http://127.0.0.1:${stub.port} (POST /simulate, GET /outbox)`);
-  console.log(`[oura-bridge] relay: ${relayUrl}, buzz-cli: ${binPath}, поллинг: ${pollMs}ms`);
+  console.log(
+    `[oura-bridge] заглушка Telegram: http://127.0.0.1:${stub.port} (POST /simulate, GET /outbox)`,
+  );
+  console.log(
+    `[oura-bridge] relay: ${relayUrl}, buzz-cli: ${binPath}, поллинг: ${pollMs}ms`,
+  );
 }
 
 void main();
