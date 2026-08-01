@@ -88,4 +88,23 @@ curl -X GET http://127.0.0.1:8787/outbox
 
 ## Проверено на стенде
 
-_заполняется по итогам сквозного демо_
+Дата: 2026-07-31. Сквозное демо пройдено полностью на локальном стенде (relay `cargo run -p buzz-relay` дев-сборка, Docker: postgres:17-alpine + redis:7-alpine + minio).
+
+**Сценарий и фактические результаты:**
+
+1. `POST /simulate` `{"chatId":"42","name":"Иван","text":"Здравствуйте! Сколько стоит доставка?"}` → мост заминтил лид-идентичность, создал канал `inbox-иван-42`, отправил сообщение от имени лида. Лог: `[inbound] chat 42 (Иван) → комната лида`.
+2. `buzz messages get --channel <id>` (сервисный ключ) вернул сообщение лида: kind:9, тег `["h", <channel-uuid>]`; `channels members` — сервис `owner`, лид `member`.
+3. Ответ оператора (вторая идентичность: `mint-key` → `channels add-member` → `messages send`) → в течение одного поллинга появился в `GET /outbox`: `[{"chatId":"42","text":"Добрый день, Иван! ..."}]`. Повторные поллинги дублей не дают.
+4. Рестарт моста + новое входящее того же чата → канал НЕ пересоздан (тот же uuid из `bridge.state.json`), ответы не задублированы.
+
+**Фактические формы JSON buzz-cli** (нормализатор `cli-client.ts` покрывает их основной веткой):
+- `messages get` → массив `{id, pubkey, content, created_at, kind, tags}`;
+- `messages send` → `{accepted: true, event_id, message}`;
+- `channels create` → объект с `id` (uuid канала);
+- `channels members` → массив `{pubkey, role}`.
+
+**Нюансы стенда (macOS этой машины):**
+- Порт 5432 занят homebrew-postgres, 5433 — другой dev-БД → постгрес buzz уведён на **5434** через `docker-compose.override.yml` (файл в `.git/info/exclude`, в репо не входит); в `.env`: `DATABASE_URL=...:5434/buzz` и `PGPORT=5434`.
+- `buzz-admin migrate` НЕ читает `.env` — нужен явный `DATABASE_URL=postgres://buzz:buzz_dev@localhost:5434/buzz ./target/debug/buzz-admin migrate`.
+- Relay требует MinIO (`docker compose up -d minio minio-init`) — без него падает на git conformance probe.
+- Ключи стенда лежат в `services/oura-bridge/.env` (гитигнорен).
