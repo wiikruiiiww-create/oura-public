@@ -258,7 +258,7 @@ function SortableCommunityButton({
           <>
             <ContextMenuItem onClick={() => onMarkAllRead(community)}>
               <CheckCheck className="h-4 w-4" />
-              Mark all as read
+              Прочитать всё
             </ContextMenuItem>
             <ContextMenuSeparator />
             <ContextMenuItem
@@ -267,17 +267,17 @@ function SortableCommunityButton({
               }}
             >
               <Link2 className="h-4 w-4" />
-              Copy community URL
+              Скопировать ссылку сообщества
             </ContextMenuItem>
             {canInvite ? (
               <ContextMenuItem onClick={onInvite}>
                 <Ticket className="h-4 w-4" />
-                Invite to community
+                Пригласить в сообщество
               </ContextMenuItem>
             ) : null}
             <ContextMenuItem onClick={() => onSetEditingCommunity(community)}>
               <Settings2 className="h-4 w-4" />
-              Community settings
+              Настройки сообщества
             </ContextMenuItem>
           </>
         }
@@ -378,7 +378,7 @@ export function CommunityRail({
 
   return (
     <nav
-      aria-label="Communities"
+      aria-label="Сообщества"
       className={cn(
         "flex w-12 shrink-0 flex-col items-center gap-2 overflow-y-auto bg-sidebar pb-3",
         topPaddingClass,
@@ -423,7 +423,7 @@ export function CommunityRail({
       <Tooltip>
         <TooltipTrigger asChild>
           <button
-            aria-label="Add community"
+            aria-label="Добавить сообщество"
             className="flex h-9 w-9 items-center justify-center rounded-2xl bg-sidebar-accent/60 text-sidebar-foreground/70 outline-hidden transition-all hover:rounded-xl hover:bg-primary/80 hover:text-primary-foreground focus:outline-none focus-visible:outline-none"
             data-testid="community-rail-add"
             onClick={onAddCommunity}
@@ -432,7 +432,7 @@ export function CommunityRail({
             <Plus className="h-4 w-4" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="right">Add community</TooltipContent>
+        <TooltipContent side="right">Добавить сообщество</TooltipContent>
       </Tooltip>
       <EditCommunityDialog
         canRemove={communities.length > 1}

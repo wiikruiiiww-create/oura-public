@@ -70,8 +70,8 @@ const SECTION_LABEL_CHEVRON_ICON_CLASS =
   "absolute left-1/2 top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2";
 
 const SORT_OPTIONS: { value: ChannelSortMode; label: string }[] = [
-  { value: "recent", label: "Recent" },
-  { value: "alpha", label: "A–Z" },
+  { value: "recent", label: "Недавние" },
+  { value: "alpha", label: "А–Я" },
 ];
 
 /**
@@ -168,7 +168,7 @@ export function SectionActionsMenu({
     <DropdownMenu onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
         <button
-          aria-label={`More actions for ${sectionLabel}`}
+          aria-label={`Действия: ${sectionLabel}`}
           className={cn(SECTION_ICON_BUTTON_CLASS, visibilityClassName)}
           data-testid={testId}
           onClick={(event) => event.stopPropagation()}
@@ -189,19 +189,19 @@ export function SectionActionsMenu({
         {hasUnread && onMarkAllRead ? (
           <DropdownMenuItem onSelect={() => deferMenuAction(onMarkAllRead)}>
             <CheckCheck className="h-4 w-4" />
-            <span>Mark all as read</span>
+            <span>Прочитать всё</span>
           </DropdownMenuItem>
         ) : null}
         {onNewMessage ? (
           <DropdownMenuItem onSelect={() => deferMenuAction(onNewMessage)}>
             <Plus className="h-4 w-4" />
-            <span>{newMessageLabel ?? "New message"}</span>
+            <span>{newMessageLabel ?? "Новое сообщение"}</span>
           </DropdownMenuItem>
         ) : null}
         {onBrowse ? (
           <DropdownMenuItem onSelect={() => deferMenuAction(onBrowse)}>
             <HashSearch className="h-4 w-4" />
-            <span>{browseLabel ?? "Browse channels"}</span>
+            <span>{browseLabel ?? "Все каналы"}</span>
             <DropdownMenuShortcut>
               {getPlatformKeysById("browse-channels")}
             </DropdownMenuShortcut>
@@ -210,7 +210,7 @@ export function SectionActionsMenu({
         {onCreate ? (
           <DropdownMenuItem onSelect={() => deferMenuAction(onCreate)}>
             <Plus className="h-4 w-4" />
-            <span>{createLabel ?? "Create channel"}</span>
+            <span>{createLabel ?? "Создать канал"}</span>
           </DropdownMenuItem>
         ) : null}
         {showSectionManagement ? (
@@ -220,7 +220,7 @@ export function SectionActionsMenu({
                 onSelect={() => deferMenuAction(onRenameSection)}
               >
                 <Pencil className="h-4 w-4" />
-                <span>Rename section</span>
+                <span>Переименовать раздел</span>
               </DropdownMenuItem>
             ) : null}
             {onMoveSectionUp ? (
@@ -229,7 +229,7 @@ export function SectionActionsMenu({
                 onSelect={() => deferMenuAction(onMoveSectionUp)}
               >
                 <ArrowUp className="h-4 w-4" />
-                <span>Move up</span>
+                <span>Выше</span>
               </DropdownMenuItem>
             ) : null}
             {onMoveSectionDown ? (
@@ -238,7 +238,7 @@ export function SectionActionsMenu({
                 onSelect={() => deferMenuAction(onMoveSectionDown)}
               >
                 <ArrowDown className="h-4 w-4" />
-                <span>Move down</span>
+                <span>Ниже</span>
               </DropdownMenuItem>
             ) : null}
           </>
@@ -249,7 +249,7 @@ export function SectionActionsMenu({
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <ArrowUpDown className="h-4 w-4" />
-                <span>Sort</span>
+                <span>Сортировка</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 <DropdownMenuRadioGroup
@@ -279,7 +279,7 @@ export function SectionActionsMenu({
               onSelect={() => deferMenuAction(onDeleteSection)}
             >
               <Trash2 className="h-4 w-4" />
-              <span>Delete section</span>
+              <span>Удалить раздел</span>
             </DropdownMenuItem>
           </>
         ) : null}
@@ -504,7 +504,7 @@ export function ChannelGroupSection({
           <>
             {showQuickCreate && (onQuickCreateClick ?? onCreateClick) ? (
               <SectionQuickAction
-                label={quickCreateLabel ?? createLabel ?? "Create channel"}
+                label={quickCreateLabel ?? createLabel ?? "Создать канал"}
                 onClick={(onQuickCreateClick ?? onCreateClick) as () => void}
                 testId={
                   actionsTestId ? `${actionsTestId}-quick-create` : undefined
