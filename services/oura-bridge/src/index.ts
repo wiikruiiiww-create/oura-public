@@ -3,6 +3,8 @@ import { BuzzCli } from "./buzz/cli-client.js";
 import { Router } from "./router.js";
 import { StateStore } from "./state.js";
 import { StubTelegram } from "./telegram/stub.js";
+import { TelegramChannel } from "./telegram/real.js";
+import type { InboundSource, OutboundSink } from "./types.js";
 
 function env(name: string): string | undefined {
   const v = process.env[name];
@@ -34,20 +36,41 @@ async function main(): Promise<void> {
 
   const state = await StateStore.load(statePath);
   const buzz = new BuzzCli({ binPath, relayUrl });
-  const stub = new StubTelegram(stubPort);
+
+  const sourceKind = env("OURA_SOURCE") ?? "stub";
+  const operatorPubkeys = (
+    env("OURA_OPERATOR_PUBKEYS") ??
+    env("OURA_OPERATOR_PUBKEY") ??
+    ""
+  )
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  let channel: InboundSource & OutboundSink;
+  let stub: StubTelegram | undefined;
+  if (sourceKind === "telegram") {
+    channel = new TelegramChannel(requireEnv("OURA_TELEGRAM_TOKEN"));
+  } else if (sourceKind === "stub") {
+    stub = new StubTelegram(stubPort);
+    channel = stub;
+  } else {
+    console.error(
+      `[oura-bridge] неизвестный OURA_SOURCE=${sourceKind} (допустимо: stub | telegram)`,
+    );
+    process.exit(1);
+  }
+
   const router = new Router({
     buzz,
     state,
-    sink: stub,
+    sink: channel,
     serviceNsec,
     servicePubkeyHex,
-    // TODO(Task 6): полный парсинг OURA_OPERATOR_PUBKEYS (список через запятую).
-    operatorPubkeys: env("OURA_OPERATOR_PUBKEY")
-      ? [env("OURA_OPERATOR_PUBKEY") as string]
-      : [],
+    operatorPubkeys,
   });
 
-  await stub.start(async (m) => {
+  await channel.start(async (m) => {
     try {
       await router.handleInbound(m);
       console.log(`[inbound] chat ${m.chatId} (${m.name}) → комната лида`);
@@ -73,7 +96,7 @@ async function main(): Promise<void> {
     clearInterval(timer);
     try {
       await pollPromise;
-      await stub.stop();
+      await channel.stop();
       await state.save();
       process.exit(0);
     } catch (e) {
@@ -84,9 +107,18 @@ async function main(): Promise<void> {
   process.on("SIGINT", () => void shutdown());
   process.on("SIGTERM", () => void shutdown());
 
-  console.log(
-    `[oura-bridge] заглушка Telegram: http://127.0.0.1:${stub.port} (POST /simulate, GET /outbox)`,
-  );
+  if (stub) {
+    console.log(
+      `[oura-bridge] заглушка Telegram: http://127.0.0.1:${stub.port} (POST /simulate, GET /outbox)`,
+    );
+  } else {
+    console.log("[oura-bridge] источник: Telegram (long-polling)");
+  }
+  if (operatorPubkeys.length === 0) {
+    console.warn(
+      "[oura-bridge] OURA_OPERATOR_PUBKEYS пуст — клиенту ретранслируется любой участник канала (режим дев-стенда)",
+    );
+  }
   console.log(
     `[oura-bridge] relay: ${relayUrl}, buzz-cli: ${binPath}, поллинг: ${pollMs}ms`,
   );
