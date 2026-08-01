@@ -40,7 +40,12 @@ export class StateStore {
     this.data.seenEventIds = [...this.seen];
     await mkdir(dirname(this.path), { recursive: true });
     const tmp = `${this.path}.tmp`;
-    await writeFile(tmp, JSON.stringify(this.data, null, 2), "utf8");
+    // mode: 0o600 — файл содержит nsec (приватные ключи) всех лидов в открытом
+    // виде; без явного mode право доступа зависит от umask (обычно 0644).
+    await writeFile(tmp, JSON.stringify(this.data, null, 2), {
+      encoding: "utf8",
+      mode: 0o600,
+    });
     await rename(tmp, this.path);
   }
 
