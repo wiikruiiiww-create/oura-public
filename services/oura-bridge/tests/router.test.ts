@@ -17,14 +17,14 @@ let buzz: {
 };
 let delivered: OutboundMessage[];
 
-function makeRouter(operatorPubkeyHex?: string): Router {
+function makeRouter(operatorPubkeys: string[] = []): Router {
   return new Router({
     buzz: buzz as unknown as BuzzApi,
     state,
     sink: { deliver: async (m) => void delivered.push(m) },
     serviceNsec: "nsec1service",
     servicePubkeyHex: "svc".padEnd(64, "0"),
-    operatorPubkeyHex,
+    operatorPubkeys,
   });
 }
 
@@ -44,7 +44,7 @@ beforeEach(async () => {
 
 describe("handleInbound", () => {
   it("первое сообщение: минтит лида, создаёт канал, добавляет участников, шлёт от имени лида", async () => {
-    await makeRouter("op".padEnd(64, "1")).handleInbound({
+    await makeRouter(["op".padEnd(64, "1")]).handleInbound({
       chatId: "42",
       name: "Иван",
       text: "Здравствуйте!",
@@ -146,6 +146,7 @@ describe("устойчивость", () => {
       },
       serviceNsec: "nsec1service",
       servicePubkeyHex: "svc".padEnd(64, "0"),
+      operatorPubkeys: [],
     });
     await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
     buzz.getMessages.mockResolvedValue([
@@ -194,6 +195,7 @@ describe("устойчивость", () => {
       },
       serviceNsec: "nsec1service",
       servicePubkeyHex: "svc".padEnd(64, "0"),
+      operatorPubkeys: [],
     });
     buzz.getMessages.mockResolvedValue([
       {
@@ -228,6 +230,7 @@ describe("устойчивость", () => {
       },
       serviceNsec: "nsec1service",
       servicePubkeyHex: "svc".padEnd(64, "0"),
+      operatorPubkeys: [],
     });
     buzz.getMessages.mockResolvedValue([
       {
@@ -246,5 +249,124 @@ describe("устойчивость", () => {
     await r2.pollOutbound();
     expect(delivered.length).toBe(1); // доставлено
     expect(state.hasSeen(lead.chatId, "e3")).toBe(true); // теперь помечено seen
+  });
+
+  it("seen-пометки, сделанные до сбоя в пачке, сохраняются даже если следующее сообщение бросило временную ошибку", async () => {
+    const r = makeRouter();
+    await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
+    const lead = state.getLead("42");
+    if (!lead) throw new Error("lead not found");
+    const saveSpy = vi.spyOn(state, "save");
+    let attempt = 0;
+    const r2 = new Router({
+      buzz: buzz as unknown as BuzzApi,
+      state,
+      sink: {
+        deliver: async (_m) => {
+          attempt += 1;
+          if (attempt === 1) {
+            // первое сообщение пачки: перманентный сбой — помечается seen сразу
+            throw new PermanentDeliveryError("бот заблокирован");
+          }
+          // второе сообщение той же пачки: временная ошибка обрывает обработку лида
+          throw new Error("tg down");
+        },
+      },
+      serviceNsec: "nsec1service",
+      servicePubkeyHex: "svc".padEnd(64, "0"),
+      operatorPubkeys: [],
+    });
+    buzz.getMessages.mockResolvedValue([
+      {
+        id: "e-perm",
+        authorPubkey: "operator-pk",
+        content: "первое сообщение",
+        createdAt: 1,
+      },
+      {
+        id: "e-temp",
+        authorPubkey: "operator-pk",
+        content: "второе сообщение",
+        createdAt: 2,
+      },
+    ]);
+    await r2.pollOutbound();
+    // прогресс по первому сообщению не должен теряться из-за сбоя на втором
+    expect(state.hasSeen(lead.chatId, "e-perm")).toBe(true);
+    expect(state.hasSeen(lead.chatId, "e-temp")).toBe(false);
+    expect(saveSpy).toHaveBeenCalled();
+  });
+});
+
+describe("allow-list операторов (I5)", () => {
+  it("при заданном allow-list сообщение чужого участника НЕ доставляется, но помечается seen", async () => {
+    const r = new Router({
+      buzz: buzz as unknown as BuzzApi,
+      state,
+      sink: { deliver: async (m) => void delivered.push(m) },
+      serviceNsec: "nsec1service",
+      servicePubkeyHex: "svc".padEnd(64, "0"),
+      operatorPubkeys: ["operator-pk"],
+    });
+    await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
+    const lead = state.getLead("42");
+    if (!lead) throw new Error("lead not found");
+    buzz.getMessages.mockResolvedValue([
+      {
+        id: "e-stranger",
+        authorPubkey: "stranger-pk",
+        content: "чужое сообщение",
+        createdAt: 1,
+      },
+    ]);
+    await r.pollOutbound();
+    expect(delivered.length).toBe(0);
+    expect(state.hasSeen(lead.chatId, "e-stranger")).toBe(true);
+  });
+
+  it("сообщение оператора из allow-list доставляется", async () => {
+    const r = new Router({
+      buzz: buzz as unknown as BuzzApi,
+      state,
+      sink: { deliver: async (m) => void delivered.push(m) },
+      serviceNsec: "nsec1service",
+      servicePubkeyHex: "svc".padEnd(64, "0"),
+      operatorPubkeys: ["operator-pk"],
+    });
+    await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
+    buzz.getMessages.mockResolvedValue([
+      {
+        id: "e-op",
+        authorPubkey: "operator-pk",
+        content: "Добрый день!",
+        createdAt: 1,
+      },
+    ]);
+    await r.pollOutbound();
+    expect(delivered).toEqual([{ chatId: "42", text: "Добрый день!" }]);
+  });
+
+  it("пустой allow-list: любой не-лид/не-сервис доставляется (поведение Фазы 0)", async () => {
+    const r = makeRouter([]);
+    await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
+    buzz.getMessages.mockResolvedValue([
+      {
+        id: "e-anyone",
+        authorPubkey: "anyone-pk",
+        content: "любой участник",
+        createdAt: 1,
+      },
+    ]);
+    await r.pollOutbound();
+    expect(delivered.length).toBe(1);
+  });
+
+  it("все операторы из списка добавляются участниками при онбординге лида", async () => {
+    const r = makeRouter(["op-1", "op-2"]);
+    await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
+    const addedMembers = buzz.addMember.mock.calls.map(
+      (call) => call[2] as string,
+    );
+    expect(addedMembers).toEqual(expect.arrayContaining(["op-1", "op-2"]));
   });
 });

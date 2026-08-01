@@ -41,7 +41,10 @@ async function main(): Promise<void> {
     sink: stub,
     serviceNsec,
     servicePubkeyHex,
-    operatorPubkeyHex: env("OURA_OPERATOR_PUBKEY"),
+    // TODO(Task 6): полный парсинг OURA_OPERATOR_PUBKEYS (список через запятую).
+    operatorPubkeys: env("OURA_OPERATOR_PUBKEY")
+      ? [env("OURA_OPERATOR_PUBKEY") as string]
+      : [],
   });
 
   await stub.start(async (m) => {
