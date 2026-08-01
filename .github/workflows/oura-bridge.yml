@@ -1,0 +1,54 @@
+name: Oura Bridge CI
+
+# Отдельный workflow для services/oura-bridge (@oura/bridge) — единственный
+# TS-пакет вне desktop/web, который не покрыт ci.yml/lefthook.yml. Держим его
+# в своём файле (а не в ci.yml), чтобы не трогать существующие гейты buzz core
+# и не ловить merge-конфликты при синке с upstream.
+on:
+  push:
+    branches: [main, release]
+    paths:
+      - "services/**"
+      - ".github/workflows/oura-bridge.yml"
+  pull_request:
+    paths:
+      - "services/**"
+      - ".github/workflows/oura-bridge.yml"
+
+concurrency:
+  group: oura-bridge-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  bridge:
+    name: Test, typecheck, biome
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+        with:
+          version: 11.4.0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.1
+          cache: pnpm
+
+      - name: Install dependencies (oura-bridge subtree only)
+        # --filter @oura/bridge... installs only this package and its own
+        # dependency subtree (it has no internal workspace deps), so this
+        # never pulls desktop/web/mobile's heavier native/browser toolchains.
+        run: pnpm install --frozen-lockfile --filter @oura/bridge...
+
+      - name: Typecheck
+        run: pnpm --filter @oura/bridge exec tsc --noEmit
+
+      - name: Test
+        run: pnpm --filter @oura/bridge test
+
+      - name: Biome check
+        run: pnpm exec biome check services/oura-bridge
