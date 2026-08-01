@@ -21,6 +21,21 @@ export interface InboundSource {
   stop(): Promise<void>;
 }
 
+/**
+ * Доставка невозможна навсегда (клиент заблокировал бота, чат удалён).
+ * Роутер помечает такое сообщение обработанным и не повторяет попытку;
+ * любая другая ошибка deliver — временная, повторится следующим поллингом.
+ */
+export class PermanentDeliveryError extends Error {
+  constructor(
+    message: string,
+    readonly cause?: unknown,
+  ) {
+    super(message);
+    this.name = "PermanentDeliveryError";
+  }
+}
+
 export interface OutboundSink {
   deliver(m: OutboundMessage): Promise<void>;
 }
