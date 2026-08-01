@@ -97,7 +97,7 @@ export class Router {
               continue;
             if (
               operatorPubkeys.length > 0 &&
-              !operatorPubkeys.includes(msg.authorPubkey)
+              !operatorPubkeys.includes(msg.authorPubkey.toLowerCase())
             ) {
               if (!state.hasSeen(lead.chatId, msg.id)) {
                 console.warn(

@@ -3,7 +3,7 @@ import { writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { mintIdentity } from "../src/identity.js";
+import { mintIdentity, parseOperatorPubkeys } from "../src/identity.js";
 import { StateStore } from "../src/state.js";
 
 function tmpStatePath(): string {
@@ -17,6 +17,28 @@ describe("mintIdentity", () => {
     expect(a.nsec).toMatch(/^nsec1/);
     expect(a.pubkeyHex).toMatch(/^[0-9a-f]{64}$/);
     expect(a.nsec).not.toBe(b.nsec);
+  });
+});
+
+describe("parseOperatorPubkeys", () => {
+  it("тримит и приводит к нижнему регистру, отбрасывает пустые записи", () => {
+    const hex = "ab".repeat(32);
+    const result = parseOperatorPubkeys(` ${hex.toUpperCase()} , , ${hex}`);
+    expect(result.valid).toEqual([hex, hex]);
+    expect(result.invalid).toEqual([]);
+  });
+
+  it("пустая строка даёт пустой allow-list без ошибок", () => {
+    expect(parseOperatorPubkeys("")).toEqual({ valid: [], invalid: [] });
+  });
+
+  it("отделяет записи неверного формата (не 64 hex-символа) в invalid", () => {
+    const hex = "cd".repeat(32);
+    const result = parseOperatorPubkeys(
+      `${hex},not-a-pubkey,${hex.slice(0, 10)}`,
+    );
+    expect(result.valid).toEqual([hex]);
+    expect(result.invalid).toEqual(["not-a-pubkey", hex.slice(0, 10)]);
   });
 });
 

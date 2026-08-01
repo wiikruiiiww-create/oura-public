@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { BuzzCli } from "./buzz/cli-client.js";
+import { parseOperatorPubkeys } from "./identity.js";
 import { Router } from "./router.js";
 import { StateStore } from "./state.js";
 import { StubTelegram } from "./telegram/stub.js";
@@ -38,14 +39,16 @@ async function main(): Promise<void> {
   const buzz = new BuzzCli({ binPath, relayUrl });
 
   const sourceKind = env("OURA_SOURCE") ?? "stub";
-  const operatorPubkeys = (
-    env("OURA_OPERATOR_PUBKEYS") ??
-    env("OURA_OPERATOR_PUBKEY") ??
-    ""
-  )
-    .split(",")
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+  const { valid: operatorPubkeys, invalid: invalidOperatorPubkeys } =
+    parseOperatorPubkeys(
+      env("OURA_OPERATOR_PUBKEYS") ?? env("OURA_OPERATOR_PUBKEY") ?? "",
+    );
+  if (invalidOperatorPubkeys.length > 0) {
+    console.error(
+      `[oura-bridge] OURA_OPERATOR_PUBKEYS: не hex-pubkey (64 hex-символа): ${invalidOperatorPubkeys.join(", ")}`,
+    );
+    process.exit(1);
+  }
 
   let channel: InboundSource & OutboundSink;
   let stub: StubTelegram | undefined;
