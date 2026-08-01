@@ -15,6 +15,10 @@ export function GradientLayer() {
         className="buzz-theme-gradient-layer-dark absolute inset-0 opacity-0"
         data-buzz-gradient="dark"
       />
+      <div
+        className="oura-grainient absolute inset-0"
+        data-buzz-gradient="oura"
+      />
     </div>
   );
 }
