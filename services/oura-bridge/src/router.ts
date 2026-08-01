@@ -1,6 +1,7 @@
 import { mintIdentity } from "./identity.js";
 import type { LeadRecord, StateStore } from "./state.js";
 import type { BuzzApi, InboundMessage, OutboundSink } from "./types.js";
+import { PermanentDeliveryError } from "./types.js";
 
 export interface RouterDeps {
   buzz: BuzzApi;
@@ -79,7 +80,19 @@ export class Router {
           )
             continue;
           if (state.hasSeen(lead.chatId, msg.id)) continue;
-          await sink.deliver({ chatId: lead.chatId, text: msg.content });
+          try {
+            await sink.deliver({ chatId: lead.chatId, text: msg.content });
+          } catch (e) {
+            if (e instanceof PermanentDeliveryError) {
+              console.error(
+                `[poll] лид ${lead.chatId}: доставка невозможна (${e.message}); сообщение ${msg.id} помечено обработанным`,
+              );
+              state.markSeen(lead.chatId, msg.id);
+              dirty = true;
+              continue;
+            }
+            throw e; // временная ошибка → перехватится per-lead catch, повтор в следующем поллинге
+          }
           state.markSeen(lead.chatId, msg.id);
           dirty = true;
         }

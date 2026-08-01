@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Router } from "../src/router.js";
 import { StateStore } from "../src/state.js";
 import type { BuzzApi, OutboundMessage } from "../src/types.js";
+import { PermanentDeliveryError } from "../src/types.js";
 
 let state: StateStore;
 let buzz: {
@@ -174,5 +175,74 @@ describe("устойчивость", () => {
       "nsec1service",
       "inbox-lead-2",
     );
+  });
+
+  it("PermanentDeliveryError: сообщение помечается seen и не долбится повторно", async () => {
+    const r = makeRouter();
+    await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
+    const lead = state.getLead("42");
+    const deliveryAttempts: string[] = [];
+    const r2 = new Router({
+      buzz: buzz as unknown as BuzzApi,
+      state,
+      sink: {
+        deliver: async (_m) => {
+          deliveryAttempts.push("try");
+          throw new PermanentDeliveryError("бот заблокирован");
+        },
+      },
+      serviceNsec: "nsec1service",
+      servicePubkeyHex: "svc".padEnd(64, "0"),
+    });
+    buzz.getMessages.mockResolvedValue([
+      {
+        id: "e3",
+        authorPubkey: "operator-pk",
+        content: "Добрый день!",
+        createdAt: 3,
+      },
+    ]);
+    await r2.pollOutbound();
+    await r2.pollOutbound(); // второй поллинг
+    expect(deliveryAttempts.length).toBe(1); // повторной попытки не было
+    expect(state.hasSeen(lead?.chatId, "e3")).toBe(true); // сообщение помечено seen
+  });
+
+  it("временная ошибка доставки: сообщение НЕ помечается seen, попытка повторяется", async () => {
+    const r = makeRouter();
+    await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
+    const lead = state.getLead("42");
+    let fail = true;
+    const r2 = new Router({
+      buzz: buzz as unknown as BuzzApi,
+      state,
+      sink: {
+        deliver: async (m) => {
+          if (fail) {
+            throw new Error("tg down");
+          }
+          delivered.push(m);
+        },
+      },
+      serviceNsec: "nsec1service",
+      servicePubkeyHex: "svc".padEnd(64, "0"),
+    });
+    buzz.getMessages.mockResolvedValue([
+      {
+        id: "e3",
+        authorPubkey: "operator-pk",
+        content: "Добрый день!",
+        createdAt: 3,
+      },
+    ]);
+    // первый поллинг: ошибка
+    await r2.pollOutbound();
+    expect(delivered.length).toBe(0); // ничего не доставлено
+    expect(state.hasSeen(lead?.chatId, "e3")).toBe(false); // сообщение НЕ помечено seen
+    // второй поллинг: успех
+    fail = false;
+    await r2.pollOutbound();
+    expect(delivered.length).toBe(1); // доставлено
+    expect(state.hasSeen(lead?.chatId, "e3")).toBe(true); // теперь помечено seen
   });
 });
