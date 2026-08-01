@@ -30,7 +30,7 @@ beforeEach(() => {
 });
 
 describe("BuzzCli", () => {
-  it("createChannel возвращает id и передаёт nsec через env", async () => {
+  it("createChannel создаёт приватный канал и передаёт nsec через env", async () => {
     const id = await makeCli().createChannel("nsec1aaa", "inbox-иван-42");
     expect(id).toBe("11111111-1111-1111-1111-111111111111");
     const call = JSON.parse(readFileSync(logFile, "utf8").trim());
@@ -42,10 +42,31 @@ describe("BuzzCli", () => {
       "--type",
       "stream",
       "--visibility",
-      "open",
+      "private",
     ]);
     expect(call.privateKey).toBe("nsec1aaa");
     expect(call.relayUrl).toBe("http://relay.test");
+  });
+
+  it("setChannelTopic вызывает channels topic с --channel/--topic", async () => {
+    await makeCli().setChannelTopic("nsec1aaa", "chan-1", "oura:lead:telegram");
+    const call = JSON.parse(readFileSync(logFile, "utf8").trim());
+    expect(call.args).toEqual([
+      "channels",
+      "topic",
+      "--channel",
+      "chan-1",
+      "--topic",
+      "oura:lead:telegram",
+    ]);
+    expect(call.privateKey).toBe("nsec1aaa");
+  });
+
+  it("ошибка channels topic не глотается (маркер обязателен)", async () => {
+    process.env.FAKE_BUZZ_EXIT = "4";
+    await expect(
+      makeCli().setChannelTopic("nsec1aaa", "chan-1", "oura:lead:telegram"),
+    ).rejects.toBeInstanceOf(BuzzCliError);
   });
 
   it("sendMessage вызывает messages send с контентом", async () => {

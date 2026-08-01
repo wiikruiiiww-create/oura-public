@@ -86,8 +86,11 @@ export class BuzzCli implements BuzzApi {
       name,
       "--type",
       "stream",
+      // private, а не open: открытый канал discoverable в community-wide
+      // поиске/ChannelBrowserDialog даже когда сайдбар его отфильтровал.
+      // Комната лида не должна светиться нигде, кроме «Обращений».
       "--visibility",
-      "open",
+      "private",
     ])) as {
       id?: string;
       channel_id?: string;
@@ -99,6 +102,27 @@ export class BuzzCli implements BuzzApi {
         `channels create: нет id в ответе: ${JSON.stringify(res)}`,
       );
     return id;
+  }
+
+  /**
+   * clap-схема: `buzz channels topic --channel <UUID> --topic <TEXT>`
+   * (crates/buzz-cli/src/lib.rs, ChannelsCmd::Topic). Ошибку НЕ глотаем —
+   * без маркера канал не попадёт в «Обращения» и останется в сайдбаре,
+   * то есть онбординг лида надо считать неуспешным.
+   */
+  async setChannelTopic(
+    nsec: string,
+    channelId: string,
+    topic: string,
+  ): Promise<void> {
+    await this.exec(nsec, [
+      "channels",
+      "topic",
+      "--channel",
+      channelId,
+      "--topic",
+      topic,
+    ]);
   }
 
   async addMember(
