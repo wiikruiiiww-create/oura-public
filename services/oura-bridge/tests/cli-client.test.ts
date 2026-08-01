@@ -5,12 +5,18 @@ import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it } from "vitest";
 import { BuzzCli, BuzzCliError } from "../src/buzz/cli-client.js";
 
-const fixture = fileURLToPath(new URL("./fixtures/fake-buzz.mjs", import.meta.url));
+const fixture = fileURLToPath(
+  new URL("./fixtures/fake-buzz.mjs", import.meta.url),
+);
 let logFile: string;
 let messagesFile: string;
 
 function makeCli(): BuzzCli {
-  return new BuzzCli({ binPath: process.execPath, binArgs: [fixture], relayUrl: "http://relay.test" });
+  return new BuzzCli({
+    binPath: process.execPath,
+    binArgs: [fixture],
+    relayUrl: "http://relay.test",
+  });
 }
 
 beforeEach(() => {
@@ -20,6 +26,7 @@ beforeEach(() => {
   process.env.FAKE_BUZZ_LOG = logFile;
   process.env.FAKE_BUZZ_MESSAGES = messagesFile;
   delete process.env.FAKE_BUZZ_EXIT;
+  delete process.env.FAKE_BUZZ_HANG;
 });
 
 describe("BuzzCli", () => {
@@ -28,7 +35,14 @@ describe("BuzzCli", () => {
     expect(id).toBe("11111111-1111-1111-1111-111111111111");
     const call = JSON.parse(readFileSync(logFile, "utf8").trim());
     expect(call.args).toEqual([
-      "channels", "create", "--name", "inbox-иван-42", "--type", "stream", "--visibility", "open",
+      "channels",
+      "create",
+      "--name",
+      "inbox-иван-42",
+      "--type",
+      "stream",
+      "--visibility",
+      "open",
     ]);
     expect(call.privateKey).toBe("nsec1aaa");
     expect(call.relayUrl).toBe("http://relay.test");
@@ -37,7 +51,14 @@ describe("BuzzCli", () => {
   it("sendMessage вызывает messages send с контентом", async () => {
     await makeCli().sendMessage("nsec1bbb", "chan-1", "Здравствуйте!");
     const call = JSON.parse(readFileSync(logFile, "utf8").trim());
-    expect(call.args).toEqual(["messages", "send", "--channel", "chan-1", "--content", "Здравствуйте!"]);
+    expect(call.args).toEqual([
+      "messages",
+      "send",
+      "--channel",
+      "chan-1",
+      "--content",
+      "Здравствуйте!",
+    ]);
   });
 
   it("getMessages нормализует поля id/pubkey/content/created_at", async () => {
@@ -57,7 +78,9 @@ describe("BuzzCli", () => {
 
   it("ненулевой exit-код превращается в BuzzCliError с кодом и stderr", async () => {
     process.env.FAKE_BUZZ_EXIT = "3";
-    await expect(makeCli().sendMessage("nsec1ddd", "chan-1", "x")).rejects.toSatisfy((e: unknown) => {
+    await expect(
+      makeCli().sendMessage("nsec1ddd", "chan-1", "x"),
+    ).rejects.toSatisfy((e: unknown) => {
       expect(e).toBeInstanceOf(BuzzCliError);
       expect((e as BuzzCliError).code).toBe(3);
       return true;
@@ -66,6 +89,21 @@ describe("BuzzCli", () => {
 
   it("trySetProfile глотает ошибку (профиль — необязательная косметика)", async () => {
     process.env.FAKE_BUZZ_EXIT = "1";
-    await expect(makeCli().trySetProfile("nsec1eee", "Иван")).resolves.toBeUndefined();
+    await expect(
+      makeCli().trySetProfile("nsec1eee", "Иван"),
+    ).resolves.toBeUndefined();
+  });
+
+  it("зависший buzz-cli отклоняется BuzzCliError по timeout, а не висит вечно", async () => {
+    process.env.FAKE_BUZZ_HANG = "1";
+    const cli = new BuzzCli({
+      binPath: process.execPath,
+      binArgs: [fixture],
+      relayUrl: "http://relay.test",
+      timeoutMs: 200,
+    });
+    await expect(
+      cli.sendMessage("nsec1fff", "chan-1", "x"),
+    ).rejects.toBeInstanceOf(BuzzCliError);
   });
 });
