@@ -17,7 +17,6 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Hash } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/shared/lib/cn";
@@ -151,7 +150,6 @@ export function DragOverlayChannel({ name }: { name: string }) {
       data-buzz-flat
       className="flex cursor-grabbing items-center gap-2 rounded-md bg-sidebar px-2 py-1.5 text-sm text-sidebar-foreground opacity-90 shadow-lg ring-1 ring-sidebar-border"
     >
-      <Hash className="h-4 w-4 shrink-0 text-sidebar-foreground/60" />
       <span className="truncate">{name}</span>
     </div>
   );

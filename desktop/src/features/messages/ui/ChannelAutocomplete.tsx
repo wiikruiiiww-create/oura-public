@@ -70,7 +70,7 @@ export const ChannelAutocomplete = React.memo(function ChannelAutocomplete({
             tabIndex={-1}
             type="button"
           >
-            <span className="truncate font-medium">#{suggestion.name}</span>
+            <span className="truncate font-medium">{suggestion.name}</span>
             <Badge variant="secondary">{suggestion.channelType}</Badge>
           </button>
         ))}

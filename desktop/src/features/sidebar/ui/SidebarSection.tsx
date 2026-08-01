@@ -4,7 +4,6 @@ import {
   ChevronDown,
   CircleDot,
   FileText,
-  Hash,
   Lock,
   X,
 } from "lucide-react";
@@ -242,7 +241,7 @@ function SidebarChannelIcon({
     return <FileText className="h-4 w-4" />;
   }
 
-  return <Hash className="h-4 w-4" />;
+  return null;
 }
 
 export function ChannelMenuButton({

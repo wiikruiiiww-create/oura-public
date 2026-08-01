@@ -233,9 +233,7 @@ export function AgentSessionThreadPanel({
     );
   }, [channel, channelsQuery.data, sessionChannelId]);
   const scopeLabel = sessionChannelId
-    ? scopeChannelName
-      ? `#${scopeChannelName}`
-      : "1 channel"
+    ? (scopeChannelName ?? "1 channel")
     : "All channels";
   const animateActivity = useTranscriptAnimationEnabled();
   const showTimestamps = useTranscriptTimestampsEnabled();

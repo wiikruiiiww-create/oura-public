@@ -74,8 +74,8 @@ export function SecretRevealDialog({
                     role="alert"
                   >
                     <p>
-                      {created.agent.name} was created, but couldn’t be added to
-                      #{attachmentFailure.channelName}.
+                      {created.agent.name} was created, but couldn’t be added to{" "}
+                      {attachmentFailure.channelName}.
                     </p>
                     <p>{attachmentFailure.error}</p>
                   </div>

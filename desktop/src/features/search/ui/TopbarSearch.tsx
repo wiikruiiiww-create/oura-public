@@ -261,7 +261,7 @@ function SearchHitContextLine({ label }: { label: SearchHitContextLabel }) {
           )}
           data-channel-link=""
         >
-          <span className="truncate">#{label.channelLabel}</span>
+          <span className="truncate">{label.channelLabel}</span>
         </span>
       ) : null}
     </span>
@@ -702,9 +702,10 @@ export function TopbarSearch({
           />
         ) : (
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-background/70 text-muted-foreground">
-            {React.createElement(resultIcon(result, channelLookup), {
-              className: "h-4 w-4",
-            })}
+            {(() => {
+              const Icon = resultIcon(result, channelLookup);
+              return Icon ? <Icon className="h-4 w-4" /> : null;
+            })()}
           </span>
         )}
         <span className="min-w-0 flex-1">

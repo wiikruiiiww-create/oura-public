@@ -94,7 +94,7 @@ function ActivityLabel({
           )}
           data-channel-link=""
         >
-          <span className="truncate">#{label.channelLabel}</span>
+          <span className="truncate">{label.channelLabel}</span>
         </span>
       ) : null}
     </div>
