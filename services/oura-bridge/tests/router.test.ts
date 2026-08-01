@@ -181,6 +181,7 @@ describe("устойчивость", () => {
     const r = makeRouter();
     await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
     const lead = state.getLead("42");
+    if (!lead) throw new Error("lead not found");
     const deliveryAttempts: string[] = [];
     const r2 = new Router({
       buzz: buzz as unknown as BuzzApi,
@@ -205,13 +206,14 @@ describe("устойчивость", () => {
     await r2.pollOutbound();
     await r2.pollOutbound(); // второй поллинг
     expect(deliveryAttempts.length).toBe(1); // повторной попытки не было
-    expect(state.hasSeen(lead?.chatId, "e3")).toBe(true); // сообщение помечено seen
+    expect(state.hasSeen(lead.chatId, "e3")).toBe(true); // сообщение помечено seen
   });
 
   it("временная ошибка доставки: сообщение НЕ помечается seen, попытка повторяется", async () => {
     const r = makeRouter();
     await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
     const lead = state.getLead("42");
+    if (!lead) throw new Error("lead not found");
     let fail = true;
     const r2 = new Router({
       buzz: buzz as unknown as BuzzApi,
@@ -238,11 +240,11 @@ describe("устойчивость", () => {
     // первый поллинг: ошибка
     await r2.pollOutbound();
     expect(delivered.length).toBe(0); // ничего не доставлено
-    expect(state.hasSeen(lead?.chatId, "e3")).toBe(false); // сообщение НЕ помечено seen
+    expect(state.hasSeen(lead.chatId, "e3")).toBe(false); // сообщение НЕ помечено seen
     // второй поллинг: успех
     fail = false;
     await r2.pollOutbound();
     expect(delivered.length).toBe(1); // доставлено
-    expect(state.hasSeen(lead?.chatId, "e3")).toBe(true); // теперь помечено seen
+    expect(state.hasSeen(lead.chatId, "e3")).toBe(true); // теперь помечено seen
   });
 });
