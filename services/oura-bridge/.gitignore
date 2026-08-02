@@ -1,4 +1,13 @@
 node_modules/
-bridge.state.json
-*.state.json
+
+# Секреты и состояние моста — не коммитим НИКОГДА.
+# Суффиксные шаблоны обязательны: атомарная запись создаёт bridge.state.json.tmp,
+# fail-safe — .bak, ротация ключей — .pre-rotation-<дата>. Голые имена их не ловят.
 .env
+.env.*
+!.env.example
+bridge.state.json
+bridge.state.json.*
+*.state.json
+*.state.json.*
+*.pre-rotation-*
