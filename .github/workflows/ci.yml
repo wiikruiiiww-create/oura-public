@@ -3,6 +3,10 @@ on:
   push:
     branches: [main, release]
   pull_request:
+  # Форк живёт на бесплатной квоте Actions (2000 мин/мес, macOS ×10, Windows ×2):
+  # дорогие джобы (desktop-build-macos, windows-rust) запускаются ТОЛЬКО ручным
+  # dispatch — например перед релизом или мержем изменений в desktop/crates.
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
@@ -18,6 +22,9 @@ jobs:
     name: Detect Changed Paths
     runs-on: ubuntu-latest
     timeout-minutes: 2
+    # paths-filter не умеет workflow_dispatch; ручной запуск существует только
+    # ради дорогих джоб ниже, path-гейтить на нём нечего.
+    if: github.event_name != 'workflow_dispatch'
     permissions:
       contents: read
       pull-requests: read
@@ -905,8 +912,8 @@ jobs:
     # Windows runners are slow and this compiles the workspace + Tauri crate
     # cold across four steps; budget generously.
     timeout-minutes: 45
-    needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.desktop-rust == 'true'
+    # windows-latest списывает квоту ×2 — только ручной запуск (см. workflow_dispatch выше).
+    if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
     env:
@@ -988,8 +995,9 @@ jobs:
     name: Desktop Build (macOS)
     runs-on: macos-latest
     timeout-minutes: 45
-    needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.desktop == 'true' || needs.changes.outputs.desktop-rust == 'true' || needs.changes.outputs.rust == 'true'
+    # macos-latest списывает квоту ×10 (45 мин = 450 квото-минут из 2000/мес) —
+    # только ручной запуск (см. workflow_dispatch выше).
+    if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
     steps:
