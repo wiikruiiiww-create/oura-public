@@ -1,4 +1,5 @@
 import { Bot } from "grammy";
+import { InboundQueue } from "../inbound-queue.js";
 import type {
   InboundMessage,
   InboundSource,
@@ -18,6 +19,7 @@ import {
  */
 export class TelegramChannel implements InboundSource, OutboundSink {
   private readonly bot: Bot;
+  private queue: InboundQueue | undefined;
 
   constructor(token: string) {
     this.bot = new Bot(token);
@@ -29,15 +31,13 @@ export class TelegramChannel implements InboundSource, OutboundSink {
     const me = await this.bot.api.getMe();
     console.log(`[telegram] бот @${me.username} (id ${me.id})`);
 
-    this.bot.on("message:text", async (ctx) => {
-      try {
-        await onMessage(toInbound(ctx.message));
-      } catch (e) {
-        console.error(
-          `[telegram] ошибка обработки входящего из chat ${ctx.message.chat.id}:`,
-          e,
-        );
-      }
+    // grammy обрабатывает апдейты последовательно — await пайплайна прямо в
+    // хендлере позволял одному сообщению (онбординг = до 5 вызовов buzz-cli
+    // × 30s) блокировать все чаты. Очередь развязывает поллинг и пайплайн.
+    const queue = new InboundQueue(onMessage);
+    this.queue = queue;
+    this.bot.on("message:text", (ctx) => {
+      queue.push(toInbound(ctx.message));
     });
 
     // ошибки уже идущего поллинга и хендлеров (сеть, 409 Conflict) — сюда
@@ -62,6 +62,8 @@ export class TelegramChannel implements InboundSource, OutboundSink {
 
   async stop(): Promise<void> {
     await this.bot.stop();
+    // дообработать уже принятые сообщения, чтобы не терять их на рестарте
+    await this.queue?.idle();
   }
 
   async deliver(m: OutboundMessage): Promise<void> {
