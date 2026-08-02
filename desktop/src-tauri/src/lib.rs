@@ -735,6 +735,7 @@ pub fn run() {
             get_canvas,
             set_canvas,
             get_feed,
+            get_channel_previews,
             search_messages,
             send_channel_message,
             send_managed_agent_channel_message,
