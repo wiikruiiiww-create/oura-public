@@ -21,6 +21,12 @@ export interface ParsedOperatorPubkeys {
 
 const HEX_PUBKEY_RE = /^[0-9a-f]{64}$/;
 
+/** Нормализует hex-pubkey (trim + lowercase); null, если это не 64 hex-символа. */
+export function normalizePubkeyHex(raw: string): string | null {
+  const pk = raw.trim().toLowerCase();
+  return HEX_PUBKEY_RE.test(pk) ? pk : null;
+}
+
 /**
  * Парсит CSV-список pubkey операторов из env: trim + toLowerCase (Nostr hex —
  * без регистра, но опечатка с копипастом из UI в верхнем регистре не должна
