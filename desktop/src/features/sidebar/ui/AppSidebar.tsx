@@ -8,6 +8,7 @@ import { AddCommunityDialog } from "@/features/communities/ui/AddCommunityDialog
 import type { AddCommunityPrefillRequest } from "@/features/communities/addCommunityPrefill";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { useDeferredLoad } from "@/shared/hooks/useDeferredStartup";
+import { excludeLeadChannels } from "@/features/channels/lib/leadChannel";
 import {
   useChannelSections,
   type ChannelSection,
@@ -384,7 +385,12 @@ export function AppSidebar({
     });
 
   const streamChannels = React.useMemo(
-    () => channels.filter((channel) => channel.channelType === "stream"),
+    // Комнаты лидов живут только на экране «Обращения»: в дереве каналов
+    // команды они были бы шумом (по одной комнате на каждого написавшего).
+    () =>
+      excludeLeadChannels(
+        channels.filter((channel) => channel.channelType === "stream"),
+      ),
     [channels],
   );
 
