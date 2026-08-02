@@ -40,6 +40,15 @@
       "platforms": [
         "desktop"
       ]
+    },
+    {
+      "id": "oura-lead-inbox",
+      "name": "Обращения",
+      "description": "Заменяет ленту упоминаний на главном экране списком внешних обращений (комнат лидов)",
+      "defaultEnabled": true,
+      "platforms": [
+        "desktop"
+      ]
     }
   ]
 }

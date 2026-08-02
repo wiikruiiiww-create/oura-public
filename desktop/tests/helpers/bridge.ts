@@ -1,6 +1,10 @@
 import type { Page } from "@playwright/test";
 import type { ChannelTemplate } from "../../src/shared/api/types";
-import { FEATURE_OVERRIDES_STORAGE_KEY, PREVIEW_FEATURE_IDS } from "./features";
+import {
+  E2E_FORCED_FEATURE_OVERRIDES,
+  FEATURE_OVERRIDES_STORAGE_KEY,
+  PREVIEW_FEATURE_IDS,
+} from "./features";
 
 export const TEST_IDENTITIES = {
   tyler: {
@@ -689,14 +693,22 @@ async function seedDefaultCommunity(
   );
 }
 
-async function seedPreviewFeaturesEnabled(page: Page) {
+async function seedFeatureOverrides(page: Page, enableAllPreview: boolean) {
   await page.addInitScript(
-    ({ key, ids }) => {
+    ({ key, ids, forced, enableAll }) => {
       const overrides: Record<string, boolean> = {};
-      for (const id of ids) overrides[id] = true;
+      if (enableAll) {
+        for (const id of ids) overrides[id] = true;
+      }
+      for (const [id, value] of Object.entries(forced)) overrides[id] = value;
       window.localStorage.setItem(key, JSON.stringify(overrides));
     },
-    { key: FEATURE_OVERRIDES_STORAGE_KEY, ids: PREVIEW_FEATURE_IDS },
+    {
+      key: FEATURE_OVERRIDES_STORAGE_KEY,
+      ids: PREVIEW_FEATURE_IDS,
+      forced: E2E_FORCED_FEATURE_OVERRIDES,
+      enableAll: enableAllPreview,
+    },
   );
 }
 
@@ -720,10 +732,9 @@ export async function installBridge(page: Page, options: BridgeOptions) {
     await seedOnboardingCompletionForKnownIdentities(page, options.relayWsUrl);
   }
   // Default to opting every preview feature in. Specs that exercise the
-  // Experiments toggle UI itself pass `seedPreviewFeatures: false`.
-  if (options.seedPreviewFeatures !== false) {
-    await seedPreviewFeaturesEnabled(page);
-  }
+  // Experiments toggle UI itself pass `seedPreviewFeatures: false` — the
+  // forced overrides (see E2E_FORCED_FEATURE_OVERRIDES) apply either way.
+  await seedFeatureOverrides(page, options.seedPreviewFeatures !== false);
 
   await page.addInitScript(
     ({

@@ -35,3 +35,13 @@ export const PREVIEW_FEATURE_IDS: string[] = manifest.features
  * version bump flows through to E2E seeding without manual updates.
  */
 export const FEATURE_OVERRIDES_STORAGE_KEY = `buzz-feature-overrides-v${manifest.version}`;
+
+/**
+ * Фичи, которые E2E-набор ядра buzz держит выключенными, несмотря на
+ * `defaultEnabled` в манифесте. `oura-lead-inbox` заменяет ленту упоминаний на
+ * маршруте "/", а ~16 спеков всё ещё проверяют именно её (`home-inbox-*`).
+ * Убрать отсюда вместе с портированием этих спеков на отдельный маршрут.
+ */
+export const E2E_FORCED_FEATURE_OVERRIDES: Record<string, boolean> = {
+  "oura-lead-inbox": false,
+};
