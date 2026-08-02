@@ -2,7 +2,6 @@ import {
   ChevronRight,
   Copy,
   FileText,
-  Hash,
   MessageSquare,
   type LucideIcon,
 } from "lucide-react";
@@ -13,14 +12,16 @@ import type { Channel } from "@/shared/api/types";
 import { cn } from "@/shared/lib/cn";
 import { writeTextToClipboard } from "@/shared/lib/clipboard";
 
-function getChannelIcon(channelType: Channel["channelType"]): LucideIcon {
+function getChannelIcon(
+  channelType: Channel["channelType"],
+): LucideIcon | null {
   if (channelType === "forum") {
     return FileText;
   }
   if (channelType === "dm") {
     return MessageSquare;
   }
-  return Hash;
+  return null;
 }
 
 export function ChannelHero({ channel }: { channel: Channel }) {
@@ -29,7 +30,13 @@ export function ChannelHero({ channel }: { channel: Channel }) {
   return (
     <div className="flex flex-col items-center gap-3 text-center">
       <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary text-primary-foreground">
-        <Icon className="h-8 w-8" />
+        {Icon ? (
+          <Icon className="h-8 w-8" />
+        ) : (
+          <span className="text-3xl font-semibold">
+            {channel.name.charAt(0).toUpperCase()}
+          </span>
+        )}
       </div>
       <div className="flex max-w-full flex-col items-center">
         <h3 className="max-w-full truncate text-xl font-semibold tracking-tight">

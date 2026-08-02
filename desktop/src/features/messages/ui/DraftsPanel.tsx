@@ -287,7 +287,6 @@ export async function sendDraftEntry(
 
 type SendConfirmDialogProps = {
   channelLabel: string;
-  isDm: boolean;
   onCancel: () => void;
   onConfirm: () => void;
   open: boolean;
@@ -295,12 +294,11 @@ type SendConfirmDialogProps = {
 
 export function SendConfirmDialog({
   channelLabel,
-  isDm,
   onCancel,
   onConfirm,
   open,
 }: SendConfirmDialogProps) {
-  const destination = isDm ? channelLabel : `#${channelLabel}`;
+  const destination = channelLabel;
   return (
     <AlertDialog
       onOpenChange={(nextOpen) => {
@@ -356,12 +354,7 @@ function DraftRow({
   const canOpen = canOpenDraft(entry.draft, source) && !isOrphaned;
   const canSend = canSendDraft(entry.draft, source, rootStatus);
   const isPrivate = source.channel?.visibility === "private";
-  const isDm = source.channel?.channelType === "dm";
-  const channelLabel = source.channel
-    ? isDm
-      ? source.label
-      : `#${source.label}`
-    : UNKNOWN_CHANNEL_LABEL;
+  const channelLabel = source.channel ? source.label : UNKNOWN_CHANNEL_LABEL;
 
   return (
     <div
@@ -627,7 +620,6 @@ export function DraftsPanel({
   const sendDialogSource =
     items.find((item) => item.entry.key === sendTarget?.key)?.source ??
     UNKNOWN_DRAFT_SOURCE;
-  const sendDialogIsDm = sendDialogSource.channel?.channelType === "dm";
   const sendDialogChannelLabel = sendDialogSource.channel
     ? sendDialogSource.label
     : UNKNOWN_CHANNEL_LABEL;
@@ -668,7 +660,6 @@ export function DraftsPanel({
       {sendTarget ? (
         <SendConfirmDialog
           channelLabel={sendDialogChannelLabel}
-          isDm={sendDialogIsDm}
           onCancel={handleSendCancel}
           onConfirm={handleSendConfirm}
           open={true}

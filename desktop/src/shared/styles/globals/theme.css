@@ -50,8 +50,8 @@
     /* Exact Buzz palette tokens; components consume these semantically. */
     --buzz-gradient-light-top: #e6e6b6;
     --buzz-gradient-light-bottom: #c4d0da;
-    --buzz-gradient-dark-top: #4a4616;
-    --buzz-gradient-dark-bottom: #0a1423;
+    --buzz-gradient-dark-top: #3d1332;
+    --buzz-gradient-dark-bottom: #140a1f;
     --buzz-content-dark: 0 0% 10.1960784314%;
     /* Hosted-community onboarding intentionally keeps this light palette in
        both app themes; semantic tokens keep component code color-agnostic. */
@@ -74,7 +74,7 @@
     --card-foreground: 227 68.25% 87.65%;
     --popover: 232 23.4% 18.43%;
     --popover-foreground: 227 68.25% 87.65%;
-    --primary: 267 82.69% 79.61%;
+    --primary: 316 73.68% 85.1%;
     --primary-foreground: 232 23.4% 18.43%;
     --secondary: 230 18.8% 26.08%;
     --secondary-foreground: 227 68.25% 87.65%;
@@ -105,7 +105,7 @@
     --sidebar: 234 22.75% 17.25%;
     --sidebar-background: 234 22.75% 17.25%;
     --sidebar-foreground: 227 68.25% 87.65%;
-    --sidebar-primary: 267 82.69% 79.61%;
+    --sidebar-primary: 316 73.68% 85.1%;
     --sidebar-primary-foreground: 232 23.4% 18.43%;
     --sidebar-active: var(--sidebar-primary);
     --sidebar-active-foreground: var(--sidebar-primary-foreground);

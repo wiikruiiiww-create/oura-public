@@ -100,11 +100,11 @@ export function AppSidebarPrimaryMenu({
           <SidebarMenuButton
             isActive={selectedView === "home"}
             onClick={onSelectHome}
-            tooltip="Inbox"
+            tooltip="Ящик"
             type="button"
           >
             <Inbox className="h-4 w-4" />
-            <SidebarMenuLabel>Inbox</SidebarMenuLabel>
+            <SidebarMenuLabel>Ящик</SidebarMenuLabel>
           </SidebarMenuButton>
           {homeBadgeCount > 0 ? (
             <SidebarMenuBadge
@@ -121,11 +121,11 @@ export function AppSidebarPrimaryMenu({
               data-testid="open-pulse-view"
               isActive={selectedView === "pulse"}
               onClick={onSelectPulse}
-              tooltip="Pulse"
+              tooltip="Пульс"
               type="button"
             >
               <Activity className="h-4 w-4" />
-              <SidebarMenuLabel>Pulse</SidebarMenuLabel>
+              <SidebarMenuLabel>Пульс</SidebarMenuLabel>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </FeatureGate>
@@ -135,11 +135,11 @@ export function AppSidebarPrimaryMenu({
               data-testid="open-projects-view"
               isActive={selectedView === "projects"}
               onClick={onSelectProjects}
-              tooltip="Projects"
+              tooltip="Проекты"
               type="button"
             >
               <FolderGit2 className="h-4 w-4" />
-              <SidebarMenuLabel>Projects</SidebarMenuLabel>
+              <SidebarMenuLabel>Проекты</SidebarMenuLabel>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </FeatureGate>
@@ -148,11 +148,11 @@ export function AppSidebarPrimaryMenu({
             data-testid="open-agents-view"
             isActive={selectedView === "agents"}
             onClick={onSelectAgents}
-            tooltip="Agents"
+            tooltip="Агенты"
             type="button"
           >
             <Bot className="h-4 w-4" />
-            <SidebarMenuLabel>Agents</SidebarMenuLabel>
+            <SidebarMenuLabel>Агенты</SidebarMenuLabel>
           </SidebarMenuButton>
         </SidebarMenuItem>
         <FeatureGate feature="workflows">
@@ -161,11 +161,11 @@ export function AppSidebarPrimaryMenu({
               data-testid="open-workflows-view"
               isActive={selectedView === "workflows"}
               onClick={onSelectWorkflows}
-              tooltip="Workflows"
+              tooltip="Сценарии"
               type="button"
             >
               <Zap className="h-4 w-4" />
-              <SidebarMenuLabel>Workflows</SidebarMenuLabel>
+              <SidebarMenuLabel>Сценарии</SidebarMenuLabel>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </FeatureGate>

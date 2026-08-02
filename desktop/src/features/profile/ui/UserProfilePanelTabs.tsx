@@ -647,9 +647,9 @@ function ProfileLiveActivityEmbed({
                 <span
                   className="block truncate text-xs font-medium text-muted-foreground/75"
                   data-testid="user-profile-activity-channel-label"
-                  title={`#${activeChannelName}`}
+                  title={activeChannelName}
                 >
-                  #{activeChannelName}
+                  {activeChannelName}
                 </span>
               ) : null}
             </div>

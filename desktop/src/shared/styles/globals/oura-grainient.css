@@ -1,0 +1,43 @@
+/*
+ * OURA: анимированные розовые «пятна света» поверх тёмных обоев приложения.
+ * Показывается только в тёмной теме при обоях Buzz (data-buzz-sidebar).
+ * Переиспользует keyframes buzz-grainient-orbit и @property-регистрации
+ * координат из animations.css.
+ */
+.oura-grainient {
+  display: none;
+}
+
+:root[data-buzz-sidebar].dark .oura-grainient {
+  animation: buzz-grainient-orbit 24s linear infinite alternate;
+  background-image:
+    radial-gradient(
+      circle at var(--buzz-grainient-x-0) var(--buzz-grainient-y-0),
+      hsl(316 74% 72% / 0.2) 9%,
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at var(--buzz-grainient-x-1) var(--buzz-grainient-y-1),
+      hsl(340 70% 55% / 0.16) 5%,
+      transparent 72%
+    ),
+    radial-gradient(
+      circle at var(--buzz-grainient-x-2) var(--buzz-grainient-y-2),
+      hsl(288 60% 60% / 0.14) 5%,
+      transparent 52%
+    ),
+    radial-gradient(
+      circle at var(--buzz-grainient-x-3) var(--buzz-grainient-y-3),
+      hsl(350 75% 65% / 0.14) 13%,
+      transparent 68%
+    );
+  contain: paint;
+  display: block;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-buzz-sidebar].dark .oura-grainient {
+    animation: none;
+  }
+}

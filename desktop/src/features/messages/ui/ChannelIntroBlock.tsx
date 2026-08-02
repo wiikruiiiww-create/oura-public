@@ -1,5 +1,4 @@
 import type * as React from "react";
-import { Hash } from "lucide-react";
 
 import { cn } from "@/shared/lib/cn";
 
@@ -45,10 +44,14 @@ export function ChannelIntroBlock({
         className="flex h-[60px] w-[60px] items-center justify-center rounded-2xl border border-border/70 bg-muted/40 text-muted-foreground"
         data-testid="message-channel-intro-icon"
       >
-        {intro.icon ?? <Hash aria-hidden className="h-7 w-7" />}
+        {intro.icon ?? (
+          <span aria-hidden className="text-2xl font-semibold">
+            {intro.channelName.charAt(0).toUpperCase()}
+          </span>
+        )}
       </div>
       <p className="mt-4 max-w-2xl truncate text-xl font-semibold leading-7 tracking-tight text-foreground">
-        #{intro.channelName}
+        {intro.channelName}
       </p>
       <p className="mt-1 max-w-2xl text-sm leading-5 text-muted-foreground">
         This is the beginning of the{" "}

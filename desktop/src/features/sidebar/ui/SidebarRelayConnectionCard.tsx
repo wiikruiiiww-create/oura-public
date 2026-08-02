@@ -59,15 +59,15 @@ export function SidebarRelayConnectionCompactCard({
   testId = "sidebar-relay-unreachable-compact",
 }: SidebarRelayConnectionCardProps) {
   const reconnectTitle = isWaitingOnReconnectHook
-    ? "Waiting to reconnect"
-    : "Connecting";
+    ? "Ожидание переподключения"
+    : "Подключение…";
   const reconnectDescription = isWaitingOnReconnectHook
-    ? "Complete any prompts opened by the reconnect helper to continue."
-    : "Reconnecting";
+    ? "Завершите шаги в открывшемся окне переподключения."
+    : "Переподключение…";
 
   return (
     <SidebarCompactActionCard
-      actionAriaLabel={isConnected ? "Connected" : "Connect to relay"}
+      actionAriaLabel={isConnected ? "Подключено" : "Подключиться к серверу"}
       actionDisabled={isActionDisabled || isReconnectPending || isConnected}
       actionTestId={actionTestId}
       description={
@@ -75,9 +75,9 @@ export function SidebarRelayConnectionCompactCard({
           ? undefined
           : isReconnectPending
             ? reconnectDescription
-            : "Click to connect"
+            : "Нажмите, чтобы подключиться"
       }
-      dismissLabel="Dismiss relay notification"
+      dismissLabel="Скрыть уведомление"
       iconKey={
         isConnected ? "connected" : isReconnectPending ? "pending" : "idle"
       }
@@ -98,10 +98,10 @@ export function SidebarRelayConnectionCompactCard({
       testId={testId}
       title={
         isConnected
-          ? "Connected"
+          ? "Подключено"
           : isReconnectPending
             ? reconnectTitle
-            : "Can't reach the relay"
+            : "Нет связи с сервером"
       }
       tone={isConnected ? "success" : "neutral"}
     />

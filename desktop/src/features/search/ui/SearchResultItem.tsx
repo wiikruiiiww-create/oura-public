@@ -3,7 +3,6 @@ import {
   ArrowRight,
   Bot,
   FileText,
-  Hash,
   MessageCircle,
   Plus,
   User,
@@ -95,7 +94,7 @@ export function resultIcon(
     return MessageCircle;
   }
 
-  return Hash;
+  return null;
 }
 
 export function SearchResultShell({
@@ -107,7 +106,7 @@ export function SearchResultShell({
   testId,
 }: {
   children: React.ReactNode;
-  icon: LucideIcon;
+  icon: LucideIcon | null;
   isSelected: boolean;
   onClick: () => void;
   onMouseEnter: () => void;
@@ -126,9 +125,13 @@ export function SearchResultShell({
       type="button"
     >
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-secondary text-secondary-foreground">
-          <Icon className="h-4 w-4" />
-        </div>
+        {Icon ? (
+          <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-secondary text-secondary-foreground">
+            <Icon className="h-4 w-4" />
+          </div>
+        ) : (
+          <div className="mt-0.5 h-9 w-9 shrink-0 rounded-2xl bg-secondary" />
+        )}
 
         {children}
 

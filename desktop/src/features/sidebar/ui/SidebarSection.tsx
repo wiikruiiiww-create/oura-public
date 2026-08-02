@@ -4,7 +4,6 @@ import {
   ChevronDown,
   CircleDot,
   FileText,
-  Hash,
   Lock,
   X,
 } from "lucide-react";
@@ -242,7 +241,7 @@ function SidebarChannelIcon({
     return <FileText className="h-4 w-4" />;
   }
 
-  return <Hash className="h-4 w-4" />;
+  return null;
 }
 
 export function ChannelMenuButton({
@@ -468,7 +467,7 @@ export function SidebarSection({
                     ) : null}
                     {channel.channelType === "dm" && onHideDm ? (
                       <button
-                        aria-label="Close direct message"
+                        aria-label="Закрыть чат"
                         className={cn(
                           "absolute right-1 top-1/2 z-10 -translate-y-1/2 after:absolute after:-inset-2 after:md:hidden group-data-[collapsible=icon]:hidden",
                           SIDEBAR_ROW_ICON_ACTION_CLASS,

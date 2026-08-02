@@ -216,7 +216,7 @@ export function FeedSection({
                   </span>
                   {item.channelName ? (
                     <span className="text-2xs text-primary/80">
-                      #{item.channelName}
+                      {item.channelName}
                     </span>
                   ) : null}
                   <span className="ml-auto shrink-0 text-2xs text-muted-foreground/60">
