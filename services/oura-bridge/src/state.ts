@@ -1,4 +1,4 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 
 export interface LeadRecord {
@@ -39,13 +39,42 @@ export class StateStore {
   }
 
   static async load(path: string): Promise<StateStore> {
-    let data: StateFile = { leads: {} };
+    let raw: string;
     try {
-      data = JSON.parse(await readFile(path, "utf8")) as StateFile;
-    } catch {
-      // файла ещё нет — стартуем с пустого состояния
+      raw = await readFile(path, "utf8");
+    } catch (e) {
+      // Пустой старт допустим ТОЛЬКО когда файла ещё нет. Любой другой сбой
+      // чтения означает риск молча забыть nsec всех лидов (они существуют
+      // только в этом файле) и начать плодить дубликаты комнат.
+      if ((e as NodeJS.ErrnoException).code === "ENOENT") {
+        return new StateStore(path, { leads: {} });
+      }
+      throw new Error(
+        `не удалось прочитать state-файл ${path}; мост остановлен, чтобы не потерять ключи лидов — проверьте файл или восстановите из ${path}.bak`,
+        { cause: e },
+      );
     }
-    return new StateStore(path, data);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      throw new Error(
+        `state-файл ${path} повреждён (битый JSON); мост остановлен, чтобы не потерять ключи лидов — восстановите файл из ${path}.bak`,
+        { cause: e },
+      );
+    }
+    if (
+      typeof parsed !== "object" ||
+      parsed === null ||
+      Array.isArray(parsed) ||
+      typeof (parsed as StateFile).leads !== "object" ||
+      (parsed as StateFile).leads === null
+    ) {
+      throw new Error(
+        `state-файл ${path} имеет неожиданную форму (нет объекта leads); восстановите файл из ${path}.bak`,
+      );
+    }
+    return new StateStore(path, parsed as StateFile);
   }
 
   private async writeNow(): Promise<void> {
@@ -54,6 +83,15 @@ export class StateStore {
       [...this.seenByLead.entries()].map(([chatId, ids]) => [chatId, [...ids]]),
     );
     await mkdir(dirname(this.path), { recursive: true });
+    // Предыдущая версия уходит в .bak ДО замены основного файла — единственная
+    // страховка от потери лид-ключей при порче основного файла (load fail-fast
+    // отсылает оператора именно к .bak).
+    try {
+      await copyFile(this.path, `${this.path}.bak`);
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
+      // первой записи файл не предшествует — бэкапить нечего
+    }
     const tmp = `${this.path}.tmp`;
     // mode: 0o600 — файл содержит nsec (приватные ключи) всех лидов в открытом
     // виде; без явного mode право доступа зависит от umask (обычно 0644).
