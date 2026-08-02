@@ -48,7 +48,7 @@ describe("BuzzCli", () => {
     expect(call.relayUrl).toBe("http://relay.test");
   });
 
-  it("sendMessage вызывает messages send с контентом", async () => {
+  it("sendMessage передаёт контент через stdin, а не argv (B1)", async () => {
     await makeCli().sendMessage("nsec1bbb", "chan-1", "Здравствуйте!");
     const call = JSON.parse(readFileSync(logFile, "utf8").trim());
     expect(call.args).toEqual([
@@ -57,8 +57,26 @@ describe("BuzzCli", () => {
       "--channel",
       "chan-1",
       "--content",
-      "Здравствуйте!",
+      "-",
     ]);
+    expect(call.stdin).toBe("Здравствуйте!");
+  });
+
+  it('сообщение "-" не вешает мост: это контент в stdin, а не маркер в argv (B1)', async () => {
+    await makeCli().sendMessage("nsec1bbb", "chan-1", "-");
+    const call = JSON.parse(readFileSync(logFile, "utf8").trim());
+    expect(call.args.slice(-2)).toEqual(["--content", "-"]);
+    expect(call.stdin).toBe("-");
+  });
+
+  it('сообщение, начинающееся с "-", доставляется, а не отвергается clap (B1)', async () => {
+    await makeCli().sendMessage(
+      "nsec1bbb",
+      "chan-1",
+      "--help меня зовут Дефис",
+    );
+    const call = JSON.parse(readFileSync(logFile, "utf8").trim());
+    expect(call.stdin).toBe("--help меня зовут Дефис");
   });
 
   it("getMessages нормализует поля id/pubkey/content/created_at", async () => {

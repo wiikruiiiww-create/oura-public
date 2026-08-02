@@ -37,9 +37,13 @@ interface RawMessage {
 export class BuzzCli implements BuzzApi {
   constructor(private readonly opts: BuzzCliOptions) {}
 
-  private async exec(nsec: string, args: string[]): Promise<unknown> {
+  private async exec(
+    nsec: string,
+    args: string[],
+    stdinData?: string,
+  ): Promise<unknown> {
     try {
-      const { stdout } = await run(
+      const pending = run(
         this.opts.binPath,
         [...(this.opts.binArgs ?? []), ...args],
         {
@@ -55,6 +59,13 @@ export class BuzzCli implements BuzzApi {
           killSignal: "SIGKILL",
         },
       );
+      // stdin закрывается ВСЕГДА: подкоманда, ждущая stdin (конвенция
+      // `--content -`), без этого висела бы до SIGKILL по таймауту (B1).
+      // EPIPE от уже умершего процесса — не наша ошибка, её отдаст await.
+      pending.child.stdin?.on("error", () => {});
+      if (stdinData !== undefined) pending.child.stdin?.write(stdinData);
+      pending.child.stdin?.end();
+      const { stdout } = await pending;
       const text = stdout.trim();
       return text ? JSON.parse(text) : null;
     } catch (e) {
@@ -121,14 +132,14 @@ export class BuzzCli implements BuzzApi {
     channelId: string,
     content: string,
   ): Promise<void> {
-    await this.exec(nsec, [
-      "messages",
-      "send",
-      "--channel",
-      channelId,
-      "--content",
+    // Текст лида/оператора никогда не попадает в argv: сообщение `-` там
+    // означало бы «читать stdin» (зависание до таймаута), а `-размер` и
+    // подобные отвергал бы clap. `--content -` + stdin покрывает любой текст.
+    await this.exec(
+      nsec,
+      ["messages", "send", "--channel", channelId, "--content", "-"],
       content,
-    ]);
+    );
   }
 
   async getMessages(

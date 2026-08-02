@@ -4,9 +4,15 @@
 import { appendFileSync, existsSync, readFileSync } from "node:fs";
 
 const args = process.argv.slice(2);
+// Конвенция buzz-cli: `--content -` = «читать контент из stdin» (B1).
+const contentIdx = args.indexOf("--content");
+const stdin =
+  contentIdx !== -1 && args[contentIdx + 1] === "-"
+    ? readFileSync(0, "utf8")
+    : undefined;
 appendFileSync(
   process.env.FAKE_BUZZ_LOG,
-  `${JSON.stringify({ args, privateKey: process.env.BUZZ_PRIVATE_KEY, relayUrl: process.env.BUZZ_RELAY_URL })}\n`,
+  `${JSON.stringify({ args, stdin, privateKey: process.env.BUZZ_PRIVATE_KEY, relayUrl: process.env.BUZZ_RELAY_URL })}\n`,
 );
 
 if (process.env.FAKE_BUZZ_HANG === "1") {
