@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { BuzzCli } from "./buzz/cli-client.js";
+import { leadTopicMarker } from "./lead-marker.js";
 import { parseOperatorPubkeys } from "./identity.js";
 import { Router } from "./router.js";
 import { StateStore } from "./state.js";
@@ -50,6 +51,9 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  // Заглушка эмулирует именно Telegram, поэтому дефолт один на оба режима.
+  const leadSource = env("OURA_LEAD_SOURCE") ?? "telegram";
+
   let channel: InboundSource & OutboundSink;
   let stub: StubTelegram | undefined;
   if (sourceKind === "telegram") {
@@ -71,6 +75,7 @@ async function main(): Promise<void> {
     serviceNsec,
     servicePubkeyHex,
     operatorPubkeys,
+    leadSource,
   });
 
   await channel.start(async (m) => {
@@ -123,7 +128,7 @@ async function main(): Promise<void> {
     );
   }
   console.log(
-    `[oura-bridge] relay: ${relayUrl}, buzz-cli: ${binPath}, поллинг: ${pollMs}ms`,
+    `[oura-bridge] relay: ${relayUrl}, buzz-cli: ${binPath}, поллинг: ${pollMs}ms, маркер лида: ${leadTopicMarker(leadSource)}`,
   );
 }
 

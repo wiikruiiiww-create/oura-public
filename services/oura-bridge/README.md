@@ -17,6 +17,7 @@
 | `OURA_SOURCE` | `stub` | Источник внешнего канала: `stub` (HTTP-заглушка) или `telegram` (реальный бот) |
 | `OURA_TELEGRAM_TOKEN` | (обязателен при `OURA_SOURCE=telegram`) | Токен бота от @BotFather |
 | `OURA_OPERATOR_PUBKEYS` | (пусто) | Hex-pubkey операторов через запятую: добавляются в каналы лидов, ТОЛЬКО их ответы уходят клиенту. Пусто = любой участник (допустимо только на дев-стенде). Старое имя `OURA_OPERATOR_PUBKEY` читается как алиас |
+| `OURA_LEAD_SOURCE` | `telegram` | Источник внешнего канала в маркере лид-канала (`topic` = `oura:lead:<source>`). Десктоп по нему рисует подпись «Telegram» на карточке «Обращений» |
 
 ## Stand-запуск
 
@@ -88,6 +89,14 @@ curl -X GET http://127.0.0.1:8787/outbox
 ```
 
 Ожидаемый результат: JSON с массивом исходящих сообщений.
+
+## Как десктоп находит комнаты лидов
+
+Сразу после `channels create` мост ставит каналу `topic` = `oura:lead:<source>`
+(`buzz channels topic --channel <id> --topic <marker>`). Это machine-маркер, а не
+человеческий текст: десктоп по префиксу `oura:lead` собирает экран «Обращения»
+и прячет эти каналы из сайдбара. Канал создаётся с `--visibility private`, чтобы
+он не всплывал в community-wide поиске и «Browse channels».
 
 ## Реальный Telegram
 

@@ -1,3 +1,4 @@
+import { leadTopicMarker } from "./lead-marker.js";
 import { mintIdentity } from "./identity.js";
 import type { LeadRecord, StateStore } from "./state.js";
 import type { BuzzApi, InboundMessage, OutboundSink } from "./types.js";
@@ -11,6 +12,8 @@ export interface RouterDeps {
   servicePubkeyHex: string;
   /** hex-pubkey операторов; пусто = любой участник считается оператором (только дев-стенд) */
   operatorPubkeys: string[];
+  /** Источник внешнего канала для маркера лид-канала (`telegram`, `whatsapp`, …). */
+  leadSource: string;
 }
 
 /** Имя канала: только буквы/цифры/дефисы, чтобы не спорить с валидацией relay. */
@@ -48,9 +51,18 @@ export class Router {
   }
 
   private async onboardLead(m: InboundMessage): Promise<LeadRecord> {
-    const { buzz, state, serviceNsec, operatorPubkeys } = this.deps;
+    const { buzz, state, serviceNsec, operatorPubkeys, leadSource } = this.deps;
     const id = mintIdentity();
     const channelId = await buzz.createChannel(serviceNsec, channelName(m));
+    // Маркер до всего остального: пока его нет, канал для десктопа —
+    // обычный stream-канал (виден в сайдбаре, нет в «Обращениях»).
+    // Сбой здесь роняет онбординг целиком — лид не пишется в state и
+    // следующее сообщение того же чата повторит попытку.
+    await buzz.setChannelTopic(
+      serviceNsec,
+      channelId,
+      leadTopicMarker(leadSource),
+    );
     await buzz.addMember(serviceNsec, channelId, id.pubkeyHex);
     for (const pk of operatorPubkeys) {
       await buzz.addMember(serviceNsec, channelId, pk);
