@@ -83,6 +83,10 @@ case "${1:-help}" in
     require_env
     compose config
     ;;
+  backup)
+    require_env
+    ./backup.sh
+    ;;
   backup-hint)
     backup_hint
     ;;
@@ -108,6 +112,7 @@ Commands:
   logs [svc]    Follow logs (default: relay)
   status        Show compose service status
   config        Render merged compose config
+  backup        Snapshot postgres + minio + git volume (see backup.sh)
   backup-hint   Print the production backup checklist
 
   add-member <npub-or-hex> [--role member|admin]

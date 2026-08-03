@@ -1,5 +1,11 @@
 name: buzz-prod
 
+# Cap container logs so long-running services never fill the VPS disk.
+x-logging: &default-logging
+  options:
+    max-size: "20m"
+    max-file: "5"
+
 services:
   relay:
     image: ${BUZZ_IMAGE:-ghcr.io/block/buzz:main}
@@ -43,6 +49,11 @@ services:
       retries: 12
       start_period: 30s
     restart: unless-stopped
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: ${BUZZ_RELAY_MEM_LIMIT:-1g}
     networks:
       - buzz-net
 
@@ -62,6 +73,11 @@ services:
       retries: 12
       start_period: 10s
     restart: unless-stopped
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: ${POSTGRES_MEM_LIMIT:-1g}
     networks:
       - buzz-net
 
@@ -79,6 +95,11 @@ services:
       retries: 12
       start_period: 5s
     restart: unless-stopped
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: ${REDIS_MEM_LIMIT:-256m}
     networks:
       - buzz-net
 
@@ -97,6 +118,11 @@ services:
       retries: 12
       start_period: 10s
     restart: unless-stopped
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          memory: ${MINIO_MEM_LIMIT:-512m}
     networks:
       - buzz-net
 
@@ -116,6 +142,7 @@ services:
         mc anonymous set none "local/$${BUZZ_S3_BUCKET}"
       '
     restart: "no"
+    logging: *default-logging
     networks:
       - buzz-net
 
