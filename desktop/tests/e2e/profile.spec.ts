@@ -684,7 +684,7 @@ test("opens Send feedback from the profile menu", async ({ page }) => {
   await page.getByTestId("profile-popover-send-feedback").click();
   await expect(page.getByTestId("send-feedback-dialog")).toBeVisible();
   await expect(page.getByTestId("feedback-privacy-disclosure")).toContainText(
-    "not posted to a channel",
+    "не публикуется в канале",
   );
 });
 
@@ -710,11 +710,11 @@ test("keeps Send disabled when a stale attachment attempt finishes", async ({
   await page.getByTestId("feedback-message").fill("Attachment race");
   await page.getByTestId("feedback-attach-image").click();
   await expect(page.getByTestId("feedback-attach-image")).toContainText(
-    "Attaching…",
+    "Прикрепление…",
   );
 
   await page.waitForTimeout(450);
-  await page.getByRole("button", { name: "Cancel" }).click();
+  await page.getByRole("button", { name: "Отмена" }).click();
   await openProfileMenu(page);
   await page.getByTestId("profile-popover-send-feedback").click();
   await page.getByTestId("feedback-message").fill("Second attachment");
@@ -724,7 +724,7 @@ test("keeps Send disabled when a stale attachment attempt finishes", async ({
   await expect(submit).toBeDisabled();
   await page.waitForTimeout(900);
   await expect(page.getByTestId("feedback-attach-image")).toContainText(
-    "Attaching…",
+    "Прикрепление…",
   );
   await expect(submit).toBeDisabled();
 
@@ -1189,7 +1189,7 @@ test("notification settings drive the Inbox badge and desktop alerts", async ({
   await openSettings(page, "notifications");
   await expect(page.getByTestId("settings-notifications")).toBeVisible();
   await expect(page.getByTestId("notifications-desktop-state")).toContainText(
-    "On",
+    "Включено",
   );
 
   await page.getByTestId("settings-back-to-app").click();
@@ -1315,7 +1315,7 @@ test("desktop notification clicks open the matching forum thread", async ({
 
   await openSettings(page, "notifications");
   await expect(page.getByTestId("notifications-desktop-state")).toContainText(
-    "On",
+    "Включено",
   );
   await page.getByTestId("settings-back-to-app").click();
   await expectHomeView(page);

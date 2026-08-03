@@ -15,8 +15,8 @@ export function PreventSleepSettingsCard() {
   return (
     <section className="min-w-0" data-testid="settings-agents">
       <SettingsSectionHeader
-        title="Agents"
-        description="Control how agents behave in conversations and run on this machine."
+        title="Агенты"
+        description="Управляйте тем, как агенты ведут себя в переписке и запускаются на этом компьютере."
       />
 
       <SettingsOptionGroup>
@@ -26,11 +26,12 @@ export function PreventSleepSettingsCard() {
               className="text-sm font-medium"
               htmlFor="persistent-agent-audience-switch"
             >
-              Keep addressed agents active
+              Держать агентов активными после обращения
             </label>
             <p className="text-sm font-normal text-muted-foreground">
-              Keep agents you address selected for future messages in the same
-              channel or thread. Remove them from the composer at any time.
+              Агенты, к которым вы обратились, остаются выбранными для следующих
+              сообщений в этом канале или треде. Вы можете убрать их из поля
+              ввода в любой момент.
             </p>
           </div>
           <Switch
@@ -47,12 +48,12 @@ export function PreventSleepSettingsCard() {
               className="text-sm font-medium"
               htmlFor="prevent-sleep-switch"
             >
-              Keep awake while agents are active
+              Не давать компьютеру засыпать, пока агенты активны
             </label>
             <p className="text-sm font-normal text-muted-foreground">
-              Prevents your computer from sleeping while local agents are
-              running. Automatically releases when all agents stop or after 1
-              hour without agent activity.
+              Не даёт компьютеру уходить в сон, пока запущены локальные агенты.
+              Автоматически отключается, когда все агенты останавливаются, или
+              через 1 час без активности агентов.
             </p>
           </div>
           <Switch
@@ -71,15 +72,15 @@ export function PreventSleepSettingsCard() {
 
       {enabled && !hasRunningAgents && (
         <p className="mt-3 text-sm text-muted-foreground">
-          Waiting for agents to start
+          Ожидание запуска агентов
         </p>
       )}
 
       {expired && (
         <p className="mt-3 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-sm text-yellow-700 dark:text-yellow-400">
-          Sleep prevention expired after 1 hour without agent activity. It will
-          resume on the next agent activity, or toggle off and on to re-enable
-          now.
+          Блокировка сна отключилась через 1 час без активности агентов. Она
+          возобновится при следующей активности агента, либо выключите и
+          включите переключатель, чтобы включить её сейчас.
         </p>
       )}
     </section>

@@ -25,35 +25,35 @@ export type KindGroup = {
  */
 export const KIND_GROUPS: ReadonlyArray<KindGroup> = [
   {
-    label: "Messages & posts",
+    label: "Сообщения и посты",
     items: [
       ...CHANNEL_MESSAGE_EVENT_KINDS.map((k) => ({
         kind: k,
         label: kindLabel(k),
       })),
-      { kind: KIND_STREAM_MESSAGE_DIFF, label: "Message diffs (kind 40008)" },
+      { kind: KIND_STREAM_MESSAGE_DIFF, label: "Диффы сообщений (kind 40008)" },
     ],
   },
   {
-    label: "Reactions, edits & deletions",
+    label: "Реакции, правки и удаления",
     items: CHANNEL_AUX_EVENT_KINDS.map((k) => ({
       kind: k,
       label: kindLabel(k),
     })),
   },
   {
-    label: "Huddle events",
+    label: "События хадлов",
     items: [
-      { kind: KIND_HUDDLE_STARTED, label: "Huddle started" },
-      { kind: KIND_HUDDLE_PARTICIPANT_JOINED, label: "Participant joined" },
-      { kind: KIND_HUDDLE_PARTICIPANT_LEFT, label: "Participant left" },
-      { kind: KIND_HUDDLE_ENDED, label: "Huddle ended" },
+      { kind: KIND_HUDDLE_STARTED, label: "Хадл начался" },
+      { kind: KIND_HUDDLE_PARTICIPANT_JOINED, label: "Участник присоединился" },
+      { kind: KIND_HUDDLE_PARTICIPANT_LEFT, label: "Участник вышел" },
+      { kind: KIND_HUDDLE_ENDED, label: "Хадл завершился" },
     ],
   },
   {
-    label: "System messages",
+    label: "Системные сообщения",
     items: [
-      { kind: KIND_SYSTEM_MESSAGE, label: "System messages (kind 40099)" },
+      { kind: KIND_SYSTEM_MESSAGE, label: "Системные сообщения (kind 40099)" },
     ],
   },
 ] as const;
@@ -62,21 +62,21 @@ export const KIND_GROUPS: ReadonlyArray<KindGroup> = [
 function kindLabel(kind: number): string {
   switch (kind) {
     case 5:
-      return "Event deletions (kind 5)";
+      return "Удаления событий (kind 5)";
     case 7:
-      return "Reactions (kind 7)";
+      return "Реакции (kind 7)";
     case 9:
-      return "Stream messages (kind 9)";
+      return "Потоковые сообщения (kind 9)";
     case 9005:
-      return "Buzz-native deletions (kind 9005)";
+      return "Собственные удаления OURA (kind 9005)";
     case 40002:
-      return "Stream messages v2 (kind 40002)";
+      return "Потоковые сообщения v2 (kind 40002)";
     case 40003:
-      return "Message edits (kind 40003)";
+      return "Правки сообщений (kind 40003)";
     case 45001:
-      return "Forum posts (kind 45001)";
+      return "Форумные посты (kind 45001)";
     case 45003:
-      return "Forum comments (kind 45003)";
+      return "Комментарии форума (kind 45003)";
     default:
       return `Kind ${kind}`;
   }

@@ -74,11 +74,11 @@ export function ChannelTemplatesSettingsCard() {
   function handleDuplicate(template: ChannelTemplate) {
     duplicateMutation.mutate(template.id, {
       onSuccess: (created) => {
-        toast.success(`Duplicated as "${created.name}"`);
+        toast.success(`Дублирован как «${created.name}»`);
       },
       onError: (error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to duplicate",
+          error instanceof Error ? error.message : "Не удалось дублировать",
         );
       },
     });
@@ -88,12 +88,12 @@ export function ChannelTemplatesSettingsCard() {
     if (!deleteTarget) return;
     deleteMutation.mutate(deleteTarget.id, {
       onSuccess: () => {
-        toast.success(`Deleted "${deleteTarget.name}"`);
+        toast.success(`Удалён «${deleteTarget.name}»`);
         setDeleteTarget(null);
       },
       onError: (error) => {
         toast.error(
-          error instanceof Error ? error.message : "Failed to delete",
+          error instanceof Error ? error.message : "Не удалось удалить",
         );
       },
     });
@@ -102,11 +102,11 @@ export function ChannelTemplatesSettingsCard() {
   return (
     <section className="min-w-0" data-testid="settings-channel-templates">
       <SettingsSectionHeader
-        title="Channel templates"
+        title="Шаблоны каналов"
         description={
           <>
-            Save reusable channel configurations and apply them when creating
-            new channels.
+            Сохраняйте многоразовые конфигурации каналов и применяйте их при
+            создании новых каналов.
           </>
         }
         action={
@@ -117,18 +117,19 @@ export function ChannelTemplatesSettingsCard() {
             variant="outline"
           >
             <Plus className="mr-1.5 h-4 w-4" />
-            Create
+            Создать
           </Button>
         }
       />
 
       {templatesQuery.isLoading ? (
         <p className="py-6 text-center text-sm text-muted-foreground">
-          Loading templates...
+          Загрузка шаблонов…
         </p>
       ) : templates.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border/70 bg-muted/15 px-4 py-8 text-center text-sm text-muted-foreground">
-          No templates yet. Create one to save a reusable channel configuration.
+          Пока нет шаблонов. Создайте один, чтобы сохранить многоразовую
+          конфигурацию канала.
         </div>
       ) : (
         <div className="space-y-1">
@@ -168,19 +169,19 @@ export function ChannelTemplatesSettingsCard() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete template</AlertDialogTitle>
+            <AlertDialogTitle>Удалить шаблон</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete &quot;{deleteTarget?.name}&quot;?
-              This action cannot be undone.
+              Вы уверены, что хотите удалить «{deleteTarget?.name}»? Это
+              действие нельзя отменить.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDelete}
             >
-              Delete
+              Удалить
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -210,7 +211,7 @@ function TemplateRow({
           <span className="truncate text-sm font-medium">{template.name}</span>
           {template.isBuiltin ? (
             <Badge className="shrink-0 text-2xs uppercase" variant="outline">
-              built-in
+              встроенный
             </Badge>
           ) : null}
         </div>
@@ -223,19 +224,19 @@ function TemplateRow({
           {personaCount > 0 ? (
             <span className="flex items-center gap-1">
               <Bot className="h-4 w-4" />
-              {personaCount} {personaCount === 1 ? "agent" : "agents"}
+              {personaCount} {personaCount === 1 ? "агент" : "агентов"}
             </span>
           ) : null}
           {teamCount > 0 ? (
             <span className="flex items-center gap-1">
               <Users className="h-4 w-4" />
-              {teamCount} {teamCount === 1 ? "team" : "teams"}
+              {teamCount} {teamCount === 1 ? "команда" : "команд"}
             </span>
           ) : null}
           {template.canvasTemplate ? (
             <span className="flex items-center gap-1">
               <MessageSquare className="h-4 w-4" />
-              canvas
+              канва
             </span>
           ) : null}
         </div>
@@ -255,11 +256,11 @@ function TemplateRow({
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={onEdit}>
             <Pencil className="mr-2 h-4 w-4" />
-            Edit
+            Изменить
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onDuplicate}>
             <Copy className="mr-2 h-4 w-4" />
-            Duplicate
+            Дублировать
           </DropdownMenuItem>
           {!template.isBuiltin ? (
             <DropdownMenuItem
@@ -267,7 +268,7 @@ function TemplateRow({
               onClick={onDelete}
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete
+              Удалить
             </DropdownMenuItem>
           ) : null}
         </DropdownMenuContent>
@@ -370,12 +371,12 @@ function TemplateFormDialog({
 
       updateMutation.mutate(input, {
         onSuccess: () => {
-          toast.success(`Updated "${trimmedName}"`);
+          toast.success(`Обновлён «${trimmedName}»`);
           onOpenChange(false);
         },
         onError: (error) => {
           toast.error(
-            error instanceof Error ? error.message : "Failed to update",
+            error instanceof Error ? error.message : "Не удалось обновить",
           );
         },
       });
@@ -389,12 +390,12 @@ function TemplateFormDialog({
 
       createMutation.mutate(input, {
         onSuccess: () => {
-          toast.success(`Created "${trimmedName}"`);
+          toast.success(`Создан «${trimmedName}»`);
           onOpenChange(false);
         },
         onError: (error) => {
           toast.error(
-            error instanceof Error ? error.message : "Failed to create",
+            error instanceof Error ? error.message : "Не удалось создать",
           );
         },
       });
@@ -433,11 +434,11 @@ function TemplateFormDialog({
     <Dialog onOpenChange={onOpenChange} open={open}>
       <ChooserDialogContent
         className="max-w-lg"
-        title={isEditing ? "Edit template" : "Create template"}
+        title={isEditing ? "Изменить шаблон" : "Создать шаблон"}
         description={
           isEditing
-            ? "Update this channel template configuration."
-            : "Save a reusable channel configuration."
+            ? "Обновите конфигурацию этого шаблона канала."
+            : "Сохраните многоразовую конфигурацию канала."
         }
         footer={
           <div className="flex w-full items-center justify-end gap-2">
@@ -447,7 +448,7 @@ function TemplateFormDialog({
               type="button"
               variant="ghost"
             >
-              Cancel
+              Отмена
             </Button>
             <Button
               disabled={isPending || name.trim().length === 0}
@@ -456,11 +457,11 @@ function TemplateFormDialog({
             >
               {isPending
                 ? isEditing
-                  ? "Saving..."
-                  : "Creating..."
+                  ? "Сохранение…"
+                  : "Создание…"
                 : isEditing
-                  ? "Save"
-                  : "Create"}
+                  ? "Сохранить"
+                  : "Создать"}
             </Button>
           </div>
         }
@@ -472,14 +473,14 @@ function TemplateFormDialog({
               className="text-sm font-medium text-foreground"
               htmlFor="template-name"
             >
-              Name
+              Название
             </label>
             <Input
               autoComplete="off"
               disabled={isPending}
               id="template-name"
               onChange={(e) => setName(e.target.value)}
-              placeholder="Sprint Planning"
+              placeholder="Планирование спринта"
               value={name}
             />
           </div>
@@ -490,9 +491,9 @@ function TemplateFormDialog({
               className="text-sm font-medium text-foreground"
               htmlFor="template-description"
             >
-              Description{" "}
+              Описание{" "}
               <span className="font-normal text-muted-foreground">
-                (optional)
+                (необязательно)
               </span>
             </label>
             <Textarea
@@ -500,7 +501,7 @@ function TemplateFormDialog({
               disabled={isPending}
               id="template-description"
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="What this template is for"
+              placeholder="Для чего этот шаблон"
               rows={2}
               value={description}
             />
@@ -512,9 +513,9 @@ function TemplateFormDialog({
               className="text-sm font-medium text-foreground"
               htmlFor="template-canvas"
             >
-              Canvas template{" "}
+              Шаблон канвы{" "}
               <span className="font-normal text-muted-foreground">
-                (optional)
+                (необязательно)
               </span>
             </label>
             <Textarea
@@ -522,12 +523,13 @@ function TemplateFormDialog({
               disabled={isPending}
               id="template-canvas"
               onChange={(e) => setCanvasTemplate(e.target.value)}
-              placeholder="Canvas content here..."
+              placeholder="Содержимое канвы…"
               rows={4}
               value={canvasTemplate}
             />
             <p className="text-xs text-muted-foreground">
-              Use {"{channel.name}"} and {"{template.name}"} as placeholders.
+              Используйте {"{channel.name}"} и {"{template.name}"} в качестве
+              плейсхолдеров.
             </p>
           </div>
 
@@ -599,9 +601,9 @@ function TemplateTeamSelector({
   return (
     <div className="space-y-3">
       <div>
-        <div className="text-sm font-medium">Teams</div>
+        <div className="text-sm font-medium">Команды</div>
         <p className="text-sm font-normal text-muted-foreground">
-          Select teams to include in this template.
+          Выберите команды, которые войдут в этот шаблон.
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -674,17 +676,17 @@ function RuntimeAssignments({
   return (
     <div className="space-y-3">
       <div>
-        <div className="text-sm font-medium">Runtimes</div>
+        <div className="text-sm font-medium">Среды выполнения</div>
         <p className="text-sm font-normal text-muted-foreground">
-          Choose which runtime to use for each agent.
+          Выберите, какую среду выполнения использовать для каждого агента.
         </p>
       </div>
 
       {providersLoading ? (
-        <p className="text-xs text-muted-foreground">Discovering runtimes...</p>
+        <p className="text-xs text-muted-foreground">Поиск сред выполнения…</p>
       ) : providers.length === 0 ? (
         <p className="text-xs text-muted-foreground">
-          No ACP runtimes detected. Install one to assign runtimes.
+          Среды выполнения ACP не найдены. Установите одну, чтобы их назначать.
         </p>
       ) : (
         <div className="space-y-2">
@@ -755,7 +757,7 @@ function RuntimeRow({
         onChange={(e) => onChange(e.target.value)}
         value={value}
       >
-        <option value="">Default</option>
+        <option value="">По умолчанию</option>
         {providers.map((runtime) => (
           <option key={runtime.id} value={runtime.id}>
             {runtime.label}

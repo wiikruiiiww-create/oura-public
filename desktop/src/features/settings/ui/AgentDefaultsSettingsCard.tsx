@@ -8,8 +8,8 @@ export function AgentDefaultsSettingsCard() {
       data-testid="settings-global-agent-config"
     >
       <SectionHeader
-        title="Agent defaults"
-        description="Provider, model, effort, and environment settings inherited by local agents. Agent-specific settings always take priority."
+        title="Настройки агентов по умолчанию"
+        description="Настройки провайдера, модели, уровня усилий и окружения, наследуемые локальными агентами. Настройки конкретного агента всегда имеют приоритет."
       />
       <AgentDefaultsEditor />
     </section>

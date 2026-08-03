@@ -56,8 +56,8 @@ const RUNTIME_SORT_PRIORITY: Record<string, number> = {
 function runtimeInstallGuideLabel(runtime: AcpRuntimeCatalogEntry) {
   return runtime.availability === "adapter_missing" ||
     runtime.availability === "adapter_outdated"
-    ? "Adapter install guide"
-    : "CLI setup guide";
+    ? "Руководство по установке адаптера"
+    : "Руководство по настройке CLI";
 }
 
 function RuntimeLogo({ runtime }: { runtime: AcpRuntimeCatalogEntry }) {
@@ -103,7 +103,7 @@ function RuntimeOverflowMenu({
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <button
-          aria-label={`Open actions for ${runtime.label}`}
+          aria-label={`Открыть действия для ${runtime.label}`}
           className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           data-testid={`doctor-runtime-menu-${runtime.id}`}
           type="button"
@@ -130,7 +130,7 @@ function RuntimeOverflowMenu({
         {runtime.nodeRequired ? (
           <DropdownMenuItem onSelect={() => void openUrl("https://nodejs.org")}>
             <ExternalLink className="h-4 w-4" />
-            Install Node.js
+            Установить Node.js
           </DropdownMenuItem>
         ) : null}
         {hasInstructions ? (
@@ -179,14 +179,14 @@ function RuntimeActions({
       {isWorking ? (
         <div className="flex h-5 w-9 items-center justify-center text-muted-foreground">
           <Spinner
-            aria-label={`${runtime.label} ${isInstalling ? "installing" : "connecting"}`}
+            aria-label={`${runtime.label} ${isInstalling ? "установка" : "подключение"}`}
             className="h-4 w-4 border-2"
             data-testid={`doctor-runtime-loading-${runtime.id}`}
           />
         </div>
       ) : (
         <Switch
-          aria-label={`${runtime.label} availability`}
+          aria-label={`Доступность ${runtime.label}`}
           checked={isAvailable}
           className="disabled:cursor-default disabled:opacity-100"
           data-testid={`doctor-runtime-toggle-${runtime.id}`}
@@ -205,14 +205,14 @@ function RuntimeActions({
 function RuntimeStatusChip({ runtime }: { runtime: AcpRuntimeCatalogEntry }) {
   const label =
     runtime.authStatus.status === "config_invalid"
-      ? "Config error"
+      ? "Ошибка конфигурации"
       : runtime.availability === "adapter_missing"
-        ? "Adapter needed"
+        ? "Нужен адаптер"
         : runtime.availability === "adapter_outdated"
-          ? "Update needed"
+          ? "Нужно обновление"
           : runtime.availability === "cli_missing" ||
               runtime.availability === "not_installed"
-            ? "CLI needed"
+            ? "Нужен CLI"
             : null;
 
   if (!label) {
@@ -324,7 +324,8 @@ function RuntimeRow({
       onError: (error) => {
         setInstallResult({
           success: false,
-          error: error instanceof Error ? error.message : "Install failed.",
+          error:
+            error instanceof Error ? error.message : "Не удалось установить.",
         });
       },
     });
@@ -341,16 +342,16 @@ function RuntimeRow({
     : [];
   const connectMutation = useConnectAcpRuntimeMutation();
   const connectionError = connectMutation.error
-    ? `Couldn't connect ${runtime.label}: ${
+    ? `Не удалось подключить ${runtime.label}: ${
         connectMutation.error instanceof Error
           ? connectMutation.error.message
-          : "Connection failed."
+          : "Не удалось подключиться."
       }`
     : authMethodsQuery.error
-      ? `Couldn't load sign-in options: ${
+      ? `Не удалось загрузить варианты входа: ${
           authMethodsQuery.error instanceof Error
             ? authMethodsQuery.error.message
-            : "Request failed."
+            : "Запрос не выполнен."
         }`
       : null;
 
@@ -415,7 +416,7 @@ function RuntimeRow({
             className="mt-2 whitespace-pre-line rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-sm text-destructive"
             data-testid={`doctor-runtime-config-error-${runtime.id}`}
           >
-            Config error: {runtime.authStatus.diagnostic}
+            Ошибка конфигурации: {runtime.authStatus.diagnostic}
           </p>
         ) : null}
 
@@ -440,8 +441,8 @@ function RuntimeRow({
             className="mt-2 rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-sm text-muted-foreground"
             data-testid={`doctor-runtime-terminal-guidance-${runtime.id}`}
           >
-            Finish signing in from the Terminal window, then click Check again
-            to re-check {runtime.label}.
+            Завершите вход в окне терминала, затем нажмите «Проверить снова»,
+            чтобы перепроверить {runtime.label}.
           </p>
         ) : null}
       </div>
@@ -451,20 +452,23 @@ function RuntimeRow({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Update {runtime.label} adapter?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Обновить адаптер {runtime.label}?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This replaces the machine-wide codex-acp adapter. Older Buzz
-              releases using the legacy adapter may lose community access until
-              @zed-industries/codex-acp@0.16.0 is restored.
+              Это заменит адаптер codex-acp на уровне всей системы. Более старые
+              версии OURA, использующие устаревший адаптер, могут потерять
+              доступ к сообществу, пока не будет восстановлен
+              @zed-industries/codex-acp@0.16.0.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleInstall}
               data-testid={`doctor-runtime-confirm-update-${runtime.id}`}
             >
-              Update
+              Обновить
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -505,7 +509,7 @@ function GitBashCard({
                   : "bg-amber-500/15 text-amber-600 dark:text-amber-400",
               )}
             >
-              {prerequisite.available ? "Available" : "Action needed"}
+              {prerequisite.available ? "Доступно" : "Нужно действие"}
             </span>
           </div>
           {!prerequisite.available ? (
@@ -514,13 +518,13 @@ function GitBashCard({
               onClick={() => void openUrl(prerequisite.installInstructionsUrl)}
               type="button"
             >
-              <ExternalLink className="h-4 w-4" /> Install Git for Windows
+              <ExternalLink className="h-4 w-4" /> Установить Git for Windows
             </button>
           ) : null}
         </div>
         {!prerequisite.available ? (
           <div className="mt-3 space-y-1 text-sm text-muted-foreground">
-            <p>Required for buzz-agent shell tools on Windows.</p>
+            <p>Требуется для инструментов оболочки buzz-agent в Windows.</p>
             <p>{prerequisite.installHint}</p>
           </div>
         ) : null}
@@ -553,8 +557,8 @@ export function DoctorSettingsPanel() {
     >
       <SectionHeader
         className="items-center"
-        title="Agent runtimes"
-        description="Choose which agent tools Buzz can use on this device."
+        title="Среды выполнения агентов"
+        description="Выберите, какие инструменты агентов может использовать OURA на этом устройстве."
         action={
           <Button
             disabled={isRefreshing}
@@ -570,7 +574,7 @@ export function DoctorSettingsPanel() {
             <RefreshCw
               className={cn("h-4 w-4", isRefreshing && "animate-spin")}
             />
-            Check again
+            Проверить снова
           </Button>
         }
       />
@@ -580,20 +584,20 @@ export function DoctorSettingsPanel() {
           <section>
             <div className="mb-3 text-sm">
               <h2 className="text-lg font-semibold tracking-tight">
-                System prerequisites
+                Системные требования
               </h2>
               <p className="mt-1 text-sm font-normal text-muted-foreground">
-                Windows tools required by supported agents.
+                Инструменты Windows, необходимые поддерживаемым агентам.
               </p>
             </div>
             <GitBashCard prerequisite={gitBashQuery.data} />
           </section>
         ) : null}
 
-        <section aria-label="Supported agent runtimes">
+        <section aria-label="Поддерживаемые среды выполнения агентов">
           {runtimesQuery.isLoading ? (
             <div className="rounded-2xl bg-muted/20 px-4 py-4 text-sm font-normal text-muted-foreground">
-              Checking agent runtimes...
+              Проверка сред выполнения агентов…
             </div>
           ) : runtimes.length > 0 ? (
             <div className="space-y-3" data-testid="doctor-runtime-list">
@@ -607,7 +611,7 @@ export function DoctorSettingsPanel() {
             </div>
           ) : (
             <div className="rounded-2xl bg-amber-500/10 px-4 py-4 text-sm text-warning">
-              No supported agent runtimes found.
+              Поддерживаемые среды выполнения агентов не найдены.
             </div>
           )}
 

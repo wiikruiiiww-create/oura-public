@@ -53,7 +53,7 @@ async function assertDesktopNotificationsEnabled(
   await openSettings(page, "notifications");
   await expect(page.getByTestId("settings-notifications")).toBeVisible();
   await expect(page.getByTestId("notifications-desktop-state")).toContainText(
-    "On",
+    "Включено",
   );
   await page.getByTestId("settings-back-to-app").click();
 }

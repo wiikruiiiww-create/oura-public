@@ -34,8 +34,8 @@ export function KeyboardShortcutsCard() {
   return (
     <section className="min-w-0" data-testid="settings-shortcuts">
       <SettingsSectionHeader
-        title="Keyboard shortcuts"
-        description="All available keyboard shortcuts. Shortcuts are read-only."
+        title="Горячие клавиши"
+        description="Все доступные горячие клавиши. Изменить их нельзя."
       />
 
       <div className="space-y-4">

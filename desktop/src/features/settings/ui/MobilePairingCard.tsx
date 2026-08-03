@@ -74,7 +74,7 @@ function PairingDialog({
           setError(
             err instanceof Error
               ? err.message
-              : "Failed to start pairing session",
+              : "Не удалось начать сеанс сопряжения",
           );
           setStep("error");
         }
@@ -114,7 +114,7 @@ function PairingDialog({
 
     listen<{ reason: string }>("pairing-aborted", (event) => {
       if (!cancelled) {
-        setError(`Pairing aborted: ${event.payload.reason}`);
+        setError(`Сопряжение прервано: ${event.payload.reason}`);
         setStep("error");
       }
     }).then((fn) => {
@@ -155,7 +155,9 @@ function PairingDialog({
       await confirmPairingSas();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to send credentials",
+        err instanceof Error
+          ? err.message
+          : "Не удалось отправить учётные данные",
       );
       setStep("error");
     }
@@ -163,14 +165,16 @@ function PairingDialog({
 
   function handleDenySas() {
     cancelPairing().catch(() => {});
-    setError("SAS code mismatch — pairing cancelled for security.");
+    setError(
+      "Коды SAS не совпадают — сопряжение отменено в целях безопасности.",
+    );
     setStep("error");
   }
 
   async function handleCopy() {
     if (!qrUri) return;
     await writeTextToClipboard(qrUri);
-    toast.success("Copied to clipboard");
+    toast.success("Скопировано в буфер обмена");
   }
 
   return (
@@ -181,13 +185,13 @@ function PairingDialog({
       >
         <div className="flex max-h-[85vh] flex-col">
           <DialogHeader className="shrink-0 pb-5 pr-8">
-            <DialogTitle>Pair Mobile Device</DialogTitle>
+            <DialogTitle>Сопряжение с мобильным устройством</DialogTitle>
             <DialogDescription>
               {step === "sas"
-                ? "Verify the security code matches your mobile device."
+                ? "Проверьте, что код безопасности совпадает с кодом на вашем мобильном устройстве."
                 : step === "done"
-                  ? "Your mobile device is now paired."
-                  : "Scan this QR code with the Buzz mobile app to securely pair."}
+                  ? "Ваше мобильное устройство сопряжено."
+                  : "Отсканируйте этот QR-код в мобильном приложении OURA, чтобы безопасно выполнить сопряжение."}
             </DialogDescription>
           </DialogHeader>
 
@@ -201,7 +205,7 @@ function PairingDialog({
               <div className="flex flex-col items-center justify-center gap-3 py-8">
                 <Spinner className="h-6 w-6 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                  Preparing secure pairing session...
+                  Подготовка защищённого сеанса сопряжения…
                 </p>
               </div>
             ) : step === "qr" && qrUri ? (
@@ -214,7 +218,7 @@ function PairingDialog({
                     centerImageSrc="/app-icon@2x.png"
                     data-testid="mobile-pairing-qr"
                     size={240}
-                    title="Mobile pairing QR code"
+                    title="QR-код для сопряжения с мобильным устройством"
                     value={qrUri}
                   />
                 </div>
@@ -227,7 +231,7 @@ function PairingDialog({
                   variant="outline"
                 >
                   <Copy className="mr-1.5 h-4 w-4" />
-                  Copy pairing code
+                  Скопировать код сопряжения
                 </Button>
               </div>
             ) : step === "sas" && sasCode ? (
@@ -235,7 +239,8 @@ function PairingDialog({
                 <div className="flex flex-col items-center gap-3 py-4">
                   <ShieldCheck className="h-10 w-10 text-primary" />
                   <p className="text-sm font-medium">
-                    Verify this code matches your mobile device
+                    Убедитесь, что этот код совпадает с кодом на вашем мобильном
+                    устройстве
                   </p>
                   <div className="rounded-xl border-2 border-primary/30 bg-primary/5 px-8 py-4">
                     <p
@@ -246,8 +251,9 @@ function PairingDialog({
                     </p>
                   </div>
                   <p className="text-center text-xs text-muted-foreground">
-                    You are about to transfer your Buzz identity to another
-                    device. Only confirm if you initiated this pairing.
+                    Вы собираетесь передать свою личность OURA на другое
+                    устройство. Подтверждайте, только если это сопряжение
+                    инициировали вы.
                   </p>
                 </div>
 
@@ -259,7 +265,7 @@ function PairingDialog({
                     variant="outline"
                   >
                     <X className="mr-1.5 h-4 w-4" />
-                    Cancel
+                    Отмена
                   </Button>
                   <Button
                     className="flex-1"
@@ -267,7 +273,7 @@ function PairingDialog({
                     onClick={handleConfirmSas}
                   >
                     <Check className="mr-1.5 h-4 w-4" />
-                    Codes Match
+                    Коды совпадают
                   </Button>
                 </div>
               </div>
@@ -275,7 +281,7 @@ function PairingDialog({
               <div className="flex flex-col items-center justify-center gap-3 py-8">
                 <Spinner className="h-6 w-6 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                  Sending identity to mobile device...
+                  Отправка личности на мобильное устройство…
                 </p>
               </div>
             ) : step === "done" ? (
@@ -284,10 +290,10 @@ function PairingDialog({
                   <Check className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
                 <p className="text-sm font-medium">
-                  Mobile device paired successfully
+                  Мобильное устройство успешно сопряжено
                 </p>
                 <p className="text-center text-xs text-muted-foreground">
-                  Your mobile app is now connected to this relay.
+                  Ваше мобильное приложение теперь подключено к этому релею.
                 </p>
               </div>
             ) : null}
@@ -308,12 +314,12 @@ export function MobilePairingCard({
   return (
     <section className="min-w-0" data-testid="settings-mobile">
       <SettingsSectionHeader
-        title="Mobile"
+        title="Мобильное"
         description={
           <>
-            Connect the Buzz mobile app to this relay by scanning a QR code. The
-            connection is secured with end-to-end encryption and a verification
-            code.
+            Подключите мобильное приложение OURA к этому релею, отсканировав
+            QR-код. Соединение защищено сквозным шифрованием и кодом
+            подтверждения.
           </>
         }
       />
@@ -322,9 +328,11 @@ export function MobilePairingCard({
         <SettingsOptionRow className="gap-3">
           <Smartphone className="h-4 w-4 shrink-0 text-muted-foreground" />
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium">Pair Mobile Device</p>
+            <p className="text-sm font-medium">
+              Сопряжение с мобильным устройством
+            </p>
             <p className="text-sm font-normal text-muted-foreground">
-              Securely transfer your identity via NIP-AB protocol
+              Безопасная передача личности по протоколу NIP-AB
             </p>
           </div>
           <Button
@@ -333,7 +341,7 @@ export function MobilePairingCard({
             onClick={() => setDialogOpen(true)}
             size="sm"
           >
-            Pair
+            Сопрячь
           </Button>
         </SettingsOptionRow>
       </SettingsOptionGroup>

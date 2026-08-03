@@ -96,7 +96,7 @@ test("parseCustomKinds_duplicateTokens_deduped", () => {
 });
 
 test("parseCustomKinds_kindAlreadyInGroups_silentlyIgnored", () => {
-  // Kind 9 is in the "Messages & posts" group — not invalid but not returned
+  // Kind 9 is in the "Сообщения и посты" group — not invalid but not returned
   const result = parseCustomKinds("9 60000");
   assert.deepEqual(result.valid, [60000]);
   assert.deepEqual(result.invalid, []);
@@ -150,7 +150,7 @@ test("toggleKind_checkedKind_removesIt", () => {
 // ── toggleGroup ───────────────────────────────────────────────────────────────
 
 test("toggleGroup_noneChecked_checksAll", () => {
-  const group = groupByLabel("Messages & posts");
+  const group = groupByLabel("Сообщения и посты");
   const result = toggleGroup(group, new Set());
   for (const item of group.items) {
     assert.ok(
@@ -161,15 +161,15 @@ test("toggleGroup_noneChecked_checksAll", () => {
 });
 
 test("toggleGroup_allChecked_uncheksAll", () => {
-  const group = groupByLabel("Messages & posts");
-  const allChecked = new Set(kindsOfGroup("Messages & posts"));
+  const group = groupByLabel("Сообщения и посты");
+  const allChecked = new Set(kindsOfGroup("Сообщения и посты"));
   const result = toggleGroup(group, allChecked);
   assert.equal(result.size, 0);
 });
 
 test("toggleGroup_partiallyChecked_checksAll", () => {
-  const group = groupByLabel("Messages & posts");
-  const kinds = kindsOfGroup("Messages & posts");
+  const group = groupByLabel("Сообщения и посты");
+  const kinds = kindsOfGroup("Сообщения и посты");
   // Only one kind checked
   const partial = new Set([kinds[0]]);
   const result = toggleGroup(group, partial);
@@ -179,7 +179,7 @@ test("toggleGroup_partiallyChecked_checksAll", () => {
 });
 
 test("toggleGroup_doesNotAffectOtherKinds", () => {
-  const group = groupByLabel("Messages & posts");
+  const group = groupByLabel("Сообщения и посты");
   const outerKind = 99999;
   const baseSet = new Set([outerKind]);
   const result = toggleGroup(group, baseSet);
@@ -189,31 +189,31 @@ test("toggleGroup_doesNotAffectOtherKinds", () => {
 // ── isGroupFullyChecked / isGroupIndeterminate ────────────────────────────────
 
 test("isGroupFullyChecked_allInGroup_returnsTrue", () => {
-  const group = groupByLabel("Reactions, edits & deletions");
-  const all = new Set(kindsOfGroup("Reactions, edits & deletions"));
+  const group = groupByLabel("Реакции, правки и удаления");
+  const all = new Set(kindsOfGroup("Реакции, правки и удаления"));
   assert.equal(isGroupFullyChecked(group, all), true);
 });
 
 test("isGroupFullyChecked_noneInGroup_returnsFalse", () => {
-  const group = groupByLabel("Reactions, edits & deletions");
+  const group = groupByLabel("Реакции, правки и удаления");
   assert.equal(isGroupFullyChecked(group, new Set()), false);
 });
 
 test("isGroupIndeterminate_someButNotAll_returnsTrue", () => {
-  const group = groupByLabel("Reactions, edits & deletions");
-  const kinds = kindsOfGroup("Reactions, edits & deletions");
+  const group = groupByLabel("Реакции, правки и удаления");
+  const kinds = kindsOfGroup("Реакции, правки и удаления");
   const partial = new Set([kinds[0]]);
   assert.equal(isGroupIndeterminate(group, partial), true);
 });
 
 test("isGroupIndeterminate_noneChecked_returnsFalse", () => {
-  const group = groupByLabel("Reactions, edits & deletions");
+  const group = groupByLabel("Реакции, правки и удаления");
   assert.equal(isGroupIndeterminate(group, new Set()), false);
 });
 
 test("isGroupIndeterminate_allChecked_returnsFalse", () => {
-  const group = groupByLabel("Reactions, edits & deletions");
-  const all = new Set(kindsOfGroup("Reactions, edits & deletions"));
+  const group = groupByLabel("Реакции, правки и удаления");
+  const all = new Set(kindsOfGroup("Реакции, правки и удаления"));
   assert.equal(isGroupIndeterminate(group, all), false);
 });
 
@@ -246,7 +246,7 @@ test("buildFinalKinds_emptySelection_producesEmptyArray", () => {
 // ── Group + custom union (deduped / sorted) ───────────────────────────────────
 
 test("buildFinalKinds_groupAndCustom_unioned_sorted_deduped", () => {
-  const messagesKinds = kindsOfGroup("Messages & posts");
+  const messagesKinds = kindsOfGroup("Сообщения и посты");
   const customKinds = [99999, 88888];
   const result = buildFinalKinds(new Set(messagesKinds), customKinds);
   // Must be sorted ascending
@@ -301,7 +301,7 @@ test("buildSubscriptionRequest_singleKindSelection_exactKindsArray", () => {
 });
 
 test("buildSubscriptionRequest_groupHeaderToggle_allKindsInGroup", () => {
-  const messagesKinds = kindsOfGroupBySR("Messages & posts");
+  const messagesKinds = kindsOfGroupBySR("Сообщения и посты");
   const req = buildSubscriptionRequest(
     "channel_h",
     "channel-abc",
@@ -316,7 +316,7 @@ test("buildSubscriptionRequest_groupHeaderToggle_allKindsInGroup", () => {
 });
 
 test("buildSubscriptionRequest_groupPlusCustomKind_unionDedupedSorted", () => {
-  const messagesKinds = kindsOfGroupBySR("Messages & posts");
+  const messagesKinds = kindsOfGroupBySR("Сообщения и посты");
   const customKinds = [50000, 50001];
   const req = buildSubscriptionRequest(
     "channel_h",

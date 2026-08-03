@@ -25,7 +25,7 @@ test("mobile pairing uses the local Wallet-style QR renderer", async ({
   const copyButton = dialog.getByTestId("copy-pairing-code");
   await expect(dialog).toBeVisible();
   await expect(qrCode).toBeVisible();
-  await expect(copyButton).toHaveText("Copy pairing code");
+  await expect(copyButton).toHaveText("Скопировать код сопряжения");
   await expect(dialog).toHaveCSS("border-radius", "16px");
   await expect(dialog).toHaveCSS("border-left-width", "0px");
   await expect(dialog).toHaveCSS("padding-left", "24px");
