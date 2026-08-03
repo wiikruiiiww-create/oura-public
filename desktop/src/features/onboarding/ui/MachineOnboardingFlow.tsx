@@ -11,12 +11,12 @@ import { StartupWindowDragRegion } from "@/shared/ui/StartupWindowDragRegion";
 import { BackupStep } from "./BackupStep";
 import { DefaultConfigStep } from "./DefaultConfigStep";
 import { IdentityKeyHelpDialog } from "./IdentityKeyHelpDialog";
-import { LandingBees } from "./LandingBees";
 import { NostrKeyImportForm } from "./NostrKeyImportForm";
 import {
   ONBOARDING_LANDING_CTA_CLASS,
   OnboardingChrome,
 } from "./OnboardingChrome";
+import { WELCOME_COPY } from "./welcomeCopy";
 import { OnboardingFooterProvider } from "./OnboardingFooter";
 import { OnboardingSlideTransition } from "./OnboardingSlideTransition";
 import { SetupStep } from "./SetupStep";
@@ -119,7 +119,10 @@ export function MachineOnboardingFlow({
       data-testid="machine-onboarding-gate"
     >
       <StartupWindowDragRegion />
-      {page === "identity" ? <LandingBees /> : null}
+      <div
+        aria-hidden
+        className="oura-onboarding-grainient pointer-events-none fixed inset-0"
+      />
       {page !== "identity" ? (
         <OnboardingChrome
           current={page === "config" ? 4 : page === "setup" ? 3 : 2}
@@ -138,14 +141,9 @@ export function MachineOnboardingFlow({
               effect="mask-reveal-up"
               transitionKey="machine-identity"
             >
-              <img
-                alt="Buzz"
-                className="w-full max-w-[600px]"
-                src="/landing/buzz-wordmark.png"
-              />
+              <h1 className="oura-wordmark">{WELCOME_COPY.wordmark}</h1>
               <p className="mt-2 max-w-[560px] text-center text-2xl font-normal leading-none text-foreground">
-                Your people, your agents, your projects —<br />
-                all in one place.
+                {WELCOME_COPY.tagline}
               </p>
               {error ? (
                 <p className="mt-4 text-sm text-destructive">{error}</p>
@@ -157,7 +155,9 @@ export function MachineOnboardingFlow({
                   onClick={() => void loadFreshIdentity()}
                   type="button"
                 >
-                  {isPending ? "Saving identity…" : "Create a new identity key"}
+                  {isPending
+                    ? WELCOME_COPY.creatingKey
+                    : WELCOME_COPY.createKey}
                 </Button>
                 <Button
                   className="h-9 rounded-full bg-foreground/10 px-5 hover:bg-foreground/15"
@@ -166,7 +166,7 @@ export function MachineOnboardingFlow({
                   type="button"
                   variant="ghost"
                 >
-                  Use an existing key
+                  {WELCOME_COPY.useExistingKey}
                 </Button>
               </div>
               <IdentityKeyHelpDialog />

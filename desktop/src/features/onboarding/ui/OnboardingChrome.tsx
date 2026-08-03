@@ -11,18 +11,15 @@ export const TOTAL_ONBOARDING_PAGES = 7;
 const ONBOARDING_CTA_SHAPE = "h-[2.375rem] rounded-full px-6";
 
 /**
- * Primary-CTA styling for the in-step onboarding pages: the shared pill with a
- * light-blue label (`--buzz-onboarding-cta-label`, available on any
- * `.buzz-onboarding-neutral-theme` subtree).
+ * Primary-CTA styling for the in-step onboarding pages: the shared pill in
+ * the shell's primary tokens (розовая пилюля с тёмной подписью).
  */
-export const ONBOARDING_PRIMARY_CTA_CLASS = `${ONBOARDING_CTA_SHAPE} text-[var(--buzz-onboarding-cta-label)]`;
+export const ONBOARDING_PRIMARY_CTA_CLASS = ONBOARDING_CTA_SHAPE;
 
 /**
- * Primary-CTA styling for the landing screen only: the shared pill with the
- * chartreuse label (`--buzz-welcome-chartreuse`). The blue label is reserved
- * for the CTAs inside the steps.
+ * Primary-CTA styling for the landing screen: same pill as the step CTAs.
  */
-export const ONBOARDING_LANDING_CTA_CLASS = `${ONBOARDING_CTA_SHAPE} text-[var(--buzz-welcome-chartreuse)]`;
+export const ONBOARDING_LANDING_CTA_CLASS = ONBOARDING_CTA_SHAPE;
 
 /**
  * Icon-control styling for onboarding surfaces that sit on the textured card:

@@ -10,6 +10,7 @@ import {
 } from "@/shared/ui/dialog";
 import { ONBOARDING_INK_ICON_CLASS } from "./OnboardingChrome";
 import { OnboardingFooter } from "./OnboardingFooter";
+import { WELCOME_COPY } from "./welcomeCopy";
 
 const IDENTITY_KEY_HELP_SEEN_STORAGE_KEY =
   "buzz.machine-onboarding.identity-key-help-seen.v1";
@@ -60,7 +61,7 @@ export function IdentityKeyHelpDialog() {
             type="button"
             variant="link"
           >
-            What’s an identity key?
+            {WELCOME_COPY.whatIsKey}
           </Button>
         </DialogTrigger>
       </OnboardingFooter>
