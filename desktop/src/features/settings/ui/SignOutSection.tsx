@@ -23,7 +23,7 @@ import { Spinner } from "@/shared/ui/spinner";
  * stray capital or trailing space does not trip people up — the friction is
  * deliberate typing, not case sensitivity.
  */
-export const SIGNOUT_CONFIRM_PHRASE = "wipe all my data";
+export const SIGNOUT_CONFIRM_PHRASE = "удалить все мои данные";
 
 /**
  * Sign-out card + destructive confirmation flow.
@@ -123,7 +123,7 @@ export function SignOutSection() {
         setIsPending(false);
         setIsOpen(false);
         resetDialogState();
-        toast.error(err instanceof Error ? err.message : "Sign out failed.");
+        toast.error(err instanceof Error ? err.message : "Не удалось выйти.");
       });
   }
 
@@ -134,10 +134,11 @@ export function SignOutSection() {
     >
       <div className="flex items-center justify-between gap-4 px-1">
         <div className="min-w-0 space-y-1">
-          <h2 className="text-lg font-semibold tracking-tight">Sign out</h2>
+          <h2 className="text-lg font-semibold tracking-tight">Выход</h2>
           <p className="text-sm text-muted-foreground">
-            Removes your identity key and all local app data from this device.
-            Back up your private key (nsec) first — this cannot be undone.
+            Удаляет ключ идентичности и все локальные данные приложения с этого
+            устройства. Сначала сохраните резервную копию приватного ключа
+            (nsec) — действие необратимо.
           </p>
         </div>
         <Button
@@ -149,9 +150,9 @@ export function SignOutSection() {
           variant="destructive"
         >
           {isPending ? (
-            <Spinner aria-label="Signing out" className="h-4 w-4 border-2" />
+            <Spinner aria-label="Выходим" className="h-4 w-4 border-2" />
           ) : null}
-          {isPending ? "Signing out…" : "Sign Out"}
+          {isPending ? "Выходим…" : "Выйти"}
         </Button>
       </div>
       <AlertDialog
@@ -165,20 +166,20 @@ export function SignOutSection() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Sign out and wipe all data?</AlertDialogTitle>
+            <AlertDialogTitle>Выйти и стереть все данные?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will delete your identity key, all agent settings, and cached
-              data from this device, then relaunch Buzz into first-run setup.
-              This cannot be undone.
+              Ключ идентичности, настройки агентов и кэшированные данные будут
+              удалены с этого устройства, после чего OURA перезапустится в
+              первичную настройку. Действие необратимо.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <div className="space-y-3">
             <p className="text-sm font-medium">
-              1. Back up your private key (nsec)
+              1. Сохраните резервную копию приватного ключа (nsec)
             </p>
             {isNsecLoading ? (
-              <p className="text-sm text-muted-foreground">Loading…</p>
+              <p className="text-sm text-muted-foreground">Загрузка…</p>
             ) : nsecError ? (
               <p
                 className="text-sm text-destructive"
@@ -208,10 +209,10 @@ export function SignOutSection() {
                 }
               />
               <span>
-                I have saved my private key somewhere safe.
+                Приватный ключ сохранён в надёжном месте.
                 {!canConfirmBackup ? (
                   <span className="block text-xs text-muted-foreground">
-                    Reveal or copy the key above first.
+                    Сначала покажите или скопируйте ключ выше.
                   </span>
                 ) : null}
               </span>
@@ -223,9 +224,9 @@ export function SignOutSection() {
               className="text-sm font-medium"
               htmlFor="signout-confirm-phrase"
             >
-              2. Type{" "}
+              2. Введите{" "}
               <span className="font-semibold">"{SIGNOUT_CONFIRM_PHRASE}"</span>{" "}
-              to confirm
+              для подтверждения
             </label>
             <Input
               autoComplete="off"
@@ -240,7 +241,7 @@ export function SignOutSection() {
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending}>Отмена</AlertDialogCancel>
             {/* A plain Button, not AlertDialogAction: Radix's Action closes
                 the dialog on click, which would drop the pending state while
                 the wipe + restart is still in flight. */}
@@ -252,12 +253,9 @@ export function SignOutSection() {
               variant="destructive"
             >
               {isPending ? (
-                <Spinner
-                  aria-label="Signing out"
-                  className="h-4 w-4 border-2"
-                />
+                <Spinner aria-label="Выходим" className="h-4 w-4 border-2" />
               ) : null}
-              {isPending ? "Signing out…" : "Delete My Data"}
+              {isPending ? "Выходим…" : "Удалить мои данные"}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

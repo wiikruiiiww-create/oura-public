@@ -53,7 +53,7 @@ const settingsNavGroups: Array<{
   sections: SettingsSection[];
 }> = [
   {
-    label: "Personal",
+    label: "Личное",
     sections: [
       "profile",
       "appearance",
@@ -64,11 +64,11 @@ const settingsNavGroups: Array<{
     ],
   },
   {
-    label: "Communities",
+    label: "Сообщества",
     sections: ["hosted-communities", "channel-templates", "community-members"],
   },
   {
-    label: "App",
+    label: "Приложение",
     sections: ["agents", "compute", "experimental", "mobile", "updates"],
   },
 ];
@@ -225,11 +225,11 @@ export function SettingsView({
               <SidebarMenuButton
                 data-testid="settings-back-to-app"
                 onClick={onClose}
-                tooltip="Back to app"
+                tooltip="Назад в приложение"
                 type="button"
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span>Back to app</span>
+                <span>Назад в приложение</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

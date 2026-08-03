@@ -72,18 +72,18 @@ function IdentityRow({
       </div>
       {copyValue ? (
         <button
-          aria-label={`Copy ${label}`}
+          aria-label={`Скопировать: ${label}`}
           className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           data-testid={`copy-${testId}`}
           onClick={async () => {
             await writeTextToClipboard(copyValue);
-            toast.success("Copied to clipboard");
+            toast.success("Скопировано в буфер обмена");
           }}
-          title={`Copy ${label}`}
+          title={`Скопировать: ${label}`}
           type="button"
         >
           <Copy className="h-4 w-4 shrink-0" />
-          Copy
+          Копировать
         </button>
       ) : null}
     </div>
@@ -124,7 +124,7 @@ function NsecRevealRow() {
           setLoadError(
             err instanceof Error
               ? err.message
-              : "Failed to retrieve private key.",
+              : "Не удалось получить приватный ключ.",
           );
       } finally {
         if (!fetchCancelledRef.current) setIsLoading(false);
@@ -140,9 +140,11 @@ function NsecRevealRow() {
   return (
     <div className="px-4 py-3" data-testid="profile-private-key-row">
       <div className="flex items-center justify-between gap-4">
-        <p className="text-sm font-medium">Private key</p>
+        <p className="text-sm font-medium">Приватный ключ</p>
         <button
-          aria-label={isOpen ? "Hide private key" : "Reveal private key"}
+          aria-label={
+            isOpen ? "Скрыть приватный ключ" : "Показать приватный ключ"
+          }
           className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           data-testid="profile-private-key-toggle"
           onClick={() => void handleReveal()}
@@ -151,12 +153,12 @@ function NsecRevealRow() {
           {isOpen ? (
             <>
               <EyeOff className="h-4 w-4 shrink-0" />
-              Hide
+              Скрыть
             </>
           ) : (
             <>
               <Eye className="h-4 w-4 shrink-0" />
-              Reveal
+              Показать
             </>
           )}
         </button>
@@ -164,7 +166,7 @@ function NsecRevealRow() {
       {isOpen ? (
         <div className="mt-2">
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <p className="text-sm text-muted-foreground">Загрузка…</p>
           ) : loadError ? (
             <p className="text-sm text-destructive">{loadError}</p>
           ) : nsec ? (
@@ -190,8 +192,8 @@ function EditProfileMetadataButton({
   isEditing: boolean;
 }) {
   const Icon = isEditing ? Check : Pencil;
-  const actionLabel = isEditing ? "Done" : "Edit";
-  const accessibleLabel = isEditing ? `Done editing ${label}` : `Edit ${label}`;
+  const actionLabel = isEditing ? "Готово" : "Изменить";
+  const accessibleLabel = isEditing ? `Готово: ${label}` : `Изменить: ${label}`;
 
   return (
     <button
@@ -386,7 +388,7 @@ export function ProfileSettingsCard({
     fallbackDisplayName ||
     "Your profile";
   const resolvedPubkey = profile?.pubkey ?? currentPubkey ?? "Unavailable";
-  const nip05Handle = profile?.nip05Handle ?? "Not set";
+  const nip05Handle = profile?.nip05Handle ?? "Не указано";
   const emojiAvatarPreview = React.useMemo(
     () => parseEmojiAvatarDataUrl(avatarUrlDraft),
     [avatarUrlDraft],
@@ -568,8 +570,8 @@ export function ProfileSettingsCard({
     >
       <div>
         <SettingsSectionHeader
-          title="Profile"
-          description="Update how your name, avatar, and bio appear across Buzz."
+          title="Профиль"
+          description="Настройте, как ваше имя, аватар и описание выглядят в OURA."
         />
 
         <div className="space-y-3">
@@ -762,12 +764,12 @@ export function ProfileSettingsCard({
                         >
                           <div className="flex min-h-14 items-center justify-between gap-4 px-4 py-3">
                             <h2 className="text-lg font-semibold tracking-tight">
-                              Profile info
+                              Данные профиля
                             </h2>
                             <EditProfileMetadataButton
                               disabled={updateProfileMutation.isPending}
                               isEditing={isEditingProfileMetadata}
-                              label="profile info"
+                              label="данные профиля"
                               onClick={handleProfileMetadataEdit}
                               testId="profile-metadata-edit"
                             />
@@ -779,7 +781,7 @@ export function ProfileSettingsCard({
                                 className="block text-sm font-medium"
                                 htmlFor="profile-display-name"
                               >
-                                Display name
+                                Отображаемое имя
                               </label>
                               {isEditingProfileMetadata ? (
                                 <Input
@@ -790,7 +792,7 @@ export function ProfileSettingsCard({
                                   onChange={(event) =>
                                     setDisplayNameDraft(event.target.value)
                                   }
-                                  placeholder="Display name"
+                                  placeholder="Отображаемое имя"
                                   ref={displayNameInputRef}
                                   value={displayNameDraft}
                                 />
@@ -798,9 +800,9 @@ export function ProfileSettingsCard({
                                 <p
                                   className="min-w-0 truncate text-sm text-muted-foreground"
                                   data-testid="profile-display-name-value"
-                                  title={displayNameDraft || "Not set"}
+                                  title={displayNameDraft || "Не указано"}
                                 >
-                                  {displayNameDraft || "Not set"}
+                                  {displayNameDraft || "Не указано"}
                                 </p>
                               )}
                             </div>
@@ -812,7 +814,7 @@ export function ProfileSettingsCard({
                                 className="block text-sm font-medium"
                                 htmlFor="profile-about"
                               >
-                                Profile description
+                                Описание профиля
                               </label>
                               {isEditingProfileMetadata ? (
                                 <Textarea
@@ -823,7 +825,7 @@ export function ProfileSettingsCard({
                                   onChange={(event) =>
                                     setAboutDraft(event.target.value)
                                   }
-                                  placeholder="Profile description"
+                                  placeholder="Описание профиля"
                                   ref={aboutTextareaRef}
                                   value={aboutDraft}
                                 />
@@ -836,9 +838,9 @@ export function ProfileSettingsCard({
                                       : "text-muted-foreground/55",
                                   )}
                                   data-testid="profile-about-value"
-                                  title={aboutDraft || "Not set"}
+                                  title={aboutDraft || "Не указано"}
                                 >
-                                  {aboutDraft || "Not set"}
+                                  {aboutDraft || "Не указано"}
                                 </p>
                               )}
                             </div>
@@ -856,11 +858,11 @@ export function ProfileSettingsCard({
                             >
                               <div className="min-w-0">
                                 <h2 className="text-lg font-semibold tracking-tight">
-                                  Identity
+                                  Идентичность
                                 </h2>
                                 <p className="mt-1 text-sm font-normal text-muted-foreground">
-                                  Your keypair and NIP-05 handle are fixed for
-                                  this device.
+                                  Ключевая пара и NIP-05-адрес закреплены за
+                                  этим устройством.
                                 </p>
                               </div>
                               <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-[color,transform] duration-150 ease-out group-open:rotate-180 group-hover/identity:text-foreground group-focus-visible/identity:text-foreground" />
@@ -873,13 +875,13 @@ export function ProfileSettingsCard({
                                 copyValue={
                                   profile?.pubkey ?? currentPubkey ?? undefined
                                 }
-                                label="Public key"
+                                label="Публичный ключ"
                                 testId="profile-pubkey"
                                 value={resolvedPubkey}
                               />
                               <IdentityRow
                                 copyValue={profile?.nip05Handle ?? undefined}
-                                label="NIP-05 handle"
+                                label="NIP-05-адрес"
                                 testId="profile-nip05"
                                 value={nip05Handle}
                               />

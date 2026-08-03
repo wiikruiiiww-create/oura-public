@@ -11,7 +11,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { installMockBridge } from "../helpers/bridge";
 import { openSettings } from "../helpers/settings";
 
-const CONFIRM_PHRASE = "wipe all my data";
+const CONFIRM_PHRASE = "удалить все мои данные";
 
 // The mock bridge routes copy_text_to_clipboard through navigator.clipboard,
 // which requires explicit permissions in headless Chromium.
@@ -107,7 +107,7 @@ test("cancel resets the gates for the next open", async ({ page }) => {
   await page.getByTestId("nsec-copy").click();
   await page.getByTestId("signout-backup-confirm").click();
   await page.getByTestId("signout-confirm-phrase").fill(CONFIRM_PHRASE);
-  await page.getByRole("button", { name: "Cancel" }).click();
+  await page.getByRole("button", { name: "Отмена" }).click();
   await expect(page.getByRole("alertdialog")).not.toBeVisible();
 
   // Reopen — everything must be locked again.

@@ -155,80 +155,80 @@ export type SettingsPanelProps = {
 export const settingsSections: SettingsSectionDescriptor[] = [
   {
     value: "appearance",
-    label: "Appearance",
+    label: "Внешний вид",
     icon: MonitorCog,
   },
   {
     value: "profile",
-    label: "Profile",
+    label: "Профиль",
     icon: UserRound,
   },
   {
     value: "notifications",
-    label: "Notifications",
+    label: "Уведомления",
     icon: BellRing,
   },
   {
     value: "experimental",
-    label: "Experiments",
+    label: "Эксперименты",
     icon: FlaskConical,
   },
   {
     value: "agents",
-    label: "Agents",
+    label: "Агенты",
     icon: Bot,
     featureGate: "managed-agents",
   },
   {
     value: "channel-templates",
-    label: "Templates",
+    label: "Шаблоны",
     icon: LayoutTemplate,
     featureGate: "channel-templates",
   },
   {
     value: "compute",
-    label: "Compute",
+    label: "Вычисления",
     icon: Cpu,
   },
   {
     value: "shortcuts",
-    label: "Shortcuts",
+    label: "Горячие клавиши",
     icon: Keyboard,
   },
   {
     value: "hosted-communities",
-    label: "Hosted communities",
+    label: "Хостинг сообществ",
     icon: MessagesSquare,
   },
   {
     value: "community-members",
-    label: "Invites",
+    label: "Приглашения",
     icon: Ticket,
   },
   {
     value: "moderation",
-    label: "Moderation",
+    label: "Модерация",
     icon: ShieldAlert,
   },
   {
     value: "custom-emoji",
-    label: "Custom emoji",
+    label: "Свои эмодзи",
     icon: Smile,
     featureGate: "custom-emoji",
   },
   {
     value: "local-archive",
-    label: "Local archive",
+    label: "Локальный архив",
     icon: Archive,
   },
   {
     value: "mobile",
-    label: "Mobile",
+    label: "Мобильный",
     icon: Smartphone,
   },
   {
     value: "updates",
-    label: "Updates",
+    label: "Обновления",
     icon: Download,
   },
 ];
@@ -517,8 +517,8 @@ function ThemeSettingsCard() {
       data-testid="settings-theme"
     >
       <SettingsSectionHeader
-        title="Appearance"
-        description="Choose a theme for Buzz."
+        title="Внешний вид"
+        description="Выберите тему OURA."
       />
 
       {/* Mode selector: System / Light / Dark */}
