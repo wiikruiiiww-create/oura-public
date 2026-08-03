@@ -14,9 +14,11 @@ name: Sprig
 #   - tag `sprig-v*`  → versioned release
 #   - workflow_dispatch → manual canary build (no release publish unless asked)
 
+# Форк на бесплатной квоте Actions: rolling-release на каждый merge в main
+# отключён (двойной musl-билд воркспейса; на форке лейн падал). Остались
+# версионные теги sprig-v* и ручной dispatch.
 on:
   push:
-    branches: [main]
     tags: ["sprig-v*"]
   workflow_dispatch:
     inputs:

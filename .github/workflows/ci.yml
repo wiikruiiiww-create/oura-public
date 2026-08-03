@@ -3,6 +3,13 @@ on:
   push:
     branches: [main, release]
   pull_request:
+  # Форк живёт на бесплатной квоте Actions (2000 мин/мес, macOS ×10, Windows ×2):
+  # - дорогие джобы (desktop-build-macos, windows-rust) — ТОЛЬКО ручной dispatch,
+  #   например перед релизом или мержем изменений в desktop/crates;
+  # - push в main проходит тот же path-фильтр, что и PR (обход `event == 'push'`
+  #   из джобовых if убран) — docs/bridge-мерж не гоняет полную матрицу, а
+  #   rust/desktop-мерж заодно обновляет кэши main (save-if != pull_request).
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
@@ -18,6 +25,9 @@ jobs:
     name: Detect Changed Paths
     runs-on: ubuntu-latest
     timeout-minutes: 2
+    # paths-filter не умеет workflow_dispatch; ручной запуск существует только
+    # ради дорогих джоб ниже, path-гейтить на нём нечего.
+    if: github.event_name != 'workflow_dispatch'
     permissions:
       contents: read
       pull-requests: read
@@ -47,15 +57,17 @@ jobs:
               - '.github/workflows/ci.yml'
               - 'scripts/run-tests.sh'
               - 'justfile'
+            # pnpm-lock.yaml общий на весь монорепо и убран из фильтров:
+            # изменения зависимостей services/oura-bridge запускали всю
+            # desktop/web-матрицу. Правки desktop/web-зависимостей трогают
+            # их package.json — фильтры сработают по 'desktop/**'/'web/**'.
             desktop:
               - 'desktop/**'
               - '!desktop/src-tauri/**'
-              - 'pnpm-lock.yaml'
             desktop-rust:
               - 'desktop/src-tauri/**'
             web:
               - 'web/**'
-              - 'pnpm-lock.yaml'
             mobile:
               - 'mobile/**'
               - 'scripts/mobile-release.sh'
@@ -77,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.desktop-rust == 'true'
+    if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.desktop-rust == 'true'
     permissions:
       contents: read
     steps:
@@ -98,7 +110,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.rust == 'true'
+    if: needs.changes.outputs.rust == 'true'
     permissions:
       contents: read
     steps:
@@ -120,7 +132,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.desktop == 'true' || needs.changes.outputs.desktop-rust == 'true' || needs.changes.outputs.rust == 'true'
+    if: needs.changes.outputs.desktop == 'true' || needs.changes.outputs.desktop-rust == 'true' || needs.changes.outputs.rust == 'true'
     permissions:
       contents: read
     steps:
@@ -210,7 +222,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.desktop == 'true' || needs.changes.outputs.desktop-rust == 'true' || needs.changes.outputs.rust == 'true'
+    if: needs.changes.outputs.desktop == 'true' || needs.changes.outputs.desktop-rust == 'true' || needs.changes.outputs.rust == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -276,7 +288,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [changes, desktop-core, desktop-smoke-e2e]
-    if: always() && (github.event_name == 'push' || needs.changes.outputs.desktop == 'true' || needs.changes.outputs.desktop-rust == 'true' || needs.changes.outputs.rust == 'true')
+    if: always() && (needs.changes.outputs.desktop == 'true' || needs.changes.outputs.desktop-rust == 'true' || needs.changes.outputs.rust == 'true')
     permissions:
       contents: read
     steps:
@@ -297,7 +309,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.desktop == 'true' || needs.changes.outputs.desktop-rust == 'true' || needs.changes.outputs.rust == 'true'
+    if: needs.changes.outputs.desktop == 'true' || needs.changes.outputs.desktop-rust == 'true' || needs.changes.outputs.rust == 'true'
     permissions:
       contents: read
     steps:
@@ -365,7 +377,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [changes, desktop-e2e-relay]
-    if: github.event_name == 'push' || needs.changes.outputs.desktop == 'true' || needs.changes.outputs.desktop-rust == 'true' || needs.changes.outputs.rust == 'true'
+    if: needs.changes.outputs.desktop == 'true' || needs.changes.outputs.desktop-rust == 'true' || needs.changes.outputs.rust == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -541,7 +553,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: [changes, desktop-e2e-integration-shard]
-    if: always() && (github.event_name == 'push' || needs.changes.outputs.desktop == 'true' || needs.changes.outputs.desktop-rust == 'true' || needs.changes.outputs.rust == 'true')
+    if: always() && (needs.changes.outputs.desktop == 'true' || needs.changes.outputs.desktop-rust == 'true' || needs.changes.outputs.rust == 'true')
     permissions:
       contents: read
     steps:
@@ -558,7 +570,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [changes, desktop-e2e-relay]
-    if: github.event_name == 'push' || needs.changes.outputs.rust == 'true'
+    if: needs.changes.outputs.rust == 'true'
     permissions:
       contents: read
     steps:
@@ -699,7 +711,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [changes, desktop-e2e-relay]
-    if: github.event_name == 'push' || needs.changes.outputs.rust == 'true'
+    if: needs.changes.outputs.rust == 'true'
     permissions:
       contents: read
     steps:
@@ -740,7 +752,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.web == 'true'
+    if: needs.changes.outputs.web == 'true'
     permissions:
       contents: read
     steps:
@@ -773,7 +785,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.mobile == 'true'
+    if: needs.changes.outputs.mobile == 'true'
     permissions:
       contents: read
     steps:
@@ -830,7 +842,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.rust == 'true'
+    if: needs.changes.outputs.rust == 'true'
     permissions:
       contents: read
     steps:
@@ -865,7 +877,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.rust == 'true'
+    if: needs.changes.outputs.rust == 'true'
     permissions:
       contents: read
     strategy:
@@ -905,8 +917,8 @@ jobs:
     # Windows runners are slow and this compiles the workspace + Tauri crate
     # cold across four steps; budget generously.
     timeout-minutes: 45
-    needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.rust == 'true' || needs.changes.outputs.desktop-rust == 'true'
+    # windows-latest списывает квоту ×2 — только ручной запуск (см. workflow_dispatch выше).
+    if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
     env:
@@ -988,8 +1000,9 @@ jobs:
     name: Desktop Build (macOS)
     runs-on: macos-latest
     timeout-minutes: 45
-    needs: [changes]
-    if: github.event_name == 'push' || needs.changes.outputs.desktop == 'true' || needs.changes.outputs.desktop-rust == 'true' || needs.changes.outputs.rust == 'true'
+    # macos-latest списывает квоту ×10 (45 мин = 450 квото-минут из 2000/мес) —
+    # только ручной запуск (см. workflow_dispatch выше).
+    if: github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
     steps:
