@@ -14,10 +14,14 @@ let buzz: {
   sendMessage: ReturnType<typeof vi.fn>;
   getMessages: ReturnType<typeof vi.fn>;
   trySetProfile: ReturnType<typeof vi.fn>;
+  setChannelTopic: ReturnType<typeof vi.fn>;
 };
 let delivered: OutboundMessage[];
 
-function makeRouter(operatorPubkeys: string[] = []): Router {
+function makeRouter(
+  operatorPubkeys: string[] = [],
+  leadSource = "telegram",
+): Router {
   return new Router({
     buzz: buzz as unknown as BuzzApi,
     state,
@@ -25,6 +29,7 @@ function makeRouter(operatorPubkeys: string[] = []): Router {
     serviceNsec: "nsec1service",
     servicePubkeyHex: "svc".padEnd(64, "0"),
     operatorPubkeys,
+    leadSource,
   });
 }
 
@@ -39,6 +44,7 @@ beforeEach(async () => {
     sendMessage: vi.fn().mockResolvedValue(undefined),
     getMessages: vi.fn().mockResolvedValue([]),
     trySetProfile: vi.fn().mockResolvedValue(undefined),
+    setChannelTopic: vi.fn().mockResolvedValue(undefined),
   };
 });
 
@@ -81,6 +87,46 @@ describe("handleInbound", () => {
     await r.handleInbound({ chatId: "42", name: "Иван", text: "два" });
     expect(buzz.createChannel).toHaveBeenCalledTimes(1);
     expect(buzz.sendMessage).toHaveBeenCalledTimes(2);
+  });
+
+  it("после создания канала ставит machine-маркер лида в topic", async () => {
+    await makeRouter().handleInbound({
+      chatId: "42",
+      name: "Иван",
+      text: "Здравствуйте!",
+    });
+    expect(buzz.setChannelTopic).toHaveBeenCalledWith(
+      "nsec1service",
+      "chan-new",
+      "oura:lead:telegram",
+    );
+    // маркер ставится ДО первого сообщения лида: иначе оператор увидит
+    // сообщение в канале, которого ещё нет в «Обращениях».
+    expect(buzz.setChannelTopic.mock.invocationCallOrder[0]).toBeLessThan(
+      buzz.sendMessage.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("источник маркера берётся из конфигурации моста", async () => {
+    await makeRouter([], "whatsapp").handleInbound({
+      chatId: "43",
+      name: "Пётр",
+      text: "привет",
+    });
+    expect(buzz.setChannelTopic).toHaveBeenCalledWith(
+      "nsec1service",
+      "chan-new",
+      "oura:lead:whatsapp",
+    );
+  });
+
+  it("сбой маркировки не оставляет полулида в состоянии", async () => {
+    buzz.setChannelTopic.mockRejectedValueOnce(new Error("relay down"));
+    const r = makeRouter();
+    await expect(
+      r.handleInbound({ chatId: "44", name: "Ольга", text: "алло" }),
+    ).rejects.toThrow("relay down");
+    expect(state.getLead("44")).toBeUndefined();
   });
 });
 
@@ -147,6 +193,7 @@ describe("устойчивость", () => {
       serviceNsec: "nsec1service",
       servicePubkeyHex: "svc".padEnd(64, "0"),
       operatorPubkeys: [],
+      leadSource: "telegram",
     });
     await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
     buzz.getMessages.mockResolvedValue([
@@ -196,6 +243,7 @@ describe("устойчивость", () => {
       serviceNsec: "nsec1service",
       servicePubkeyHex: "svc".padEnd(64, "0"),
       operatorPubkeys: [],
+      leadSource: "telegram",
     });
     buzz.getMessages.mockResolvedValue([
       {
@@ -231,6 +279,7 @@ describe("устойчивость", () => {
       serviceNsec: "nsec1service",
       servicePubkeyHex: "svc".padEnd(64, "0"),
       operatorPubkeys: [],
+      leadSource: "telegram",
     });
     buzz.getMessages.mockResolvedValue([
       {
@@ -275,6 +324,7 @@ describe("устойчивость", () => {
       serviceNsec: "nsec1service",
       servicePubkeyHex: "svc".padEnd(64, "0"),
       operatorPubkeys: [],
+      leadSource: "telegram",
     });
     buzz.getMessages.mockResolvedValue([
       {
@@ -307,6 +357,7 @@ describe("allow-list операторов (I5)", () => {
       serviceNsec: "nsec1service",
       servicePubkeyHex: "svc".padEnd(64, "0"),
       operatorPubkeys: ["operator-pk"],
+      leadSource: "telegram",
     });
     await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
     const lead = state.getLead("42");
@@ -332,6 +383,7 @@ describe("allow-list операторов (I5)", () => {
       serviceNsec: "nsec1service",
       servicePubkeyHex: "svc".padEnd(64, "0"),
       operatorPubkeys: ["operator-pk"],
+      leadSource: "telegram",
     });
     await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
     buzz.getMessages.mockResolvedValue([

@@ -51,6 +51,16 @@ export interface BuzzMessage {
 /** Действия моста в buzz. Реализация — обёртка buzz-cli (Task 2). */
 export interface BuzzApi {
   createChannel(nsec: string, name: string): Promise<string>;
+  /**
+   * Ставит `topic` канала (kind 9002 → relay синтезирует его в kind:39000).
+   * Мост использует это поле как machine-маркер лид-канала: десктоп
+   * фильтрует «Обращения» и прячет их из сайдбара именно по нему.
+   */
+  setChannelTopic(
+    nsec: string,
+    channelId: string,
+    topic: string,
+  ): Promise<void>;
   addMember(nsec: string, channelId: string, pubkeyHex: string): Promise<void>;
   sendMessage(nsec: string, channelId: string, content: string): Promise<void>;
   getMessages(

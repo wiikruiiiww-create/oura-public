@@ -4,11 +4,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useAppNavigation } from "@/app/navigation/useAppNavigation";
 import { useChannelsQuery } from "@/features/channels/hooks";
 import { HomeScreen } from "@/features/home/ui/HomeScreen";
+import { LeadInboxScreen } from "@/features/lead-inbox/ui/LeadInboxScreen";
 import {
   consumePendingWelcomeChannel,
   WELCOME_CHANNEL_READY_EVENT,
 } from "@/features/onboarding/welcome";
 import { useIdentityQuery } from "@/shared/api/hooks";
+import { useFeatureEnabled } from "@/shared/features";
 
 type HomeRouteSearch = {
   item?: string;
@@ -45,6 +47,7 @@ export const Route = createFileRoute("/")({
 
 function HomeRouteComponent() {
   const { goChannel } = useAppNavigation();
+  const leadInboxEnabled = useFeatureEnabled("oura-lead-inbox");
   const channelsQuery = useChannelsQuery();
   const identityQuery = useIdentityQuery();
   const channels = channelsQuery.data ?? [];
@@ -89,6 +92,19 @@ function HomeRouteComponent() {
   React.useEffect(() => {
     openPendingWelcomeChannel(availableChannelIds);
   }, [availableChannelIds, openPendingWelcomeChannel]);
+
+  // Р7: маршрут index — это «Обращения». Старый Inbox упоминаний остаётся
+  // смонтированным (будущая вкладка «Упоминания») и включается выключением
+  // preview-фичи в Настройках → Experiments.
+  if (leadInboxEnabled) {
+    return (
+      <LeadInboxScreen
+        onOpenChannel={(channelId) => {
+          void goChannel(channelId);
+        }}
+      />
+    );
+  }
 
   return (
     <HomeScreen

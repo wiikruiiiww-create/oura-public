@@ -41,7 +41,18 @@ export type ChannelMember = {
   joinedAt: string;
   displayName: string | null;
 };
-
+/**
+ * Последнее сообщение комнаты для карточки списка. Отдаётся батчем Tauri-командой
+ * `get_channel_previews` (`desktop/src-tauri/src/commands/channel_previews.rs`).
+ */
+export type ChannelPreview = {
+  channelId: string;
+  eventId: string;
+  pubkey: string;
+  content: string;
+  createdAt: number;
+  authorCount: number;
+};
 export type CreateChannelInput = {
   name: string;
   channelType: Exclude<ChannelType, "dm">;

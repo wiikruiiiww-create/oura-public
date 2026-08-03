@@ -17,6 +17,7 @@
 | `OURA_SOURCE` | `stub` | Источник внешнего канала: `stub` (HTTP-заглушка) или `telegram` (реальный бот) |
 | `OURA_TELEGRAM_TOKEN` | (обязателен при `OURA_SOURCE=telegram`) | Токен бота от @BotFather |
 | `OURA_OPERATOR_PUBKEYS` | (пусто) | Hex-pubkey операторов через запятую: добавляются в каналы лидов, ТОЛЬКО их ответы уходят клиенту. Пусто = любой участник (допустимо только на дев-стенде). Старое имя `OURA_OPERATOR_PUBKEY` читается как алиас |
+| `OURA_LEAD_SOURCE` | `telegram` | Источник внешнего канала в маркере лид-канала (`topic` = `oura:lead:<source>`). Десктоп по нему рисует подпись «Telegram» на карточке «Обращений» |
 
 ## Stand-запуск
 
@@ -89,6 +90,14 @@ curl -X GET http://127.0.0.1:8787/outbox
 
 Ожидаемый результат: JSON с массивом исходящих сообщений.
 
+## Как десктоп находит комнаты лидов
+
+Сразу после `channels create` мост ставит каналу `topic` = `oura:lead:<source>`
+(`buzz channels topic --channel <id> --topic <marker>`). Это machine-маркер, а не
+человеческий текст: десктоп по префиксу `oura:lead` собирает экран «Обращения»
+и прячет эти каналы из сайдбара. Канал создаётся с `--visibility private`, чтобы
+он не всплывал в community-wide поиске и «Browse channels».
+
 ## Реальный Telegram
 
 1. Создай бота у @BotFather (`/newbot`), получи токен.
@@ -121,3 +130,12 @@ curl -X GET http://127.0.0.1:8787/outbox
 - `buzz-admin migrate` НЕ читает `.env` — нужен явный `DATABASE_URL=postgres://buzz:buzz_dev@localhost:5434/buzz ./target/debug/buzz-admin migrate`.
 - Relay требует MinIO (`docker compose up -d minio minio-init`) — без него падает на git conformance probe.
 - Ключи стенда лежат в `services/oura-bridge/.env` (гитигнорен).
+
+### Смоук фичи «Обращения» (2026-08-02)
+
+Стенд: relay dev-сборка :3000, postgres :5434, redis, minio; мост в stub-режиме из ветки `feat/oura-lead-inbox`, `OURA_OPERATOR_PUBKEYS` = оператор стенда + десктоп-идентичность владельца.
+
+1. `POST /simulate` `{"chatId":"9001","name":"Смоук Иван",...}` → канал `inbox-смоук-иван-9001`; в БД relay: `visibility = private`, `topic = oura:lead:telegram` (маркер ставится мостом сразу после создания). Участники: сервис (owner), лид, оба оператора.
+2. Ответ оператора через CLI (`messages send`) второму лиду (9002) → в течение одного поллинга ровно одна запись в `GET /outbox`, повторные поллинги дублей не дают (per-lead дедуп).
+3. «Закрытие обращения» = `channels archive` → `archived_at` проставлен; канал 9001 не задет.
+4. Визуальная часть (сайдбар без лид-каналов, карточка с бейджем «новый» на «/», клик открывает комнату, ответ снимает бейдж) — проверяется в десктопе из этой же ветки (`pnpm -C desktop tauri dev`).
