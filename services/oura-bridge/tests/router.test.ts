@@ -371,6 +371,50 @@ describe("allow-list операторов (I5)", () => {
   });
 });
 
+describe("NIP-43 регистрация лид-ключей (этап 2Б)", () => {
+  it("при онбординге ключ лида регистрируется ДО первой отправки от его имени", async () => {
+    const order: string[] = [];
+    const register = vi.fn(async (_pk: string) => void order.push("register"));
+    buzz.sendMessage.mockImplementation(async () => void order.push("send"));
+    const r = new Router({
+      buzz: buzz as unknown as BuzzApi,
+      state,
+      sink: { deliver: async (m) => void delivered.push(m) },
+      serviceNsec: "nsec1service",
+      servicePubkeyHex: "svc".padEnd(64, "0"),
+      operatorPubkeys: [],
+      registerLeadMembership: register,
+    });
+    await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
+    const lead = state.getLead("42");
+    expect(register).toHaveBeenCalledWith(lead?.pubkeyHex);
+    expect(order[0]).toBe("register");
+  });
+
+  it("сбой регистрации валит онбординг; следующее входящее повторяет попытку", async () => {
+    const register = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("relay недоступен"))
+      .mockResolvedValue(undefined);
+    const r = new Router({
+      buzz: buzz as unknown as BuzzApi,
+      state,
+      sink: { deliver: async (m) => void delivered.push(m) },
+      serviceNsec: "nsec1service",
+      servicePubkeyHex: "svc".padEnd(64, "0"),
+      operatorPubkeys: [],
+      registerLeadMembership: register,
+    });
+    await expect(
+      r.handleInbound({ chatId: "42", name: "Иван", text: "раз" }),
+    ).rejects.toThrow("relay недоступен");
+    expect(state.getLead("42")).toBeUndefined();
+    await r.handleInbound({ chatId: "42", name: "Иван", text: "два" });
+    expect(state.getLead("42")).toBeDefined();
+    expect(register).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe("архивация лидов (B5)", () => {
   const DAY_MS = 24 * 60 * 60 * 1000;
   let clock: number;

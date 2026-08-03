@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { BuzzCli } from "./buzz/cli-client.js";
 import { parseOperatorPubkeys } from "./identity.js";
 import { acquireLock } from "./lock.js";
+import { registerRelayMember } from "./buzz/nip43.js";
 import { Router } from "./router.js";
 import { decideStartup } from "./startup.js";
 import { StateStore } from "./state.js";
@@ -79,6 +80,34 @@ async function main(): Promise<void> {
     channel = stub;
   }
 
+  // NIP-43 (этап 2Б): регистрация лид-ключей участниками relay — обязательна
+  // перед включением BUZZ_REQUIRE_RELAY_MEMBERSHIP=true; сервисный ключ должен
+  // быть admin/owner relay
+  const registerMembership = env("OURA_REGISTER_LEAD_MEMBERSHIP") === "true";
+  const registerLeadMembership = registerMembership
+    ? (leadPubkeyHex: string): Promise<void> =>
+        registerRelayMember({ relayUrl, serviceNsec, leadPubkeyHex })
+    : undefined;
+  if (registerMembership) {
+    // лиды, онбордившиеся до включения флага, регистрируются на старте;
+    // сбой не роняет мост — поллинг переживает недоступность relay, а
+    // незарегистрированный лид виден по этому warn до следующего рестарта
+    for (const lead of state.activeLeads(Date.now(), leadActiveWindowMs)) {
+      try {
+        await registerRelayMember({
+          relayUrl,
+          serviceNsec,
+          leadPubkeyHex: lead.pubkeyHex,
+        });
+      } catch (e) {
+        console.warn(
+          `[oura-bridge] стартовая NIP-43-регистрация лида ${lead.chatId} не удалась:`,
+          e,
+        );
+      }
+    }
+  }
+
   const router = new Router({
     buzz,
     state,
@@ -87,6 +116,7 @@ async function main(): Promise<void> {
     servicePubkeyHex,
     operatorPubkeys,
     leadActiveWindowMs,
+    registerLeadMembership,
   });
 
   await channel.start(async (m) => {

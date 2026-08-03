@@ -15,6 +15,12 @@ export interface RouterDeps {
   leadActiveWindowMs?: number;
   /** источник времени — подменяется в тестах */
   now?: () => number;
+  /**
+   * NIP-43 (этап 2Б): регистрация лид-ключа участником relay при онбординге,
+   * ДО первого события от имени лида. Не задано = регистрация выключена
+   * (relay без membership-гейта).
+   */
+  registerLeadMembership?: (leadPubkeyHex: string) => Promise<void>;
 }
 
 const DEFAULT_LEAD_ACTIVE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
@@ -68,6 +74,11 @@ export class Router {
   private async onboardLead(m: InboundMessage): Promise<LeadRecord> {
     const { buzz, state, serviceNsec, operatorPubkeys } = this.deps;
     const id = mintIdentity();
+    // сбой регистрации валит онбординг целиком — лид не сохраняется,
+    // следующее его сообщение повторит попытку с нуля
+    if (this.deps.registerLeadMembership) {
+      await this.deps.registerLeadMembership(id.pubkeyHex);
+    }
     const channelId = await buzz.createChannel(serviceNsec, channelName(m));
     await buzz.addMember(serviceNsec, channelId, id.pubkeyHex);
     for (const pk of operatorPubkeys) {
