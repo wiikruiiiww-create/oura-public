@@ -234,7 +234,7 @@ test("repeats mismatch feedback without signing", async ({ page }) => {
 
   await pasteCode(first, "654321");
   await expect(page.getByRole("alert")).toHaveText(
-    "That code doesn't match. Check the code and try again.",
+    "Код не подходит. Проверьте код и повторите попытку.",
   );
   await expect(continueButton).toBeDisabled();
   await expect.poll(() => shakeCount(page)).toBe(1);
@@ -265,7 +265,7 @@ test("rejects an expired request without signing", async ({ page }) => {
 
   await expect(
     page.getByText(
-      "This binding link has expired. Request a new one from the requesting app.",
+      "Срок действия ссылки для привязки истёк. Запросите новую в приложении, отправившем запрос.",
     ),
   ).toBeVisible();
   await pasteCode(
@@ -279,7 +279,7 @@ test("rejects an expired request without signing", async ({ page }) => {
 test("cancels a request without signing", async ({ page }) => {
   await openNostrBind(page);
 
-  await page.getByRole("button", { name: "Cancel" }).click();
+  await page.getByRole("button", { name: "Отмена" }).click();
   await expect(page.getByTestId("nostr-bind-page")).toBeHidden();
   await expect.poll(() => signCommandPayloads(page)).toEqual([]);
 });
@@ -313,7 +313,7 @@ test("signs a valid request, shows the response, and copies it", async ({
   await page.getByTestId("nostr-bind-copy-response").click();
   await expect(
     page.getByTestId("nostr-bind-copy-response"),
-  ).toHaveAccessibleName("Copied");
+  ).toHaveAccessibleName("Скопировано");
   await expect
     .poll(() =>
       page.evaluate(
@@ -328,7 +328,7 @@ test("signs a valid request, shows the response, and copies it", async ({
     .toBe(signedResponse);
   await expect.poll(() => signCommandPayloads(page)).toHaveLength(1);
 
-  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Продолжить" }).click();
   await expect(page.getByTestId("nostr-bind-page")).toBeHidden();
 });
 
@@ -364,7 +364,7 @@ test("returns a signed response in the callback fragment after consent", async (
   await expect(page.getByTestId("nostr-bind-finish-step")).toBeVisible();
 
   await expect(
-    page.getByRole("heading", { name: "Continue in your browser" }),
+    page.getByRole("heading", { name: "Продолжите в браузере" }),
   ).toBeVisible();
   const manualFallback = page.getByTestId("nostr-bind-manual-fallback");
   await expect(manualFallback).not.toHaveAttribute("open", "");
@@ -434,7 +434,7 @@ test("opens the manual fallback when returning to the browser fails", async ({
 
   await expect(
     page.getByText(
-      "Could not open the browser. Copy the response below to finish manually.",
+      "Не удалось открыть браузер. Скопируйте ответ ниже, чтобы завершить процесс вручную.",
     ),
   ).toBeVisible();
   await expect(page.getByTestId("nostr-bind-manual-fallback")).toHaveAttribute(
@@ -459,12 +459,14 @@ test("keeps the signed response available when clipboard access fails", async ({
   await expect(
     page
       .getByTestId("nostr-bind-manual-fallback-content")
-      .getByText("Buzz couldn't access the clipboard. Try again."),
+      .getByText(
+        "OURA не удалось получить доступ к буферу обмена. Повторите попытку.",
+      ),
   ).toBeVisible();
   await expect(page.getByTestId("nostr-bind-signed-response")).toContainText(
     "e2e-signed-nostr-binding",
   );
   await expect(
     page.getByTestId("nostr-bind-copy-response"),
-  ).toHaveAccessibleName("Copy response");
+  ).toHaveAccessibleName("Копировать ответ");
 });

@@ -95,7 +95,7 @@ export function HostedCommunitiesSettingsCard() {
         errorMessage(
           identityResponse.error,
           identityResponse.correlation_id,
-          "Could not load the connected Buzz identity.",
+          "Не удалось загрузить подключённую идентичность OURA.",
         ),
       );
     }
@@ -104,7 +104,7 @@ export function HostedCommunitiesSettingsCard() {
         errorMessage(
           communitiesResponse.error,
           communitiesResponse.correlation_id,
-          "Could not load communities.",
+          "Не удалось загрузить сообщества.",
         ),
       );
     }
@@ -148,14 +148,14 @@ export function HostedCommunitiesSettingsCard() {
   };
 
   const signIn = () =>
-    run("Signing in…", async () => {
+    run("Выполняется вход…", async () => {
       const nextAuth = await invoke<BuilderlabAuth>("start_builderlab_login");
       setAuth(nextAuth);
       await loadAccount();
     });
 
   const signOut = () =>
-    run("Signing out…", async () => {
+    run("Выполняется выход…", async () => {
       await invoke("clear_builderlab_auth");
       setAuth(null);
       setIdentity(null);
@@ -165,7 +165,7 @@ export function HostedCommunitiesSettingsCard() {
     });
 
   const connectIdentity = () =>
-    run("Connecting Buzz identity…", async () => {
+    run("Подключение идентичности OURA…", async () => {
       const response = await invoke<IdentityResponse>(
         "bind_builderlab_nostr_identity",
       );
@@ -174,7 +174,7 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             response.error,
             response.correlation_id,
-            "Could not connect the Buzz identity.",
+            "Не удалось подключить идентичность OURA.",
           ),
         );
       }
@@ -183,7 +183,7 @@ export function HostedCommunitiesSettingsCard() {
     });
 
   const unpairIdentity = () =>
-    run("Unpairing identity…", async () => {
+    run("Отключение идентичности…", async () => {
       const response = await invoke<IdentityResponse>(
         "delete_builderlab_nostr_identity",
       );
@@ -192,7 +192,7 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             response.error,
             response.correlation_id,
-            "Could not unpair the Buzz identity.",
+            "Не удалось отключить идентичность OURA.",
           ),
         );
       }
@@ -216,7 +216,7 @@ export function HostedCommunitiesSettingsCard() {
   const localNpub = localPubkey ? safeNpub(localPubkey) : null;
 
   const switchToDeviceIdentity = () =>
-    run("Switching identity…", async () => {
+    run("Смена идентичности…", async () => {
       // The account is bound to a different npub, so re-binding directly returns
       // identity_already_bound. Release the current binding first, then bind
       // this device's key. If the local key is reserved by another Builderlab
@@ -230,7 +230,7 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             released.error,
             released.correlation_id,
-            "Could not release the previously connected Buzz identity.",
+            "Не удалось освободить ранее подключённую идентичность OURA.",
           ),
         );
       }
@@ -243,11 +243,11 @@ export function HostedCommunitiesSettingsCard() {
         await loadAccount();
         throw new Error(
           bound.error.code === "pubkey_already_bound"
-            ? "This device's Buzz identity is already reserved by another Builderlab account, so it can't be connected here. Sign in with that account, or transfer the identity there first."
+            ? "Идентичность OURA этого устройства уже закреплена за другой учётной записью Builderlab, поэтому подключить её здесь нельзя. Войдите в ту учётную запись или сначала перенесите идентичность туда."
             : errorMessage(
                 bound.error,
                 bound.correlation_id,
-                "Could not connect this device's Buzz identity.",
+                "Не удалось подключить идентичность OURA этого устройства.",
               ),
         );
       }
@@ -257,7 +257,7 @@ export function HostedCommunitiesSettingsCard() {
 
   const archiveCommunity = (community: HostedCommunity) => {
     if (!community.id) return Promise.resolve(false);
-    return run("Archiving community…", async () => {
+    return run("Архивирование сообщества…", async () => {
       const response = await invoke<CommunityMutationResponse>(
         "archive_builderlab_community",
         { communityId: community.id },
@@ -269,7 +269,7 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             response.error,
             response.correlation_id,
-            "Could not archive the community.",
+            "Не удалось заархивировать сообщество.",
           ),
         );
       }
@@ -279,7 +279,7 @@ export function HostedCommunitiesSettingsCard() {
 
   const unarchiveCommunity = (community: HostedCommunity) => {
     if (!community.id) return Promise.resolve(false);
-    return run("Unarchiving community…", async () => {
+    return run("Разархивирование сообщества…", async () => {
       const response = await invoke<CommunityMutationResponse>(
         "unarchive_builderlab_community",
         { communityId: community.id },
@@ -289,7 +289,7 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             response.error,
             response.correlation_id,
-            "Could not unarchive the community.",
+            "Не удалось разархивировать сообщество.",
           ),
         );
       }
@@ -298,7 +298,7 @@ export function HostedCommunitiesSettingsCard() {
   };
 
   const transferCommunity = (community: HostedCommunity, npub: string) =>
-    run("Transferring ownership…", async () => {
+    run("Передача владения…", async () => {
       const response = await invoke<CommunityMutationResponse>(
         "transfer_builderlab_community",
         { communityId: community.id, transfereeNpub: npub },
@@ -308,7 +308,7 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             response.error,
             response.correlation_id,
-            "Could not transfer ownership.",
+            "Не удалось передать владение.",
           ),
         );
       }
@@ -363,7 +363,7 @@ export function HostedCommunitiesSettingsCard() {
       communities.length >= MAX_COMMUNITIES
     )
       return;
-    void run("Creating community…", async () => {
+    void run("Создание сообщества…", async () => {
       const availabilityResponse = await invoke<AvailabilityResponse>(
         "check_builderlab_community_name",
         { name: normalizedName },
@@ -374,7 +374,7 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             availabilityResponse.error,
             availabilityResponse.correlation_id,
-            "That Buzz address is already taken.",
+            "Этот адрес OURA уже занят.",
           ),
         );
       }
@@ -387,13 +387,12 @@ export function HostedCommunitiesSettingsCard() {
           errorMessage(
             response.error,
             response.correlation_id,
-            "Could not create the community.",
+            "Не удалось создать сообщество.",
           ),
         );
       }
       const url = relayUrl(response.community);
-      if (!url)
-        throw new Error("The new community did not return a relay address.");
+      if (!url) throw new Error("Новое сообщество не вернуло адрес релея.");
       setName("");
       setAvailability(null);
       await loadAccount();
@@ -405,7 +404,7 @@ export function HostedCommunitiesSettingsCard() {
         })
       ) {
         throw new Error(
-          "Another community is already being connected. Finish it before connecting this one.",
+          "Уже выполняется подключение другого сообщества. Завершите его, прежде чем подключать это.",
         );
       }
     });
@@ -417,8 +416,8 @@ export function HostedCommunitiesSettingsCard() {
   return (
     <section className="space-y-6" data-testid="hosted-communities-settings">
       <SettingsSectionHeader
-        title="Hosted communities"
-        description="Buzz works with any relay. This page is only for relay hosting provided by Block — sign in with a Builderlab account to create and manage Block-hosted communities. Builderlab sign-in is used on this page alone."
+        title="Хостинг сообществ"
+        description="OURA работает с любым релеем. Эта страница предназначена только для хостинга релея от Block — войдите с учётной записью Builderlab, чтобы создавать сообщества, размещённые Block, и управлять ими. Вход через Builderlab используется только на этой странице."
       />
 
       {error ? (
@@ -430,14 +429,16 @@ export function HostedCommunitiesSettingsCard() {
 
       {loading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <LoaderCircle className="h-4 w-4 animate-spin" /> Checking sign-in…
+          <LoaderCircle className="h-4 w-4 animate-spin" /> Проверка входа…
         </div>
       ) : !auth ? (
         <div className="rounded-xl border border-border/70 p-5">
-          <h3 className="font-medium">Sign in to manage hosted communities</h3>
+          <h3 className="font-medium">
+            Войдите, чтобы управлять хостингом сообществ
+          </h3>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Authentication opens in your browser and returns securely to Buzz.
-            You can use every other part of the app without signing in.
+            Авторизация откроется в браузере и безопасно вернёт вас в OURA.
+            Остальными разделами приложения можно пользоваться без входа.
           </p>
           <Button
             className="mt-4"
@@ -449,7 +450,7 @@ export function HostedCommunitiesSettingsCard() {
             ) : (
               <ExternalLink className="h-4 w-4" />
             )}
-            {action ?? "Sign in with Builderlab"}
+            {action ?? "Войти через Builderlab"}
           </Button>
         </div>
       ) : (
@@ -457,7 +458,7 @@ export function HostedCommunitiesSettingsCard() {
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 p-4">
             <div>
               <p className="text-sm font-medium">
-                {auth.name || auth.email || "Builderlab account"}
+                {auth.name || auth.email || "Учётная запись Builderlab"}
               </p>
               {auth.name && auth.email ? (
                 <p className="text-xs text-muted-foreground">{auth.email}</p>
@@ -469,20 +470,20 @@ export function HostedCommunitiesSettingsCard() {
               disabled={busy}
               onClick={() => void signOut()}
             >
-              <LogOut className="h-4 w-4" /> Sign out
+              <LogOut className="h-4 w-4" /> Выйти
             </Button>
           </div>
 
           {!identity ? (
             <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-5">
               <h3 className="font-medium">
-                Link this account to your Buzz identity
+                Свяжите эту учётную запись с идентичностью OURA
               </h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                This Builderlab account isn&apos;t linked to a Buzz identity
-                yet. Connect this device&apos;s key to create and own
-                communities under it — Buzz signs a one-time challenge locally,
-                so your private key never leaves Desktop.
+                Эта учётная запись Builderlab пока не связана с идентичностью
+                OURA. Подключите ключ этого устройства, чтобы создавать
+                сообщества и владеть ими — OURA подписывает одноразовый запрос
+                локально, поэтому приватный ключ никогда не покидает Desktop.
               </p>
               <Button
                 className="mt-4"
@@ -492,7 +493,7 @@ export function HostedCommunitiesSettingsCard() {
                 {action ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
                 ) : null}
-                {action ?? "Connect Buzz identity"}
+                {action ?? "Подключить идентичность OURA"}
               </Button>
             </div>
           ) : identityMismatch ? (
@@ -501,23 +502,26 @@ export function HostedCommunitiesSettingsCard() {
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
                 <div>
                   <h3 className="font-medium">
-                    This account is connected to a different Buzz identity
+                    Эта учётная запись подключена к другой идентичности OURA
                   </h3>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Your Builderlab account owns communities under another Buzz
-                    key, so connecting them here would join a relay this device
-                    isn&apos;t a member of. Creating and connecting are paused
-                    until the identities match.
+                    Ваша учётная запись Builderlab владеет сообществами под
+                    другим ключом OURA, поэтому подключение здесь означало бы
+                    вход в релей, участником которого это устройство не
+                    является. Создание и подключение приостановлены, пока
+                    идентичности не совпадут.
                   </p>
                   <dl className="mt-3 space-y-1 text-xs">
                     <div className="flex flex-wrap gap-x-2">
-                      <dt className="text-muted-foreground">Account uses</dt>
+                      <dt className="text-muted-foreground">
+                        Учётная запись использует
+                      </dt>
                       <dd className="font-mono">
                         {identity.npub ?? boundPubkey}
                       </dd>
                     </div>
                     <div className="flex flex-wrap gap-x-2">
-                      <dt className="text-muted-foreground">This device</dt>
+                      <dt className="text-muted-foreground">Это устройство</dt>
                       <dd className="font-mono">{localNpub ?? localPubkey}</dd>
                     </div>
                   </dl>
@@ -531,14 +535,14 @@ export function HostedCommunitiesSettingsCard() {
                 {action ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
                 ) : null}
-                {action ?? "Switch to this device's identity"}
+                {action ?? "Переключиться на идентичность этого устройства"}
               </Button>
             </div>
           ) : (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 p-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Buzz
-                identity connected
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />{" "}
+                Идентичность OURA подключена
                 {identity.npub ? (
                   <span className="font-mono text-xs">{identity.npub}</span>
                 ) : null}
@@ -553,23 +557,23 @@ export function HostedCommunitiesSettingsCard() {
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
               <h3 className="font-medium">
-                Your communities
+                Ваши сообщества
                 <span className="ml-2 text-xs font-normal text-muted-foreground">
-                  {communities.length} of {MAX_COMMUNITIES} used
+                  {communities.length} из {MAX_COMMUNITIES} использовано
                 </span>
               </h3>
               <Button
                 variant="ghost"
                 size="sm"
                 disabled={busy}
-                onClick={() => void run("Refreshing…", loadAccount)}
+                onClick={() => void run("Обновление…", loadAccount)}
               >
-                <RefreshCw className="h-4 w-4" /> Refresh
+                <RefreshCw className="h-4 w-4" /> Обновить
               </Button>
             </div>
             {communities.length === 0 ? (
               <p className="rounded-xl border border-dashed p-5 text-sm text-muted-foreground">
-                No hosted communities yet.
+                Пока нет сообществ на хостинге.
               </p>
             ) : (
               <ul className="space-y-2">
@@ -612,21 +616,22 @@ export function HostedCommunitiesSettingsCard() {
             onSubmit={createCommunity}
           >
             <div>
-              <h3 className="font-medium">Create a community</h3>
+              <h3 className="font-medium">Создать сообщество</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Choose the address your team will use to connect.
+                Выберите адрес, который ваша команда будет использовать для
+                подключения.
               </p>
             </div>
             {atCommunityLimit ? (
               <p className="text-sm text-muted-foreground">
-                You&apos;ve reached the limit of {MAX_COMMUNITIES} hosted
-                communities. Transfer one to free up a slot before creating
-                another.
+                Вы достигли лимита в {MAX_COMMUNITIES} сообществ на хостинге.
+                Передайте одно из них, чтобы освободить место, прежде чем
+                создавать новое.
               </p>
             ) : null}
             <div className="flex max-w-xl items-center gap-2">
               <Input
-                aria-label="Community address"
+                aria-label="Адрес сообщества"
                 autoComplete="off"
                 disabled={
                   !identity || identityMismatch || busy || atCommunityLimit
@@ -646,20 +651,16 @@ export function HostedCommunitiesSettingsCard() {
             </div>
             {name && !validName ? (
               <p className="text-sm text-destructive">
-                Use lowercase letters, numbers, and single hyphens.
+                Используйте строчные буквы, цифры и одиночные дефисы.
               </p>
             ) : validName && checkingName ? (
               <p className="text-sm text-muted-foreground">
-                Checking availability…
+                Проверка доступности…
               </p>
             ) : availability === false ? (
-              <p className="text-sm text-destructive">
-                That address is already taken.
-              </p>
+              <p className="text-sm text-destructive">Этот адрес уже занят.</p>
             ) : availability === true ? (
-              <p className="text-sm text-emerald-600">
-                That address is available.
-              </p>
+              <p className="text-sm text-emerald-600">Этот адрес свободен.</p>
             ) : null}
             <Button
               disabled={
@@ -676,7 +677,7 @@ export function HostedCommunitiesSettingsCard() {
               {action ? (
                 <LoaderCircle className="h-4 w-4 animate-spin" />
               ) : null}
-              {action ?? "Create and connect"}
+              {action ?? "Создать и подключить"}
             </Button>
           </form>
         </>
@@ -702,24 +703,24 @@ function UnpairIdentityButton({
         disabled={busy}
         onClick={() => setOpen(true)}
       >
-        <Unlink className="h-4 w-4" /> Unpair identity
+        <Unlink className="h-4 w-4" /> Отключить идентичность
       </Button>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Unpair this Buzz identity?</AlertDialogTitle>
+          <AlertDialogTitle>Отключить эту идентичность OURA?</AlertDialogTitle>
           <AlertDialogDescription>
-            Your Builderlab account will no longer be connected to this Buzz
-            key. You can reconnect any key later, but community actions stay
-            unavailable until you do.
+            Ваша учётная запись Builderlab больше не будет связана с этим ключом
+            OURA. Вы можете подключить любой ключ позже, но действия с
+            сообществами будут недоступны, пока вы этого не сделаете.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Отмена</AlertDialogCancel>
           <AlertDialogAction
             className={buttonVariants({ variant: "destructive" })}
             onClick={onConfirm}
           >
-            Unpair identity
+            Отключить идентичность
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -751,7 +752,8 @@ function CommunityRow({
   const [transferOpen, setTransferOpen] = React.useState(false);
   const url = relayUrl(community);
   const archived = Boolean(community.archived_at);
-  const displayName = community.name ?? community.slug ?? "Hosted community";
+  const displayName =
+    community.name ?? community.slug ?? "Сообщество на хостинге";
 
   return (
     <li
@@ -766,7 +768,7 @@ function CommunityRow({
           <p className="truncate text-sm font-medium">{displayName}</p>
           <p className="truncate text-xs text-muted-foreground">
             {community.normalized_host}
-            {archived ? " · Archived" : ""}
+            {archived ? " · В архиве" : ""}
           </p>
         </div>
       </div>
@@ -779,7 +781,7 @@ function CommunityRow({
             disabled={busy || !community.id}
             onClick={() => setConfirmUnarchive(true)}
           >
-            <ArchiveRestore className="h-4 w-4" /> Unarchive
+            <ArchiveRestore className="h-4 w-4" /> Разархивировать
           </Button>
           <AlertDialog
             open={confirmUnarchive}
@@ -787,16 +789,19 @@ function CommunityRow({
           >
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Unarchive {displayName}?</AlertDialogTitle>
+                <AlertDialogTitle>
+                  Разархивировать {displayName}?
+                </AlertDialogTitle>
                 <AlertDialogDescription>
-                  This address becomes connectable again. Connections that
-                  closed during archival will not reconnect automatically.
+                  Этот адрес снова станет доступен для подключения. Соединения,
+                  закрытые во время архивирования, не восстановятся
+                  автоматически.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>Отмена</AlertDialogCancel>
                 <AlertDialogAction onClick={onUnarchive}>
-                  Unarchive
+                  Разархивировать
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -811,7 +816,7 @@ function CommunityRow({
               disabled={busy}
               onClick={onConnect}
             >
-              Connect
+              Подключить
             </Button>
           ) : null}
           <Button
@@ -820,7 +825,7 @@ function CommunityRow({
             disabled={busy || !community.id}
             onClick={() => setTransferOpen(true)}
           >
-            <ArrowLeftRight className="h-4 w-4" /> Transfer
+            <ArrowLeftRight className="h-4 w-4" /> Передать
           </Button>
           <Button
             variant="ghost"
@@ -829,27 +834,27 @@ function CommunityRow({
             disabled={busy || !community.id}
             onClick={() => setConfirmArchive(true)}
           >
-            <Archive className="h-4 w-4" /> Archive
+            <Archive className="h-4 w-4" /> Архивировать
           </Button>
 
           <AlertDialog open={confirmArchive} onOpenChange={setConfirmArchive}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Archive {displayName}?</AlertDialogTitle>
+                <AlertDialogTitle>Архивировать {displayName}?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  New and existing connections stop and the address stays
-                  reserved. Archiving can&apos;t be undone from here without
-                  unarchiving, and the community keeps counting toward your
-                  quota — it isn&apos;t deleted.
+                  Новые и существующие подключения будут остановлены, а адрес
+                  останется зарезервированным. Архивирование нельзя отменить
+                  отсюда без разархивирования, и сообщество продолжит
+                  учитываться в вашей квоте — оно не удаляется.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>Отмена</AlertDialogCancel>
                 <AlertDialogAction
                   className={buttonVariants({ variant: "destructive" })}
                   onClick={onArchive}
                 >
-                  Archive
+                  Архивировать
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -898,16 +903,16 @@ function TransferOwnershipDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Transfer ownership</DialogTitle>
+          <DialogTitle>Передача владения</DialogTitle>
           <DialogDescription>
-            Transfer {communityName} to another person. You become a regular
-            member. The recipient needs a connected Buzz identity first, and
-            this can&apos;t be undone.
+            Передайте {communityName} другому человеку. Вы станете обычным
+            участником. У получателя должна быть подключена идентичность OURA, и
+            это действие нельзя отменить.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
           <Input
-            aria-label="Recipient npub"
+            aria-label="Npub получателя"
             autoComplete="off"
             className="font-mono text-sm"
             placeholder="npub1…"
@@ -917,13 +922,13 @@ function TransferOwnershipDialog({
           />
           {npub.length > 0 && !npubIsValid ? (
             <p className="text-sm text-destructive">
-              Enter a valid npub that starts with npub1.
+              Введите действительный npub, начинающийся с npub1.
             </p>
           ) : null}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Отмена
           </Button>
           <Button
             variant="destructive"
@@ -931,7 +936,7 @@ function TransferOwnershipDialog({
             onClick={() => void submit()}
           >
             {busy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
-            Transfer ownership
+            Передать владение
           </Button>
         </DialogFooter>
       </DialogContent>

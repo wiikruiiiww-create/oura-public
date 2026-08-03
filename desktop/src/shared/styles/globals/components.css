@@ -175,44 +175,12 @@
     min-height: 0;
   }
 
-  .buzz-onboarding-neutral-theme.buzz-startup-shell {
-    /* Dot grid over the chartreuse→light-blue gradient (dots layer first so
-       they sit on top). The welcome page overrides this with dots over a flat
-       chartreuse fill below. */
-    background-image:
-      radial-gradient(circle, rgb(0 0 0 / 0.08) 1px, transparent 1px),
-      linear-gradient(
-        to bottom,
-        var(--buzz-welcome-chartreuse),
-        var(--buzz-onboarding-shell-bottom)
-      );
-    background-size:
-      24px 24px,
-      auto;
-  }
-
-  .buzz-onboarding-neutral-theme.buzz-startup-shell.buzz-onboarding-welcome {
-    background-color: var(--buzz-welcome-chartreuse);
-    /* Landing is a flat chartreuse field, so the docked-footer scrim must match
-       it (not the gradient's light-blue bottom) to stay invisible. */
-    --buzz-onboarding-shell-bottom: var(--buzz-welcome-chartreuse);
-    /* Subtle dot grid: 2px dots spaced on a 24px lattice. */
-    background-image: radial-gradient(
-      circle,
-      rgb(0 0 0 / 0.08) 1px,
-      transparent 1px
-    );
-    background-size: 24px 24px;
-  }
-
   .buzz-onboarding-neutral-theme {
     /* Landing "chartreuse" — the welcome background; reused for the CTA label. */
     --buzz-welcome-chartreuse: #d7d72e;
     /* Bottom stop of the onboarding shell gradient; also the docked-footer
        scrim color so content scrolling under the CTA fades into the page. */
     --buzz-onboarding-shell-bottom: #d7e7f6;
-    /* Label color for the primary onboarding CTA (light blue on the dark pill). */
-    --buzz-onboarding-cta-label: #d7e6f0;
     /* Olive ink for the backup step's private key and its "never share" caption,
        reading against the fuzzy-white key frame. */
     --buzz-onboarding-backup-ink: #717106;
@@ -239,6 +207,60 @@
     --buzz-onboarding-avatar-action-fg: 240 240 205;
     --buzz-onboarding-avatar-control-fg: 113 113 6;
     --buzz-onboarding-avatar-dialog-shadow: 0 0 0;
+  }
+
+  /*
+   * OURA: первый запуск (welcome + шаги машинного онбординга) — брендово
+   * тёмный независимо от темы приложения: сливовый фон, розовый primary.
+   * Не-shell поверхности neutral-theme (диалоги в приложении, hosted-flow
+   * с data-system-color-scheme) сохраняют палитры выше.
+   */
+  .buzz-onboarding-neutral-theme.buzz-startup-shell {
+    /* Розовый акцент OURA для бейджей и рамок шагов (историческое имя). */
+    --buzz-welcome-chartreuse: #f5bde6;
+    --buzz-onboarding-shell-bottom: var(--buzz-gradient-dark-bottom);
+    /* Сливовый градиент — те же стопы, что обои тёмной темы приложения,
+       чтобы онбординг и рабочие экраны были одним визуальным миром. */
+    background-image: linear-gradient(
+      to bottom,
+      var(--buzz-gradient-dark-top),
+      var(--buzz-gradient-dark-bottom)
+    );
+    --background: 269 51% 8%;
+    --foreground: 316 30% 96%;
+    --primary: 316 73.68% 85.1%;
+    --primary-foreground: 269 51% 12%;
+    --secondary: 269 30% 16%;
+    --secondary-foreground: 316 30% 96%;
+    --muted: 269 30% 16%;
+    --muted-foreground: 316 12% 70%;
+    --accent: 269 30% 16%;
+    --accent-foreground: 316 30% 96%;
+    --border: 269 25% 24%;
+    --input: 269 25% 24%;
+    --ring: 316 73.68% 85.1%;
+    --buzz-onboarding-emoji-picker-background: 38, 38, 38;
+    --buzz-onboarding-emoji-picker-color: 250, 250, 250;
+    --buzz-onboarding-emoji-picker-input: 10, 10, 10;
+    --buzz-onboarding-avatar-dialog-bg: 24 24 20;
+    --buzz-onboarding-avatar-accent-bg: 211 211 163;
+    --buzz-onboarding-avatar-accent-fg: 24 24 20;
+    --buzz-onboarding-avatar-action-bg: 113 113 6;
+    --buzz-onboarding-avatar-action-fg: 240 240 205;
+    --buzz-onboarding-avatar-control-fg: 224 224 176;
+    --buzz-onboarding-avatar-dialog-shadow: 0 0 0;
+  }
+
+  /* Вордмарк welcome-экрана: крупный размытый «oura» — декоративный
+     брендовый текст (не читаемый контент), размер вне текстовой шкалы. */
+  .oura-wordmark {
+    color: hsl(var(--primary));
+    filter: blur(0.045em);
+    font-size: clamp(6rem, 19vw, 13rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    user-select: none;
   }
 
   .buzz-onboarding-key-text {

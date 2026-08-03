@@ -62,18 +62,18 @@ export function NotificationSettingsCard({
   return (
     <section className="min-w-0" data-testid="settings-notifications">
       <SettingsSectionHeader
-        title="Notifications"
-        description="Desktop alerts are on by default. Fine-tune what gets through below."
+        title="Уведомления"
+        description="Уведомления на рабочем столе включены по умолчанию. Настройте, что должно доходить, ниже."
       />
 
       <span className="sr-only" data-testid="notifications-desktop-state">
         {notificationPermission === "unsupported"
-          ? "Unavailable"
+          ? "Недоступно"
           : notificationPermission === "denied"
-            ? "Blocked"
+            ? "Заблокировано"
             : notificationSettings.desktopEnabled
-              ? "On"
-              : "Off"}
+              ? "Включено"
+              : "Выключено"}
       </span>
 
       <div className="flex flex-col gap-4">
@@ -85,13 +85,13 @@ export function NotificationSettingsCard({
                 htmlFor="desktop-alerts-switch"
               >
                 {isUpdatingDesktopNotifications
-                  ? "Requesting..."
-                  : "Desktop alerts"}
+                  ? "Запрос…"
+                  : "Уведомления на рабочем столе"}
               </label>
               <p className="text-sm font-normal text-muted-foreground">
                 {notificationSettings.desktopEnabled
-                  ? "Native desktop alerts are enabled for the categories you have armed below."
-                  : "Request OS permission and surface new mentions or needs-action items outside the app."}
+                  ? "Нативные уведомления на рабочем столе включены для категорий, отмеченных ниже."
+                  : "Запросите разрешение ОС, чтобы видеть новые упоминания и задачи, требующие действия, вне приложения."}
               </p>
             </div>
             <Switch
@@ -111,11 +111,10 @@ export function NotificationSettingsCard({
                 className="text-sm font-medium"
                 htmlFor="notify-while-viewing-switch"
               >
-                Notify while viewing
+                Уведомлять при просмотре
               </label>
               <p className="text-sm font-normal text-muted-foreground">
-                Also alert for direct messages in the conversation you have
-                open.
+                Также уведомлять о личных сообщениях в открытом разговоре.
               </p>
             </div>
             <Switch
@@ -142,10 +141,10 @@ export function NotificationSettingsCard({
                     className="text-sm font-medium"
                     htmlFor="notification-sound-switch"
                   >
-                    Sound
+                    Звук
                   </label>
                   <p className="text-sm font-normal text-muted-foreground">
-                    Alert with a sound for the events below.
+                    Звуковое оповещение для событий ниже.
                   </p>
                 </div>
                 <Switch
@@ -179,7 +178,7 @@ export function NotificationSettingsCard({
                             {SLOT_LABELS[slot]}
                             {comingSoon ? (
                               <span className="rounded-full bg-muted/70 px-2 py-0.5 text-2xs font-normal uppercase tracking-wide text-muted-foreground">
-                                Coming soon
+                                Скоро
                               </span>
                             ) : null}
                           </span>
@@ -227,12 +226,12 @@ export function NotificationSettingsCard({
                     {showComingSoon ? (
                       <>
                         <ChevronUp className="h-4 w-4" />
-                        Show less
+                        Свернуть
                       </>
                     ) : (
                       <>
                         <ChevronDown className="h-4 w-4" />
-                        View all
+                        Показать все
                       </>
                     )}
                   </Button>
@@ -249,11 +248,11 @@ export function NotificationSettingsCard({
                 className="text-sm font-medium"
                 htmlFor="home-badge-switch"
               >
-                Home badge
+                Значок «Входящие»
               </label>
               <p className="text-sm font-normal text-muted-foreground">
-                Show a Home badge for mentions and needs-action items in the
-                sidebar.
+                Показывать значок «Входящие» на боковой панели для упоминаний и
+                задач, требующих действия.
               </p>
             </div>
             <Switch
@@ -271,8 +270,8 @@ export function NotificationSettingsCard({
       {permissionBlocked && (
         <p className="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {notificationPermission === "unsupported"
-            ? "Desktop notifications are not supported in this environment."
-            : "Desktop notifications are blocked. Enable them in your system settings."}
+            ? "Уведомления на рабочем столе не поддерживаются в этом окружении."
+            : "Уведомления на рабочем столе заблокированы. Включите их в настройках системы."}
         </p>
       )}
 

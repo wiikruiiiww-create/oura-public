@@ -177,7 +177,7 @@ test.describe("Doctor panel state screenshots", () => {
     expect(codexColors).toEqual(gooseColors);
     await expect(
       page
-        .getByRole("heading", { name: "Agent runtimes" })
+        .getByRole("heading", { name: "Среды выполнения агентов" })
         .locator("..")
         .locator(".."),
     ).toHaveCSS("align-items", "center");
@@ -196,11 +196,11 @@ test.describe("Doctor panel state screenshots", () => {
       await expect(toggle.locator("span")).toHaveClass(/shadow-none/);
     }
     await expect(
-      page.getByRole("menuitem", { name: "CLI setup guide" }),
+      page.getByRole("menuitem", { name: "Руководство по настройке CLI" }),
     ).toHaveCount(0);
     await page.getByTestId("doctor-runtime-menu-codex").click();
     await expect(
-      page.getByRole("menuitem", { name: "CLI setup guide" }),
+      page.getByRole("menuitem", { name: "Руководство по настройке CLI" }),
     ).toBeVisible();
     await waitForAnimations(page);
     await page.screenshot({
@@ -215,7 +215,7 @@ test.describe("Doctor panel state screenshots", () => {
       "Not installed",
     );
     await expect(page.getByTestId("doctor-runtime-status-codex")).toHaveText(
-      "CLI needed",
+      "Нужен CLI",
     );
     await expect(
       page.getByTestId("doctor-runtime-guidance-codex"),
@@ -300,7 +300,7 @@ test.describe("Doctor panel state screenshots", () => {
     );
     await page.getByTestId("doctor-runtime-menu-codex").click();
     await expect(
-      page.getByRole("menuitem", { name: "CLI setup guide" }),
+      page.getByRole("menuitem", { name: "Руководство по настройке CLI" }),
     ).toBeVisible();
     await page.keyboard.press("Escape");
 
@@ -335,16 +335,16 @@ test.describe("Doctor panel state screenshots", () => {
     const row = page.getByTestId("doctor-runtime-claude");
     await expect(row).toBeVisible({ timeout: 10_000 });
     await expect(page.getByTestId("doctor-runtime-status-claude")).toHaveText(
-      "Config error",
+      "Ошибка конфигурации",
     );
     await expect(
       page.getByTestId("doctor-runtime-config-error-claude"),
     ).toContainText(
-      "Config error: error loading configuration: ~/.claude/settings.json: unknown key foo",
+      "Ошибка конфигурации: error loading configuration: ~/.claude/settings.json: unknown key foo",
     );
     await page.getByTestId("doctor-runtime-menu-claude").click();
     await expect(
-      page.getByRole("menuitem", { name: "CLI setup guide" }),
+      page.getByRole("menuitem", { name: "Руководство по настройке CLI" }),
     ).toBeVisible();
     await page.keyboard.press("Escape");
 
@@ -384,7 +384,7 @@ test.describe("Doctor panel state screenshots", () => {
     await expect(toggle).not.toBeChecked();
     await expect(toggle).toBeDisabled();
     await expect(page.getByTestId("doctor-runtime-status-codex")).toHaveText(
-      "Adapter needed",
+      "Нужен адаптер",
     );
     await expect(row).not.toContainText("Node.js is required");
     expect(
@@ -396,10 +396,10 @@ test.describe("Doctor panel state screenshots", () => {
     );
     await page.getByTestId("doctor-runtime-menu-codex").click();
     await expect(
-      page.getByRole("menuitem", { name: "Install Node.js" }),
+      page.getByRole("menuitem", { name: "Установить Node.js" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("menuitem", { name: "Adapter install guide" }),
+      page.getByRole("menuitem", { name: "Руководство по установке адаптера" }),
     ).toBeVisible();
     await page.keyboard.press("Escape");
 
@@ -485,7 +485,7 @@ test.describe("Doctor panel state screenshots", () => {
     await toggle.click();
     const loading = page.getByTestId("doctor-runtime-loading-codex");
     await expect(loading).toBeVisible();
-    await expect(loading).toContainText("Codex installing");
+    await expect(loading).toContainText("Codex: установка");
     await expect(toggle).toHaveCount(0);
 
     // After failure: the toggle returns to off and the error is visible.
@@ -622,7 +622,7 @@ test.describe("Doctor panel state screenshots", () => {
     await page.getByRole("menuitem", { name: "Sign in with ChatGPT" }).click();
     const loading = page.getByTestId("doctor-runtime-loading-codex");
     await expect(loading).toBeVisible();
-    await expect(loading).toContainText("Codex connecting");
+    await expect(loading).toContainText("Codex: подключение");
     await expect(page.getByTestId("doctor-runtime-toggle-codex")).toHaveCount(
       0,
     );
@@ -665,7 +665,7 @@ test.describe("Doctor panel state screenshots", () => {
     );
     await page.getByTestId("doctor-runtime-menu-claude").click();
     await expect(
-      page.getByRole("menuitem", { name: "CLI setup guide" }),
+      page.getByRole("menuitem", { name: "Руководство по настройке CLI" }),
     ).toBeVisible();
     await expect(
       page.getByRole("menuitem", { name: "Sign in with ChatGPT" }),
@@ -693,7 +693,7 @@ test.describe("Doctor panel state screenshots", () => {
     await openSettings(page, "agents");
 
     await expect(page.getByTestId("doctor-runtime-error-codex")).toContainText(
-      "Couldn't load sign-in options: Could not inspect the Codex adapter.",
+      "Не удалось загрузить варианты входа: Could not inspect the Codex adapter.",
     );
   });
 
@@ -729,7 +729,7 @@ test.describe("Doctor panel state screenshots", () => {
     await page.getByTestId("doctor-runtime-menu-codex").click();
     await page.getByRole("menuitem", { name: "Sign in with ChatGPT" }).click();
     await expect(page.getByTestId("doctor-runtime-error-codex")).toContainText(
-      "Couldn't connect Codex: The browser could not be opened.",
+      "Не удалось подключить Codex: The browser could not be opened.",
     );
   });
 
@@ -767,7 +767,7 @@ test.describe("Doctor panel state screenshots", () => {
     await expect(
       page.getByTestId("doctor-runtime-terminal-guidance-codex"),
     ).toContainText(
-      "Finish signing in from the Terminal window, then click Check again to re-check Codex.",
+      "Завершите вход в окне терминала, затем нажмите «Проверить снова», чтобы перепроверить Codex.",
     );
   });
 
@@ -792,14 +792,14 @@ test.describe("Doctor panel state screenshots", () => {
     await openSettings(page, "agents");
 
     await expect(page.getByTestId("doctor-runtime-status-codex")).toHaveText(
-      "Update needed",
+      "Нужно обновление",
     );
     await page.getByTestId("doctor-runtime-toggle-codex").click();
 
     const dialog = page.getByRole("alertdialog");
-    await expect(dialog).toContainText("Update Codex adapter?");
+    await expect(dialog).toContainText("Обновить адаптер Codex?");
     await expect(dialog).toContainText(
-      "Older Buzz releases using the legacy adapter may lose community access",
+      "старые версии OURA, использующие устаревший адаптер, могут потерять доступ к сообществу",
     );
     await expect(page.getByTestId("doctor-runtime-loading-codex")).toHaveCount(
       0,
@@ -808,7 +808,7 @@ test.describe("Doctor panel state screenshots", () => {
     await page.getByTestId("doctor-runtime-confirm-update-codex").click();
     const loading = page.getByTestId("doctor-runtime-loading-codex");
     await expect(loading).toBeVisible();
-    await expect(loading).toContainText("Codex installing");
+    await expect(loading).toContainText("Codex: установка");
   });
 
   /**
@@ -928,7 +928,7 @@ test.describe("Doctor panel state screenshots", () => {
 
     // Click Check again — epoch increments, RuntimeRow useEffect clears
     // local installResult state, so the stale claude error disappears.
-    await page.getByRole("button", { name: "Check again" }).click();
+    await page.getByRole("button", { name: "Проверить снова" }).click();
     await expect(claudeError).toHaveCount(0, { timeout: 5_000 });
     // Codex toggle stays on (catalog still reports available after refresh).
     await expect(codexToggle).toBeChecked({ timeout: 5_000 });

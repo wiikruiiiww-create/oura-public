@@ -18,10 +18,10 @@ import { Separator } from "@/shared/ui/separator";
 import { Spinner } from "@/shared/ui/spinner";
 
 const TTL_OPTIONS: { label: string; value: number }[] = [
-  { label: "1 day", value: 24 * 60 * 60 },
-  { label: "3 days", value: 3 * 24 * 60 * 60 },
-  { label: "7 days", value: 7 * 24 * 60 * 60 },
-  { label: "30 days", value: 30 * 24 * 60 * 60 },
+  { label: "1 день", value: 24 * 60 * 60 },
+  { label: "3 дня", value: 3 * 24 * 60 * 60 },
+  { label: "7 дней", value: 7 * 24 * 60 * 60 },
+  { label: "30 дней", value: 30 * 24 * 60 * 60 },
 ];
 
 export const DEFAULT_INVITE_TTL_SECS = TTL_OPTIONS[1].value;
@@ -43,13 +43,13 @@ export function InviteLinkSection({
 }) {
   const [copyStatus, setCopyStatus] = React.useState<CopyStatus>("idle");
   const ttlLabel =
-    TTL_OPTIONS.find((option) => option.value === ttlSecs)?.label ?? "3 days";
+    TTL_OPTIONS.find((option) => option.value === ttlSecs)?.label ?? "3 дня";
   const copyLabel =
     copyStatus === "copying"
-      ? "Copying…"
+      ? "Копирование…"
       : copyStatus === "copied"
-        ? "Copied"
-        : "Copy link";
+        ? "Скопировано"
+        : "Копировать ссылку";
 
   React.useEffect(() => {
     if (copyStatus !== "copied") return;
@@ -64,10 +64,10 @@ export function InviteLinkSection({
       const invite = await mintInvite(ttlSecs);
       await writeTextToClipboard(invite.url);
       setCopyStatus("copied");
-      toast.success("Invite link copied");
+      toast.success("Ссылка-приглашение скопирована");
     } catch {
       setCopyStatus("idle");
-      toast.error("Couldn’t copy the invite link. Try again.");
+      toast.error("Не удалось скопировать ссылку-приглашение. Повторить.");
     }
   }
 
@@ -78,15 +78,15 @@ export function InviteLinkSection({
           <Link2 aria-hidden="true" className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-medium">Share with a link</h3>
+          <h3 className="text-sm font-medium">Поделиться ссылкой</h3>
           <p className="text-xs text-secondary-foreground/75">
-            Anyone with the link can join this community.
+            Присоединиться к сообществу может любой, у кого есть ссылка.
           </p>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              aria-label="Choose invite expiry"
+              aria-label="Выбрать срок действия приглашения"
               className="h-8 shrink-0 gap-1.5 px-2 text-muted-foreground"
               data-testid="invite-link-ttl-trigger"
               disabled={copyStatus === "copying"}
@@ -99,7 +99,7 @@ export function InviteLinkSection({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuLabel>Expires after</DropdownMenuLabel>
+            <DropdownMenuLabel>Истекает через</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuRadioGroup
               onValueChange={(value) => onTtlSecsChange(Number(value))}

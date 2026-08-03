@@ -28,30 +28,30 @@ const variants: Record<
 > = {
   available: {
     Icon: RefreshCcw,
-    label: "Update available",
+    label: "Доступно обновление",
     badgeColor: "bg-primary",
   },
   downloading: {
     Icon: Spinner,
     iconClassName: "h-4 w-4 border-2",
-    label: "Downloading update\u2026",
+    label: "Скачивание обновления…",
     badgeColor: "bg-primary",
   },
   installing: {
     Icon: Spinner,
     iconClassName: "h-4 w-4 border-2",
-    label: "Installing update\u2026",
+    label: "Установка обновления…",
     badgeColor: "bg-primary",
   },
   "manual-required": {
     Icon: ExternalLink,
     label:
-      "Update available — download from GitHub (use AppImage for auto-updates)",
+      "Доступно обновление — скачайте с GitHub (для автообновлений используйте AppImage)",
     badgeColor: "bg-primary",
   },
   ready: {
     Icon: RotateCw,
-    label: "Update now",
+    label: "Обновить сейчас",
     badgeColor: "bg-emerald-500",
   },
 };

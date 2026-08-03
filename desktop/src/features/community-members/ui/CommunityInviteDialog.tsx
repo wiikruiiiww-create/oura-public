@@ -34,7 +34,7 @@ export function CommunityInviteDialog({
         data-testid="community-invite-dialog"
       >
         <DialogHeader className="space-y-0">
-          <DialogTitle>Invite to community</DialogTitle>
+          <DialogTitle>Пригласить в сообщество</DialogTitle>
         </DialogHeader>
 
         <InviteLinkSection onTtlSecsChange={setTtlSecs} ttlSecs={ttlSecs} />

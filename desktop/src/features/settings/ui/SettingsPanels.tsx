@@ -155,80 +155,80 @@ export type SettingsPanelProps = {
 export const settingsSections: SettingsSectionDescriptor[] = [
   {
     value: "appearance",
-    label: "Appearance",
+    label: "Внешний вид",
     icon: MonitorCog,
   },
   {
     value: "profile",
-    label: "Profile",
+    label: "Профиль",
     icon: UserRound,
   },
   {
     value: "notifications",
-    label: "Notifications",
+    label: "Уведомления",
     icon: BellRing,
   },
   {
     value: "experimental",
-    label: "Experiments",
+    label: "Эксперименты",
     icon: FlaskConical,
   },
   {
     value: "agents",
-    label: "Agents",
+    label: "Агенты",
     icon: Bot,
     featureGate: "managed-agents",
   },
   {
     value: "channel-templates",
-    label: "Templates",
+    label: "Шаблоны",
     icon: LayoutTemplate,
     featureGate: "channel-templates",
   },
   {
     value: "compute",
-    label: "Compute",
+    label: "Вычисления",
     icon: Cpu,
   },
   {
     value: "shortcuts",
-    label: "Shortcuts",
+    label: "Горячие клавиши",
     icon: Keyboard,
   },
   {
     value: "hosted-communities",
-    label: "Hosted communities",
+    label: "Хостинг сообществ",
     icon: MessagesSquare,
   },
   {
     value: "community-members",
-    label: "Invites",
+    label: "Приглашения",
     icon: Ticket,
   },
   {
     value: "moderation",
-    label: "Moderation",
+    label: "Модерация",
     icon: ShieldAlert,
   },
   {
     value: "custom-emoji",
-    label: "Custom emoji",
+    label: "Свои эмодзи",
     icon: Smile,
     featureGate: "custom-emoji",
   },
   {
     value: "local-archive",
-    label: "Local archive",
+    label: "Локальный архив",
     icon: Archive,
   },
   {
     value: "mobile",
-    label: "Mobile",
+    label: "Мобильный",
     icon: Smartphone,
   },
   {
     value: "updates",
-    label: "Updates",
+    label: "Обновления",
     icon: Download,
   },
 ];
@@ -517,17 +517,17 @@ function ThemeSettingsCard() {
       data-testid="settings-theme"
     >
       <SettingsSectionHeader
-        title="Appearance"
-        description="Choose a theme for Buzz."
+        title="Внешний вид"
+        description="Выберите тему OURA."
       />
 
       {/* Mode selector: System / Light / Dark */}
       <div className="mb-4 flex gap-2">
         {(
           [
-            { mode: "system" as const, label: "System", Icon: SunMoon },
-            { mode: "light" as const, label: "Light", Icon: Sun },
-            { mode: "dark" as const, label: "Dark", Icon: Moon },
+            { mode: "system" as const, label: "Системная", Icon: SunMoon },
+            { mode: "light" as const, label: "Светлая", Icon: Sun },
+            { mode: "dark" as const, label: "Тёмная", Icon: Moon },
           ] as const
         ).map(({ mode, label, Icon }) => (
           <button
@@ -659,13 +659,13 @@ const THREAD_VIEW_MODE_OPTIONS: {
 }[] = [
   {
     value: "focus",
-    label: "Focus",
-    description: "Threads open over the channel, full width",
+    label: "Фокус",
+    description: "Тред открывается поверх канала, во всю ширину",
   },
   {
     value: "split",
-    label: "Split",
-    description: "Threads open in a side panel next to the channel",
+    label: "Разделение",
+    description: "Тред открывается в боковой панели рядом с каналом",
   },
 ];
 
@@ -685,7 +685,7 @@ function ThreadLayoutSetting() {
     <SettingsOptionGroup className="mt-8">
       <SettingsOptionRow>
         <div className="min-w-0">
-          <p className="text-sm font-medium">Thread layout</p>
+          <p className="text-sm font-medium">Расположение тредов</p>
           <p className="text-sm font-normal text-muted-foreground">
             {activeOption.description}
           </p>
@@ -744,7 +744,7 @@ function AccentPickerContent({
 }) {
   return (
     <div className="shrink-0 px-1 pb-2 pt-1">
-      <h3 className="mb-2 text-sm font-medium">Accent color</h3>
+      <h3 className="mb-2 text-sm font-medium">Акцентный цвет</h3>
       <div className="flex flex-wrap gap-2 p-1">
         {ACCENT_COLORS.map((color) => {
           const isNeutral = color.value === NEUTRAL_ACCENT;

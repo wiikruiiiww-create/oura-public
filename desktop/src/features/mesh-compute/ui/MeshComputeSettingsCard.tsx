@@ -199,18 +199,18 @@ export function MeshComputeSettingsCard() {
   return (
     <section className="min-w-0" data-testid="settings-mesh-share-compute">
       <SettingsSectionHeader
-        title="Share compute"
+        title="Поделиться вычислениями"
         description={
           <>
-            Share this machine with your relay. When on, other members can run
-            their agents here.
+            Поделитесь этим устройством с вашим релеем. Когда функция включена,
+            другие участники смогут запускать здесь своих агентов.
           </>
         }
       />
 
       {error ? (
         <p className="mb-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          Couldn't check shared compute: {error}
+          Не удалось проверить общий доступ к вычислениям: {error}
         </p>
       ) : null}
       {actionError ? (
@@ -229,7 +229,7 @@ export function MeshComputeSettingsCard() {
               className="text-sm font-medium"
               htmlFor="mesh-share-compute-toggle"
             >
-              Share this machine
+              Поделиться этим устройством
             </label>
             <StatusLine
               isConsuming={isConsuming}
@@ -279,7 +279,7 @@ export function MeshComputeSettingsCard() {
             htmlFor="mesh-share-compute-model"
           >
             <Cpu className="h-4 w-4 text-muted-foreground" />
-            Model
+            Модель
           </label>
           <div className="flex flex-col gap-2">
             <Input
@@ -291,12 +291,13 @@ export function MeshComputeSettingsCard() {
                 setModelInput(next);
                 writeDraft(MODEL_DRAFT_STORAGE_KEY, next);
               }}
-              placeholder="Qwen3-8B-Q4_K_M or hf://meshllm/qwen3-8b@main"
+              placeholder="Qwen3-8B-Q4_K_M или hf://meshllm/qwen3-8b@main"
               value={modelInput}
             />
             <p className="text-sm font-normal text-muted-foreground">
-              Choose a suggested model below, or enter a model reference or
-              local file. Buzz downloads remote models when sharing starts.
+              Выберите модель из списка ниже или укажите ссылку на модель либо
+              локальный файл. OURA скачивает удалённые модели при запуске
+              раздачи.
             </p>
             {catalog && catalog.entries.length > 0 ? (
               <CatalogPicker
@@ -312,7 +313,7 @@ export function MeshComputeSettingsCard() {
             {installedModels.length > 0 ? (
               <div className="mt-1">
                 <p className="text-sm font-normal text-muted-foreground">
-                  Already installed on this machine:
+                  Уже установлено на этом устройстве:
                 </p>
                 <ul
                   className="mt-1 flex flex-wrap gap-1.5"
@@ -353,11 +354,11 @@ export function MeshComputeSettingsCard() {
                 advancedOpen ? "rotate-0" : "-rotate-90",
               )}
             />
-            Advanced
+            Дополнительно
           </summary>
           <div className="mt-3 flex flex-col gap-2">
             <label className="text-sm font-medium" htmlFor="mesh-vram">
-              Max VRAM (GB)
+              Максимум VRAM (ГБ)
             </label>
             <Input
               data-testid="mesh-share-compute-vram"
@@ -368,12 +369,12 @@ export function MeshComputeSettingsCard() {
                 setMaxVramGb(next);
                 writeDraft(MAX_VRAM_DRAFT_STORAGE_KEY, next);
               }}
-              placeholder="No limit"
+              placeholder="Без ограничения"
               value={maxVramGb}
             />
             {status?.consoleUrl ? (
               <p className="text-sm font-normal text-muted-foreground">
-                Debug console:{" "}
+                Консоль отладки:{" "}
                 <a
                   className="underline"
                   href={status.consoleUrl}
@@ -389,7 +390,8 @@ export function MeshComputeSettingsCard() {
       </SettingsOptionGroup>
 
       <p className="mt-3 rounded-lg bg-muted/30 px-3 py-2 text-sm font-normal text-muted-foreground">
-        Only members of this relay can use this machine's shared compute.
+        Пользоваться вычислениями этого устройства могут только участники этого
+        релея.
       </p>
     </section>
   );
@@ -419,7 +421,7 @@ function DownloadProgressBar({
     >
       <div className="flex items-baseline justify-between gap-2 text-sm">
         <span className="min-w-0 truncate font-medium">
-          {progress.status === "preparing" ? "Preparing" : "Downloading"}{" "}
+          {progress.status === "preparing" ? "Подготовка" : "Скачивание"}{" "}
           {progress.label}
         </span>
         <span className="shrink-0 text-muted-foreground">
@@ -445,10 +447,10 @@ function DownloadProgressBar({
 }
 
 const FIT_LABEL: Record<MeshCatalogEntry["fit"], string> = {
-  comfortable: "Fits well",
-  tight: "Tight fit",
-  tradeoff: "Trade-off",
-  too_large: "Too large",
+  comfortable: "Подходит хорошо",
+  tight: "Подходит впритык",
+  tradeoff: "Компромисс",
+  too_large: "Слишком большая",
 };
 
 const FIT_CLASS: Record<MeshCatalogEntry["fit"], string> = {
@@ -483,9 +485,9 @@ function CatalogPicker({
   return (
     <div className="mt-1" data-testid="mesh-share-compute-catalog">
       <p className="text-sm font-normal text-muted-foreground">
-        Recommended for this machine
+        Рекомендовано для этого устройства
         {catalog.gpuName ? ` (${catalog.gpuName}, ` : " ("}
-        {catalog.vramDisplay} AI memory):
+        {catalog.vramDisplay} памяти ИИ):
       </p>
       <ul className="mt-1.5 flex max-h-56 flex-col gap-1 overflow-y-auto">
         {visible.map((entry) => {
@@ -518,12 +520,12 @@ function CatalogPicker({
                 </span>
                 {entry.recommended ? (
                   <span className="shrink-0 rounded bg-primary/15 px-1.5 text-2xs font-medium text-primary">
-                    Recommended
+                    Рекомендовано
                   </span>
                 ) : null}
                 {entry.installed ? (
                   <span className="shrink-0 text-2xs text-muted-foreground">
-                    Installed
+                    Установлено
                   </span>
                 ) : null}
               </button>
@@ -539,8 +541,8 @@ function CatalogPicker({
           type="button"
         >
           {expanded
-            ? "Hide advanced models"
-            : `Advanced: ${advanced.length} more models`}
+            ? "Скрыть дополнительные модели"
+            : `Дополнительные модели (${advanced.length})`}
         </button>
       ) : null}
     </div>
@@ -557,10 +559,10 @@ function StatusLine({
   status: MeshNodeStatus | null;
 }) {
   if (pendingAction === "start") {
-    return <p className="text-sm text-muted-foreground">Starting…</p>;
+    return <p className="text-sm text-muted-foreground">Запуск…</p>;
   }
   if (pendingAction === "stop") {
-    return <p className="text-sm text-muted-foreground">Stopping…</p>;
+    return <p className="text-sm text-muted-foreground">Остановка…</p>;
   }
   // A client-mode runtime owns the single slot: this machine is consuming a
   // peer's compute, not sharing. Explain why Share is off + disabled instead
@@ -570,57 +572,60 @@ function StatusLine({
   if (isConsuming) {
     return (
       <p className="text-sm text-muted-foreground">
-        This machine is currently using another member's shared compute.
+        Это устройство сейчас использует вычисления, которыми поделился другой
+        участник.
       </p>
     );
   }
   if (!status) {
-    return <p className="text-sm text-muted-foreground">Checking status…</p>;
+    return <p className="text-sm text-muted-foreground">Проверка статуса…</p>;
   }
   const { state, health, modelId, modelName } = status;
   const modelLabel = modelName ?? modelId ?? "";
 
   if (state === "off") {
     return (
-      <p className="text-sm text-muted-foreground">Not sharing right now.</p>
+      <p className="text-sm text-muted-foreground">
+        Сейчас доступ не предоставлен.
+      </p>
     );
   }
   if (state === "starting") {
     const reason =
       health.status === "degraded" || health.status === "failed"
         ? health.reason
-        : "Starting…";
+        : "Запуск…";
     return <p className="text-sm text-muted-foreground">{reason}</p>;
   }
   if (state === "running") {
     if (health.status === "failed") {
       return (
         <p className="text-sm text-destructive">
-          Couldn't load: {health.reason}
+          Не удалось загрузить: {health.reason}
         </p>
       );
     }
     if (health.status === "degraded") {
       return (
         <p className="text-sm text-amber-600 dark:text-amber-400">
-          Active{modelLabel ? ` — ${modelLabel}` : ""}. {health.reason}
+          Активно{modelLabel ? ` — ${modelLabel}` : ""}. {health.reason}
         </p>
       );
     }
     return (
       <p className="text-sm text-muted-foreground">
-        Sharing{modelLabel ? ` ${modelLabel}` : ""} with relay members.
+        Раздаёт{modelLabel ? ` ${modelLabel}` : ""} участникам релея.
       </p>
     );
   }
   if (state === "stopping") {
-    return <p className="text-sm text-muted-foreground">Stopping…</p>;
+    return <p className="text-sm text-muted-foreground">Остановка…</p>;
   }
   if (state === "failed") {
     const reason =
       health.status === "failed" || health.status === "degraded"
         ? health.reason
-        : "Couldn't start.";
+        : "Не удалось запустить.";
     return <p className="text-sm text-destructive">{reason}</p>;
   }
   return null;

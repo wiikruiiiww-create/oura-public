@@ -60,15 +60,15 @@ export function ActiveAgentCommunitiesSettingsCard() {
   return (
     <section className="min-w-0" data-testid="active-agent-communities">
       <SettingsSectionHeader
-        title="Active in communities"
-        description="See and control each community where this device runs your agents."
+        title="Активность в сообществах"
+        description="Просматривайте и управляйте каждым сообществом, где это устройство запускает ваших агентов."
       />
       <div className="overflow-hidden rounded-xl border border-border/60">
         {runtimesQuery.isPending ? (
-          <p className="px-4 py-3 text-sm text-muted-foreground">Loading…</p>
+          <p className="px-4 py-3 text-sm text-muted-foreground">Загрузка…</p>
         ) : runtimes.length === 0 ? (
           <p className="px-4 py-3 text-sm text-muted-foreground">
-            No agent community runtimes found.
+            Среды выполнения агентов в сообществах не найдены.
           </p>
         ) : (
           runtimes.map((runtime) => {
@@ -112,12 +112,12 @@ export function ActiveAgentCommunitiesSettingsCard() {
                     variant="outline"
                   >
                     {pending
-                      ? "Working…"
+                      ? "Выполняется…"
                       : runtime.lifecycle === "stopped"
-                        ? "Start"
+                        ? "Запустить"
                         : runtime.lifecycle === "failed"
-                          ? "Restart"
-                          : "Stop"}
+                          ? "Перезапустить"
+                          : "Остановить"}
                   </Button>
                 ) : null}
               </div>

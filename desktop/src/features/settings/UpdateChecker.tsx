@@ -12,21 +12,21 @@ export function UpdateChecker() {
   return (
     <section className="min-w-0" data-testid="settings-updates">
       <SettingsSectionHeader
-        title="Software Updates"
-        description="Keep Buzz up to date with the latest features and fixes."
+        title="Обновления программы"
+        description="Обновляйте OURA, чтобы получать новые функции и исправления."
       />
 
       <SettingsOptionGroup>
         {status.state === "idle" && (
           <SettingsOptionRow>
             <div className="min-w-0">
-              <p className="text-sm font-medium">Update status</p>
+              <p className="text-sm font-medium">Статус обновления</p>
               <p className="text-sm font-normal text-muted-foreground">
-                Check if a new version is available.
+                Проверьте, доступна ли новая версия.
               </p>
             </div>
             <Button size="sm" onClick={checkForUpdate}>
-              Check for Updates
+              Проверить обновления
             </Button>
           </SettingsOptionRow>
         )}
@@ -34,9 +34,9 @@ export function UpdateChecker() {
         {status.state === "checking" && (
           <SettingsOptionRow>
             <div className="min-w-0">
-              <p className="text-sm font-medium">Update status</p>
+              <p className="text-sm font-medium">Статус обновления</p>
               <p className="text-sm font-normal text-muted-foreground">
-                Checking for updates...
+                Проверка обновлений…
               </p>
             </div>
           </SettingsOptionRow>
@@ -45,13 +45,13 @@ export function UpdateChecker() {
         {status.state === "up-to-date" && (
           <SettingsOptionRow>
             <div className="min-w-0">
-              <p className="text-sm font-medium">Update status</p>
+              <p className="text-sm font-medium">Статус обновления</p>
               <p className="text-sm font-normal text-muted-foreground">
-                You're on the latest version.
+                Установлена последняя версия.
               </p>
             </div>
             <Button variant="outline" size="sm" onClick={checkForUpdate}>
-              Check Again
+              Проверить снова
             </Button>
           </SettingsOptionRow>
         )}
@@ -59,14 +59,14 @@ export function UpdateChecker() {
         {status.state === "unavailable" && (
           <SettingsOptionRow>
             <div className="min-w-0">
-              <p className="text-sm font-medium">Update status</p>
+              <p className="text-sm font-medium">Статус обновления</p>
               <p className="text-sm font-normal text-muted-foreground">
-                Automatic updates aren't available on this build. Download the
-                latest release manually.
+                Автоматические обновления недоступны для этой сборки. Скачайте
+                последний релиз вручную.
               </p>
             </div>
             <Button variant="outline" size="sm" onClick={checkForUpdate}>
-              Check Again
+              Проверить снова
             </Button>
           </SettingsOptionRow>
         )}
@@ -75,18 +75,18 @@ export function UpdateChecker() {
           <SettingsOptionRow>
             <div className="min-w-0">
               <p className="text-sm font-medium">
-                Update available — v{status.version}
+                Доступно обновление — v{status.version}
               </p>
               <p className="text-sm font-normal text-muted-foreground">
-                In-app updates aren't supported on this Linux package. Download
-                the new version from GitHub.{" "}
+                Обновление в приложении не поддерживается для этой сборки Linux.
+                Скачайте новую версию с GitHub.{" "}
                 <span className="text-muted-foreground">
-                  Switch to the AppImage build for automatic updates.
+                  Перейдите на сборку AppImage для автоматических обновлений.
                 </span>
               </p>
             </div>
             <Button size="sm" onClick={() => void openUrl(status.releaseUrl)}>
-              Download Update
+              Скачать обновление
             </Button>
           </SettingsOptionRow>
         )}
@@ -94,9 +94,9 @@ export function UpdateChecker() {
         {status.state === "available" && (
           <SettingsOptionRow>
             <div className="min-w-0">
-              <p className="text-sm font-medium">Update status</p>
+              <p className="text-sm font-medium">Статус обновления</p>
               <p className="text-sm font-normal text-muted-foreground">
-                Preparing update...
+                Подготовка обновления…
               </p>
             </div>
           </SettingsOptionRow>
@@ -105,9 +105,9 @@ export function UpdateChecker() {
         {status.state === "downloading" && (
           <SettingsOptionRow>
             <div className="min-w-0">
-              <p className="text-sm font-medium">Update status</p>
+              <p className="text-sm font-medium">Статус обновления</p>
               <p className="text-sm font-normal text-muted-foreground">
-                Downloading update...
+                Скачивание обновления…
               </p>
             </div>
           </SettingsOptionRow>
@@ -116,9 +116,9 @@ export function UpdateChecker() {
         {status.state === "installing" && (
           <SettingsOptionRow>
             <div className="min-w-0">
-              <p className="text-sm font-medium">Update status</p>
+              <p className="text-sm font-medium">Статус обновления</p>
               <p className="text-sm font-normal text-muted-foreground">
-                Installing update...
+                Установка обновления…
               </p>
             </div>
           </SettingsOptionRow>
@@ -127,13 +127,13 @@ export function UpdateChecker() {
         {status.state === "ready" && (
           <SettingsOptionRow>
             <div className="min-w-0">
-              <p className="text-sm font-medium">Update status</p>
+              <p className="text-sm font-medium">Статус обновления</p>
               <p className="text-sm font-normal text-muted-foreground">
-                Update downloaded. Click to apply.
+                Обновление скачано. Нажмите, чтобы применить.
               </p>
             </div>
             <Button size="sm" onClick={installAndRelaunch}>
-              Update Now
+              Обновить сейчас
             </Button>
           </SettingsOptionRow>
         )}
@@ -141,13 +141,13 @@ export function UpdateChecker() {
         {status.state === "error" && (
           <SettingsOptionRow>
             <div className="min-w-0">
-              <p className="text-sm font-medium">Update status</p>
+              <p className="text-sm font-medium">Статус обновления</p>
               <p className="text-sm font-normal text-destructive">
-                Update failed: {status.message}
+                Ошибка обновления: {status.message}
               </p>
             </div>
             <Button variant="outline" size="sm" onClick={checkForUpdate}>
-              Retry
+              Повторить
             </Button>
           </SettingsOptionRow>
         )}

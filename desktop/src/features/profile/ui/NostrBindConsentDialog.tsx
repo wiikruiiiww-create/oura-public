@@ -19,15 +19,16 @@ import { StartupWindowDragRegion } from "@/shared/ui/StartupWindowDragRegion";
 import { writeTextToClipboard } from "@/shared/lib/clipboard";
 
 const COPY_SUCCESS_MESSAGE =
-  "Signed response copied. Paste it into the Buzz admin console.";
-const PREVIEW_COPY_SUCCESS_MESSAGE = "Preview response copied.";
-const COPY_FAILURE_MESSAGE = "Buzz couldn't access the clipboard. Try again.";
+  "Подписанный ответ скопирован. Вставьте его в консоль администратора OURA.";
+const PREVIEW_COPY_SUCCESS_MESSAGE = "Ответ предпросмотра скопирован.";
+const COPY_FAILURE_MESSAGE =
+  "OURA не удалось получить доступ к буферу обмена. Повторите попытку.";
 const EXPIRED_LINK_MESSAGE =
-  "This binding link has expired. Request a new one from the requesting app.";
+  "Срок действия ссылки для привязки истёк. Запросите новую в приложении, отправившем запрос.";
 const VERIFICATION_CODE_LENGTH = 6;
 const VERIFICATION_CODE_DIGIT_KEYS = ["1", "2", "3", "4", "5", "6"] as const;
 const VERIFICATION_CODE_MISMATCH_MESSAGE =
-  "That code doesn't match. Check the code and try again.";
+  "Код не подходит. Проверьте код и повторите попытку.";
 const COPY_BUTTON_LABEL_CLASS =
   "col-start-1 row-start-1 transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:translate-y-0 motion-reduce:duration-0";
 const NOSTR_BIND_PREVIEW_PAYLOAD: NostrBindDeepLinkPayload = {
@@ -138,7 +139,7 @@ async function returnSignedResponseToBrowser(
     return null;
   } catch (error) {
     console.warn("return signed nostr binding response failed:", error);
-    return "Could not open the browser. Copy the response below to finish manually.";
+    return "Не удалось открыть браузер. Скопируйте ответ ниже, чтобы завершить процесс вручную.";
   }
 }
 
@@ -187,22 +188,22 @@ function SignedResponseControls({
           <span
             className={cn(
               COPY_BUTTON_LABEL_CLASS,
-              copyLabel === "Copy response"
+              copyLabel === "Копировать ответ"
                 ? "translate-y-0 opacity-100"
                 : "-translate-y-0.5 opacity-0",
             )}
           >
-            Copy response
+            Копировать ответ
           </span>
           <span
             className={cn(
               COPY_BUTTON_LABEL_CLASS,
-              copyLabel === "Copied"
+              copyLabel === "Скопировано"
                 ? "translate-y-0 opacity-100"
                 : "translate-y-0.5 opacity-0",
             )}
           >
-            Copied
+            Скопировано
           </span>
         </span>
       </Button>
@@ -245,8 +246,8 @@ export function NostrBindConsentDialog() {
     enteredVerificationCode.length === VERIFICATION_CODE_LENGTH;
   const isVerificationCodeValid =
     payload !== null && enteredVerificationCode === payload.verificationCode;
-  const copyButtonLabel = isSigning ? "Signing…" : "Continue";
-  const finishCopyButtonLabel = isCopied ? "Copied" : "Copy response";
+  const copyButtonLabel = isSigning ? "Подписание…" : "Продолжить";
+  const finishCopyButtonLabel = isCopied ? "Скопировано" : "Копировать ответ";
 
   const clearCopiedState = React.useCallback(() => {
     if (copiedTimerRef.current) {
@@ -298,7 +299,7 @@ export function NostrBindConsentDialog() {
         .catch((error) => {
           console.warn("get_identity for nostr bind failed:", error);
           setIdentity(null);
-          setError("Could not load the current Buzz identity.");
+          setError("Не удалось загрузить текущую идентичность OURA.");
         });
     });
 
@@ -563,7 +564,7 @@ export function NostrBindConsentDialog() {
       }
     } catch (error) {
       if (activeSignAttemptRef.current === attempt) {
-        setError(formatError(error) || "Failed to sign binding response.");
+        setError(formatError(error) || "Не удалось подписать ответ привязки.");
       }
     } finally {
       if (activeSignAttemptRef.current === attempt) {
@@ -652,7 +653,7 @@ export function NostrBindConsentDialog() {
             <StartupWindowDragRegion />
             <div className="m-auto flex w-full max-w-[500px] flex-col items-center text-center">
               <img
-                alt="Buzz"
+                alt="OURA"
                 className="h-14 w-14 rounded-xl shadow-xs"
                 src="/app-icon@2x.png"
                 srcSet="/app-icon@2x.png 1x, /app-icon@3x.png 2x"
@@ -667,16 +668,16 @@ export function NostrBindConsentDialog() {
                 >
                   <DialogPrimitive.Title className="mt-6 text-3xl font-semibold tracking-tight">
                     {payload.returnMode === "browser_fragment_v1"
-                      ? "Continue in your browser"
-                      : "Finish on the Buzz website"}
+                      ? "Продолжите в браузере"
+                      : "Завершите на сайте OURA"}
                   </DialogPrimitive.Title>
                   <DialogPrimitive.Description
                     className="mt-3 max-w-[440px] text-sm leading-6 text-muted-foreground"
                     id="nostr-bind-description"
                   >
                     {payload.returnMode === "browser_fragment_v1"
-                      ? "Buzz opened your browser to finish verification."
-                      : "Copy the response below, then paste it into the Buzz website to finish verification."}
+                      ? "OURA открыла браузер, чтобы завершить проверку."
+                      : "Скопируйте ответ ниже, затем вставьте его на сайте OURA, чтобы завершить проверку."}
                   </DialogPrimitive.Description>
 
                   {error ? (
@@ -695,12 +696,13 @@ export function NostrBindConsentDialog() {
                       open={isManualFallbackOpen}
                     >
                       <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 text-sm font-medium transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
-                        <span>Pairing didn’t finish automatically?</span>
+                        <span>Привязка не завершилась автоматически?</span>
                         <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150 group-open:rotate-180" />
                       </summary>
                       <div className="space-y-4 border-t border-border/55 p-4">
                         <p className="text-sm leading-6 text-muted-foreground">
-                          Copy this response and paste it into the pairing page.
+                          Скопируйте этот ответ и вставьте его на странице
+                          привязки.
                         </p>
                         <SignedResponseControls
                           copyFailed={copyFailed}
@@ -728,7 +730,7 @@ export function NostrBindConsentDialog() {
                       type="button"
                       variant="ghost"
                     >
-                      Continue
+                      Продолжить
                     </Button>
                   </div>
                 </OnboardingSlideTransition>
@@ -740,13 +742,13 @@ export function NostrBindConsentDialog() {
                   transitionKey="nostr-bind-code"
                 >
                   <DialogPrimitive.Title className="mt-6 text-3xl font-semibold tracking-tight">
-                    Enter verification code
+                    Введите код верификации
                   </DialogPrimitive.Title>
                   <DialogPrimitive.Description
                     className="mt-3 max-w-[440px] text-sm leading-6 text-muted-foreground"
                     id="nostr-bind-description"
                   >
-                    Enter the six-digit code shown in your browser
+                    Введите шестизначный код, показанный в браузере
                   </DialogPrimitive.Description>
 
                   <div className="mt-10 w-full space-y-4 text-sm">
@@ -757,7 +759,7 @@ export function NostrBindConsentDialog() {
                       aria-invalid={hasCodeMismatch}
                       className="w-full min-w-0 text-center"
                     >
-                      <legend className="sr-only">Verification code</legend>
+                      <legend className="sr-only">Код верификации</legend>
                       <div
                         className="flex justify-center gap-2"
                         data-testid="nostr-bind-verification-code"
@@ -769,7 +771,7 @@ export function NostrBindConsentDialog() {
                             key={VERIFICATION_CODE_DIGIT_KEYS[index]}
                           >
                             <input
-                              aria-label={`Verification code digit ${index + 1} of ${VERIFICATION_CODE_LENGTH}`}
+                              aria-label={`Цифра ${index + 1} из ${VERIFICATION_CODE_LENGTH} кода верификации`}
                               autoComplete={
                                 index === 0 ? "one-time-code" : "off"
                               }
@@ -893,22 +895,22 @@ export function NostrBindConsentDialog() {
                         <span
                           className={cn(
                             COPY_BUTTON_LABEL_CLASS,
-                            copyButtonLabel === "Continue"
+                            copyButtonLabel === "Продолжить"
                               ? "translate-y-0 opacity-100"
                               : "-translate-y-0.5 opacity-0",
                           )}
                         >
-                          Continue
+                          Продолжить
                         </span>
                         <span
                           className={cn(
                             COPY_BUTTON_LABEL_CLASS,
-                            copyButtonLabel === "Signing…"
+                            copyButtonLabel === "Подписание…"
                               ? "translate-y-0 opacity-100"
                               : "translate-y-0.5 opacity-0",
                           )}
                         >
-                          Signing…
+                          Подписание…
                         </span>
                       </span>
                     </Button>
@@ -919,7 +921,7 @@ export function NostrBindConsentDialog() {
                       type="button"
                       variant="ghost"
                     >
-                      Cancel
+                      Отмена
                     </Button>
                   </div>
                 </OnboardingSlideTransition>

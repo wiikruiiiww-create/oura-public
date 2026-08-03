@@ -110,7 +110,7 @@ export function ProfilePopover({
             }
           }}
         >
-          <div aria-label="Profile menu" role="menu">
+          <div aria-label="Меню профиля" role="menu">
             {/* ── Identity block ─────────────────────────────────── */}
             <div className="flex items-center gap-2 px-3 pt-2 pb-2">
               <MaskedAvatarBadgeFrame
@@ -223,7 +223,7 @@ export function ProfilePopover({
                   </span>
                 ) : (
                   <span className="flex-1 truncate text-muted-foreground">
-                    Update your status
+                    Обновить статус
                   </span>
                 )}
               </button>
@@ -254,7 +254,7 @@ export function ProfilePopover({
                 role="menuitem"
                 type="button"
               >
-                <span className="flex-1">Send feedback</span>
+                <span className="flex-1">Отправить отзыв</span>
               </button>
             ) : null}
 
@@ -271,7 +271,7 @@ export function ProfilePopover({
               role="menuitem"
               type="button"
             >
-              <span className="flex-1">Settings</span>
+              <span className="flex-1">Настройки</span>
               <kbd className="text-xs text-muted-foreground">
                 {settingsShortcutLabel}
               </kbd>

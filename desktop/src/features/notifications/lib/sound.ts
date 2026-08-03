@@ -36,14 +36,14 @@ export const SOUND_SLOTS = [
 export type SoundSlot = (typeof SOUND_SLOTS)[number];
 
 export const SLOT_LABELS: Record<SoundSlot, string> = {
-  dm: "Direct messages",
-  mention: "@Mentions",
-  thread_reply: "Thread replies",
-  needs_action: "Needs action",
-  job_accepted: "Agent: job accepted",
-  job_progress: "Agent: progress update",
-  job_result: "Agent: job result",
-  job_error: "Agent: job error",
+  dm: "Личные сообщения",
+  mention: "@Упоминания",
+  thread_reply: "Ответы в тредах",
+  needs_action: "Требует действия",
+  job_accepted: "Агент: задача принята",
+  job_progress: "Агент: ход выполнения",
+  job_result: "Агент: результат задачи",
+  job_error: "Агент: ошибка задачи",
 };
 
 // The agent job protocol (kinds 43001-43006) is defined and queryable but
@@ -58,14 +58,15 @@ export const COMING_SOON_SLOTS: ReadonlySet<SoundSlot> = new Set([
 ]);
 
 export const SLOT_DESCRIPTIONS: Record<SoundSlot, string> = {
-  dm: "When someone messages you directly.",
-  mention: "When someone tags you in a channel.",
-  thread_reply: "When someone replies in a thread you follow or posted in.",
-  needs_action: "When an approval or reminder is waiting on you.",
-  job_accepted: "When an agent picks up a job.",
-  job_progress: "While an agent works through a job.",
-  job_result: "When an agent finishes a job.",
-  job_error: "When an agent job fails.",
+  dm: "Когда кто-то пишет вам напрямую.",
+  mention: "Когда кто-то отмечает вас в канале.",
+  thread_reply:
+    "Когда кто-то отвечает в треде, за которым вы следите или в котором писали.",
+  needs_action: "Когда вас ждёт согласование или напоминание.",
+  job_accepted: "Когда агент берёт задачу в работу.",
+  job_progress: "Пока агент выполняет задачу.",
+  job_result: "Когда агент завершает задачу.",
+  job_error: "Когда задача агента завершилась ошибкой.",
 };
 
 export const RECOMMENDED_SOUND_BY_SLOT: Record<SoundSlot, SoundName> = {

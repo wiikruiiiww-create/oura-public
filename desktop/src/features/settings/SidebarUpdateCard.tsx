@@ -66,11 +66,11 @@ export function SidebarUpdateCompactCard({
 
   return (
     <SidebarCompactActionCard
-      actionAriaLabel="Update now"
+      actionAriaLabel="Обновить сейчас"
       actionDisabled={pending}
       actionTestId={actionTestId}
-      description={pending ? "Updating" : "Click to update"}
-      dismissLabel="Dismiss update notification"
+      description={pending ? "Обновление…" : "Нажмите, чтобы обновить"}
+      dismissLabel="Скрыть уведомление об обновлении"
       icon={
         pending ? (
           <Spinner aria-hidden="true" className="h-5 w-5 border-2" />
@@ -82,7 +82,7 @@ export function SidebarUpdateCompactCard({
       onAction={handleUpdate}
       onDismiss={onDismiss}
       testId={testId}
-      title="Ready to update!"
+      title="Обновление готово!"
     />
   );
 }

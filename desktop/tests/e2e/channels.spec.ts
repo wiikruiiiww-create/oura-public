@@ -507,13 +507,13 @@ test("shows presence in sidebar, DM header, and member list", async ({
   await expect(page.getByTestId("sidebar-profile-card")).toBeVisible();
   await expect(page.getByTestId("self-presence-badge")).toHaveAttribute(
     "aria-label",
-    "Online",
+    "В сети",
   );
   await expect(page.getByTestId("channel-presence-alice-tyler")).toBeVisible();
 
   await page.getByTestId("channel-alice-tyler").click();
   await expect(page.getByTestId("chat-title")).toHaveText("alice-tyler");
-  await expect(page.getByTestId("chat-presence-badge")).toContainText("Online");
+  await expect(page.getByTestId("chat-presence-badge")).toContainText("В сети");
 
   await openMembersSidebar(page, "general");
   await expect(

@@ -31,6 +31,7 @@ import {
   type SeverityTier,
 } from "@/features/settings/lib/moderationQueue";
 import { cn } from "@/shared/lib/cn";
+import { pluralRu } from "@/shared/lib/pluralRu";
 import { truncatePubkey } from "@/shared/lib/pubkey";
 import { Button } from "@/shared/ui/button";
 import {
@@ -92,7 +93,7 @@ async function resolveTargetAuthor(
   if (group.targetKind === "pubkey") return group.target;
   const event = await getEventById(group.target);
   if (!event?.pubkey) {
-    throw new Error("Could not resolve the message author.");
+    throw new Error("Не удалось определить автора сообщения.");
   }
   return event.pubkey;
 }
@@ -114,7 +115,8 @@ async function enforceResolution(
   switch (action) {
     case "delete":
       // Gated to event targets with a channel (resolvableActions).
-      if (group.channelId == null) throw new Error("Report has no channel.");
+      if (group.channelId == null)
+        throw new Error("У жалобы отсутствует канал.");
       await deleteMessage(group.channelId, group.target);
       return;
     case "ban":
@@ -122,7 +124,8 @@ async function enforceResolution(
       return;
     case "kick":
       // Gated to event targets with a channel (resolvableActions).
-      if (group.channelId == null) throw new Error("Report has no channel.");
+      if (group.channelId == null)
+        throw new Error("У жалобы отсутствует канал.");
       await removeChannelMember(
         group.channelId,
         await resolveTargetAuthor(group),
@@ -133,7 +136,7 @@ async function enforceResolution(
       return;
     case "timeout":
       // Dropped from one-click until the resolve flow collects a duration.
-      throw new Error("Timeout is not available from the queue yet.");
+      throw new Error("Тайм-аут пока недоступен из очереди.");
   }
 }
 
@@ -144,33 +147,33 @@ const RESOLUTION_OPTIONS: {
 }[] = [
   {
     action: "delete",
-    label: "Delete content",
-    description: "Remove the reported content and resolve.",
+    label: "Удалить контент",
+    description: "Удалить содержимое жалобы и закрыть её.",
   },
   {
     action: "kick",
-    label: "Kick author",
-    description: "Remove the author from the community.",
+    label: "Исключить автора",
+    description: "Удалить автора из сообщества.",
   },
   {
     action: "ban",
-    label: "Ban author",
-    description: "Block the author from the community.",
+    label: "Заблокировать автора",
+    description: "Заблокировать автора в сообществе.",
   },
   {
     action: "timeout",
-    label: "Time out author",
-    description: "Temporarily mute the author.",
+    label: "Заглушить автора",
+    description: "Временно заглушить автора.",
   },
   {
     action: "escalate",
-    label: "Escalate",
-    description: "Route to the platform-safety lane.",
+    label: "Эскалировать",
+    description: "Передать в очередь по безопасности платформы.",
   },
   {
     action: "dismiss",
-    label: "Dismiss",
-    description: "No violation — close without action.",
+    label: "Отклонить",
+    description: "Нарушений нет — закрыть без действий.",
   },
 ];
 
@@ -195,11 +198,11 @@ function targetLabel(group: ModerationQueueGroup): string {
   const short = truncatePubkey(group.target);
   switch (group.targetKind) {
     case "event":
-      return `Message ${short}`;
+      return `Сообщение ${short}`;
     case "pubkey":
-      return `Member ${short}`;
+      return `Участник ${short}`;
     case "blob":
-      return `Attachment ${short}`;
+      return `Вложение ${short}`;
   }
 }
 
@@ -218,7 +221,7 @@ function ReporterLine({
           {reportTypeLabel(report.reportType)}
         </span>
         <span className="text-muted-foreground">
-          reported by {who} · {formatTimestamp(report.createdAt)}
+          от {who} · {formatTimestamp(report.createdAt)}
         </span>
       </div>
       {report.note ? (
@@ -249,12 +252,12 @@ function ResolveMenu({
           size="sm"
           type="button"
         >
-          Resolve
+          Решить
           <ChevronDown className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel>Resolution</DropdownMenuLabel>
+        <DropdownMenuLabel>Решение</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {options.map((option) => (
           <DropdownMenuItem
@@ -312,7 +315,7 @@ function QueueGroupCard({
             </span>
             <span className="text-xs text-muted-foreground">
               · {group.reports.length}{" "}
-              {group.reports.length === 1 ? "report" : "reports"}
+              {pluralRu(group.reports.length, "жалоба", "жалобы", "жалоб")}
             </span>
           </div>
         </div>
@@ -342,8 +345,14 @@ function QueueGroupCard({
         <div className="flex items-start gap-1.5 rounded-md bg-amber-500/10 px-2.5 py-1.5 text-xs text-amber-700 dark:text-amber-300">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>
-            {group.priorActions.length} prior action
-            {group.priorActions.length === 1 ? "" : "s"} against this target
+            {group.priorActions.length}{" "}
+            {pluralRu(
+              group.priorActions.length,
+              "предыдущее действие",
+              "предыдущих действия",
+              "предыдущих действий",
+            )}{" "}
+            в отношении этой цели
             {" — "}
             {group.priorActions
               .slice(0, 3)
@@ -410,11 +419,11 @@ function QueueTab() {
         ),
       );
       toast.success(
-        status === "dismissed" ? "Report dismissed" : "Report resolved",
+        status === "dismissed" ? "Жалоба отклонена" : "Жалоба решена",
       );
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to resolve the report",
+        error instanceof Error ? error.message : "Не удалось обработать жалобу",
       );
     }
   }
@@ -427,12 +436,12 @@ function QueueTab() {
     );
   }
   if (reportsQuery.isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading reports…</p>;
+    return <p className="text-sm text-muted-foreground">Загрузка жалоб…</p>;
   }
   if (groups.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-border/70 bg-background/40 px-3 py-6 text-center text-sm text-muted-foreground">
-        No open reports. The queue is clear.
+        Нет открытых жалоб. Очередь пуста.
       </p>
     );
   }
@@ -479,7 +488,7 @@ function AuditRow({
           </span>
         ) : null}
         <span className="text-xs text-muted-foreground">
-          by {who} · {formatTimestamp(action.createdAt)}
+          от {who} · {formatTimestamp(action.createdAt)}
         </span>
       </div>
       {action.publicReason ? (
@@ -518,12 +527,14 @@ function AuditTab() {
     );
   }
   if (auditQuery.isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading audit log…</p>;
+    return (
+      <p className="text-sm text-muted-foreground">Загрузка журнала аудита…</p>
+    );
   }
   if (actions.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-border/70 bg-background/40 px-3 py-6 text-center text-sm text-muted-foreground">
-        No moderation actions yet.
+        Пока нет действий модерации.
       </p>
     );
   }
@@ -551,26 +562,26 @@ export function ModerationQueueCard() {
       data-testid="settings-moderation"
     >
       <SettingsSectionHeader
-        title="Moderation"
-        description="Review reported content and take action. Visible to community moderators only."
+        title="Модерация"
+        description="Просматривайте жалобы на контент и принимайте меры. Видно только модераторам сообщества."
       />
 
       {!isModerator ? (
         membershipQuery.isLoading ? (
-          <p className="text-sm text-muted-foreground">Checking access…</p>
+          <p className="text-sm text-muted-foreground">Проверка доступа…</p>
         ) : (
           <p className="rounded-lg border border-dashed border-border/70 bg-background/40 px-3 py-6 text-center text-sm text-muted-foreground">
-            The moderation queue is available to community moderators only.
+            Очередь модерации доступна только модераторам сообщества.
           </p>
         )
       ) : (
         <Tabs defaultValue="queue">
           <TabsList>
             <TabsTrigger data-testid="moderation-tab-queue" value="queue">
-              Queue
+              Очередь
             </TabsTrigger>
             <TabsTrigger data-testid="moderation-tab-audit" value="audit">
-              Audit log
+              Журнал аудита
             </TabsTrigger>
           </TabsList>
           <TabsContent value="queue">

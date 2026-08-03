@@ -33,7 +33,7 @@ test("capture: consolidated invites settings", async ({ page }) => {
     page.getByTestId("settings-nav-community-members"),
   ).toContainText("Invites");
   await expect(
-    page.getByRole("heading", { name: "Invites", exact: true }),
+    page.getByRole("heading", { name: "Приглашения", exact: true }),
   ).toBeVisible();
   await expect(page.getByTestId("community-icon-settings")).toHaveCount(0);
   await expect(
@@ -73,25 +73,27 @@ test("capture: share-style community invite dialog", async ({ page }) => {
   const dialog = page.getByTestId("community-invite-dialog");
   await expect(dialog).toBeVisible();
   await expect(
-    dialog.getByRole("heading", { name: "Invite to community" }),
+    dialog.getByRole("heading", { name: "Пригласить в сообщество" }),
   ).toBeVisible();
   await expect(page.getByTestId("community-invite-email-field")).toHaveCount(0);
   await expect(page.getByPlaceholder("Type an email address")).toHaveCount(0);
   await expect(
-    dialog.getByRole("heading", { name: "Share with a link" }),
+    dialog.getByRole("heading", { name: "Поделиться ссылкой" }),
   ).toBeVisible();
-  await expect(page.getByTestId("copy-invite-link")).toHaveText("Copy link");
+  await expect(page.getByTestId("copy-invite-link")).toHaveText(
+    "Копировать ссылку",
+  );
   await expect(page.getByTestId("invite-link-qr-code")).toHaveCount(0);
   await expect(page.getByTestId("invite-link-url")).toHaveCount(0);
 
   const expiryTrigger = page.getByTestId("invite-link-ttl-trigger");
-  await expect(expiryTrigger).toHaveText("3 days");
+  await expect(expiryTrigger).toHaveText("3 дня");
   await expiryTrigger.click();
   await expect(
-    page.getByRole("menuitemradio", { name: "1 day" }),
+    page.getByRole("menuitemradio", { name: "1 день" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("menuitemradio", { name: "30 days" }),
+    page.getByRole("menuitemradio", { name: "30 дней" }),
   ).toBeVisible();
   await page.keyboard.press("Escape");
 

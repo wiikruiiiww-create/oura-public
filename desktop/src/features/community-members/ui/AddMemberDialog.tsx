@@ -20,8 +20,8 @@ import { Input } from "@/shared/ui/input";
 const PUBKEY_REGEX = /^[0-9a-f]{64}$/;
 
 const ROLE_OPTIONS: Array<{ value: RelayMemberRole; label: string }> = [
-  { value: "member", label: "Member" },
-  { value: "admin", label: "Admin" },
+  { value: "member", label: "Участник" },
+  { value: "admin", label: "Администратор" },
 ];
 
 export function AddMemberDialog({
@@ -67,7 +67,7 @@ export function AddMemberDialog({
       { pubkey: normalizedPubkey, role },
       {
         onSuccess: () => {
-          toast.success("Member added");
+          toast.success("Участник добавлен");
           handleOpenChange(false);
         },
       },
@@ -82,9 +82,9 @@ export function AddMemberDialog({
       >
         <div className="flex max-h-[85vh] flex-col">
           <DialogHeader className="border-b border-border/60 px-6 py-5 pr-14">
-            <DialogTitle>Add member</DialogTitle>
+            <DialogTitle>Добавить участника</DialogTitle>
             <DialogDescription>
-              Add a user to this relay by their public key.
+              Добавьте пользователя в этот релей по его публичному ключу.
             </DialogDescription>
           </DialogHeader>
 
@@ -102,7 +102,7 @@ export function AddMemberDialog({
                     className="text-sm font-medium"
                     htmlFor="member-pubkey"
                   >
-                    Public key
+                    Публичный ключ
                   </label>
                   <Input
                     autoCapitalize="none"
@@ -111,24 +111,24 @@ export function AddMemberDialog({
                     id="member-pubkey"
                     maxLength={64}
                     onChange={(e) => setPubkey(e.target.value)}
-                    placeholder="64-character hex pubkey"
+                    placeholder="64-символьный hex-ключ pubkey"
                     spellCheck={false}
                     value={pubkey}
                   />
                   {pubkey.trim().length > 0 && !isValidPubkey ? (
                     <p className="text-xs text-destructive">
-                      Must be exactly 64 lowercase hex characters.
+                      Должно быть ровно 64 символа в нижнем регистре (hex).
                     </p>
                   ) : null}
                   {isAlreadyMember ? (
                     <p className="text-xs text-destructive">
-                      This pubkey is already a relay member.
+                      Этот ключ уже является участником релея.
                     </p>
                   ) : null}
                 </div>
 
                 <div className="space-y-1.5">
-                  <p className="text-sm font-medium">Role</p>
+                  <p className="text-sm font-medium">Роль</p>
                   <div className="flex gap-2">
                     {ROLE_OPTIONS.filter(
                       (opt) => isOwner || opt.value === "member",
@@ -168,7 +168,7 @@ export function AddMemberDialog({
                 type="button"
                 variant="outline"
               >
-                Cancel
+                Отмена
               </Button>
               <Button
                 data-testid="confirm-add-member"
@@ -176,7 +176,7 @@ export function AddMemberDialog({
                 size="sm"
                 type="submit"
               >
-                {addMutation.isPending ? "Adding..." : "Add member"}
+                {addMutation.isPending ? "Добавление…" : "Добавить участника"}
               </Button>
             </div>
           </form>

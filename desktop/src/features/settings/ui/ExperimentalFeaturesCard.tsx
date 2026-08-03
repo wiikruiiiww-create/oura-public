@@ -44,11 +44,11 @@ export function ExperimentalFeaturesCard() {
   return (
     <section className="min-w-0" data-testid="settings-experimental">
       <SettingsSectionHeader
-        title="Experiments"
+        title="Эксперименты"
         description={
           <>
-            These features are functional but still being refined. Enable them
-            to try new capabilities early.
+            Эти функции уже работают, но ещё дорабатываются. Включите их, чтобы
+            одними из первых попробовать новые возможности.
           </>
         }
       />

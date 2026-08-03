@@ -347,7 +347,7 @@ export function AnimatedAvatarCapture({
             setSelectedCameraSource(null);
             setSelectedCameraId(null);
             setErrorMessage(
-              "Could not find an iPhone camera. Make sure Continuity Camera is available, then try again.",
+              "Не удалось найти камеру iPhone. Убедитесь, что доступна функция Continuity Camera, и повторите попытку.",
             );
             setPhase("idle");
             return;
@@ -378,7 +378,7 @@ export function AnimatedAvatarCapture({
       } catch {
         releaseCamera();
         setErrorMessage(
-          "Could not access the camera. Check Buzz's camera permission and try again.",
+          "Не удалось получить доступ к камере. Проверьте разрешение OURA на использование камеры и повторите попытку.",
         );
         setPhase("idle");
       }
@@ -467,7 +467,9 @@ export function AnimatedAvatarCapture({
         return;
       }
       setErrorMessage(
-        error instanceof Error ? error.message : "Recording failed. Try again.",
+        error instanceof Error
+          ? error.message
+          : "Запись не удалась. Повторите попытку.",
       );
       releaseCamera();
       setPhase("idle");
@@ -504,7 +506,7 @@ export function AnimatedAvatarCapture({
       const composed = composeAvatarFrames(bitmaps, composition);
       const posterFrame = composed[posterIndex] ?? composed[0];
       if (!posterFrame) {
-        throw new Error("No frames were recorded.");
+        throw new Error("Не записано ни одного кадра.");
       }
       const animationBytes = encodeAvatarAnimation(composed);
       const posterBytes = await renderAvatarPosterPng(posterFrame);
@@ -516,7 +518,7 @@ export function AnimatedAvatarCapture({
         !animationUpload.type.startsWith("image/") ||
         !posterUpload.type.startsWith("image/")
       ) {
-        setErrorMessage("The relay rejected the recording. Try again.");
+        setErrorMessage("Релей отклонил запись. Повторите попытку.");
         return false;
       }
       onApply(buildAnimatedAvatarUrl(posterUpload.url, animationUpload.url));
@@ -525,7 +527,7 @@ export function AnimatedAvatarCapture({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Could not upload the animated avatar.",
+          : "Не удалось загрузить анимированный аватар.",
       );
       return false;
     } finally {
@@ -574,7 +576,7 @@ export function AnimatedAvatarCapture({
   const usePortal = previewContainer !== null;
   const reviewWarning =
     phase === "review" && recording && !recording.backgroundRemoved
-      ? "Background removal model couldn't be loaded, so the background was kept. Retake while online to remove it."
+      ? "Не удалось загрузить модель удаления фона, поэтому фон был сохранён. Запишите заново в режиме онлайн, чтобы удалить его."
       : null;
   const captureHelpText =
     phase === "idle"
@@ -582,17 +584,17 @@ export function AnimatedAvatarCapture({
       : phase === "starting"
         ? null
         : phase === "live"
-          ? "Line up your shot."
+          ? "Настройте кадр."
           : phase === "recording"
-            ? "Recording... hold still-ish."
+            ? "Запись… постарайтесь не двигаться."
             : phase === "processing"
-              ? "Cutting you out of the background..."
+              ? "Вырезаем вас из фона…"
               : null;
   const previewCaption =
     usePortal && (phase === "live" || phase === "recording")
       ? captureHelpText
       : usePortal && phase === "review"
-        ? "Hover to play"
+        ? "Наведите курсор, чтобы воспроизвести"
         : null;
   const inlineCaptureHelpText =
     usePortal && (phase === "live" || phase === "recording")
@@ -686,7 +688,7 @@ export function AnimatedAvatarCapture({
               animation on hover — exactly how the avatar behaves in the app.
               Dragging repositions the active framing target. */}
       <div
-        aria-label="Avatar preview — drag or use arrow keys to position"
+        aria-label="Предпросмотр аватара — перетащите или используйте стрелки для позиционирования"
         className={cn(
           // Transparent like the real avatar container — only a faint
           // ring marks the circular crop boundary. pointer-events-auto
@@ -778,15 +780,15 @@ export function AnimatedAvatarCapture({
       ) : phase === "starting" ? (
         <div className="absolute inset-0 grid place-items-center rounded-full bg-background/70 text-center shadow-inner">
           <div className="grid justify-items-center gap-2 px-4">
-            <Spinner aria-label="Starting camera" className="h-4 w-4" />
+            <Spinner aria-label="Запуск камеры" className="h-4 w-4" />
             <span className="text-xs font-medium text-muted-foreground">
-              Starting camera
+              Запуск камеры
             </span>
           </div>
         </div>
       ) : phase === "processing" ? (
         <div className="grid h-full w-full place-items-center rounded-full bg-background/60 shadow-inner">
-          <Spinner aria-label="Processing recording" className="h-6 w-6" />
+          <Spinner aria-label="Обработка записи" className="h-6 w-6" />
         </div>
       ) : null}
     </div>
@@ -908,7 +910,7 @@ export function AnimatedAvatarCapture({
           frameCount={bitmaps.length}
           frames={filmstripFrames}
           helpTestId={`${testIdPrefix}-animated-review-help`}
-          helpText="Pick the still shown before hover."
+          helpText="Выберите стоп-кадр, который отображается до наведения курсора."
           onSelectFrame={(index) =>
             setPosterIndex(clampFrameIndex(index, bitmaps.length))
           }
@@ -955,11 +957,11 @@ export function AnimatedAvatarCapture({
         >
           {isSaving ? (
             <Spinner
-              aria-label="Uploading animated avatar"
+              aria-label="Загрузка анимированного аватара"
               className="h-4 w-4 border-2"
             />
           ) : (
-            "Use as avatar"
+            "Использовать как аватар"
           )}
         </Button>
       ) : null}

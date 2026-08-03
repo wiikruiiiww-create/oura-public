@@ -228,7 +228,7 @@ test("updates the relay-backed profile from settings", async ({ page }) => {
   await expect(page.getByTestId("profile-identity-details")).toBeHidden();
   await expandIdentity(page);
   await expect(page.getByTestId("profile-pubkey")).toContainText("deadbeef");
-  await expect(page.getByTestId("profile-nip05")).toContainText("Not set");
+  await expect(page.getByTestId("profile-nip05")).toContainText("Не указано");
 
   await page.getByTestId("profile-metadata-edit").click();
   await expect(page.getByTestId("profile-metadata-edit")).toHaveText("Done");
@@ -250,7 +250,7 @@ test("updates the relay-backed profile from settings", async ({ page }) => {
   await expect(page.getByTestId("profile-display-name-value")).toHaveText(
     displayName,
   );
-  await expect(page.getByTestId("profile-nip05")).toContainText("Not set");
+  await expect(page.getByTestId("profile-nip05")).toContainText("Не указано");
   await page.getByTestId("profile-avatar-edit").click();
   await expect(page.getByTestId("profile-avatar-url")).toHaveValue("");
   await page.getByTestId("profile-avatar-done").click();
@@ -265,7 +265,7 @@ test("updates the relay-backed profile from settings", async ({ page }) => {
     displayName,
   );
   await expandIdentity(page);
-  await expect(page.getByTestId("profile-nip05")).toContainText("Not set");
+  await expect(page.getByTestId("profile-nip05")).toContainText("Не указано");
   await page.getByTestId("profile-avatar-edit").click();
   await expect(page.getByTestId("profile-avatar-url")).toHaveValue("");
   await expect(page.getByTestId("profile-about-value")).toHaveText(about);
@@ -303,7 +303,9 @@ test("saves profile metadata from the block Done button", async ({ page }) => {
   await page.getByTestId("profile-about").fill("");
   await page.getByTestId("profile-metadata-edit").click();
   await waitForReactEffects(page);
-  await expect(page.getByTestId("profile-about-value")).toHaveText("Not set");
+  await expect(page.getByTestId("profile-about-value")).toHaveText(
+    "Не указано",
+  );
   await expect(page.getByTestId("profile-save")).toHaveCount(0);
 
   await page.getByTestId("profile-metadata-edit").click();
@@ -682,7 +684,7 @@ test("opens Send feedback from the profile menu", async ({ page }) => {
   await page.getByTestId("profile-popover-send-feedback").click();
   await expect(page.getByTestId("send-feedback-dialog")).toBeVisible();
   await expect(page.getByTestId("feedback-privacy-disclosure")).toContainText(
-    "not posted to a channel",
+    "не публикуется в канале",
   );
 });
 
@@ -708,11 +710,11 @@ test("keeps Send disabled when a stale attachment attempt finishes", async ({
   await page.getByTestId("feedback-message").fill("Attachment race");
   await page.getByTestId("feedback-attach-image").click();
   await expect(page.getByTestId("feedback-attach-image")).toContainText(
-    "Attaching…",
+    "Прикрепление…",
   );
 
   await page.waitForTimeout(450);
-  await page.getByRole("button", { name: "Cancel" }).click();
+  await page.getByRole("button", { name: "Отмена" }).click();
   await openProfileMenu(page);
   await page.getByTestId("profile-popover-send-feedback").click();
   await page.getByTestId("feedback-message").fill("Second attachment");
@@ -722,7 +724,7 @@ test("keeps Send disabled when a stale attachment attempt finishes", async ({
   await expect(submit).toBeDisabled();
   await page.waitForTimeout(900);
   await expect(page.getByTestId("feedback-attach-image")).toContainText(
-    "Attaching…",
+    "Прикрепление…",
   );
   await expect(submit).toBeDisabled();
 
@@ -765,7 +767,7 @@ test("updates presence from the profile menu", async ({ page }) => {
   await openProfileMenu(page);
   await expect(
     page.getByTestId("profile-popover-presence-trigger"),
-  ).toContainText("Online");
+  ).toContainText("В сети");
 
   await page.getByTestId("profile-popover-presence-trigger").click();
   await page.getByTestId("profile-popover-status-away").click();
@@ -1187,7 +1189,7 @@ test("notification settings drive the Inbox badge and desktop alerts", async ({
   await openSettings(page, "notifications");
   await expect(page.getByTestId("settings-notifications")).toBeVisible();
   await expect(page.getByTestId("notifications-desktop-state")).toContainText(
-    "On",
+    "Включено",
   );
 
   await page.getByTestId("settings-back-to-app").click();
@@ -1313,7 +1315,7 @@ test("desktop notification clicks open the matching forum thread", async ({
 
   await openSettings(page, "notifications");
   await expect(page.getByTestId("notifications-desktop-state")).toContainText(
-    "On",
+    "Включено",
   );
   await page.getByTestId("settings-back-to-app").click();
   await expectHomeView(page);

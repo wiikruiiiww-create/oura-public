@@ -500,9 +500,9 @@ test("shows a sidebar update card when an update is ready", async ({
   await page.getByTestId("sidebar-profile-card").click();
   await page.getByTestId("profile-popover-settings").click();
   await page.getByTestId("settings-nav-updates").click();
-  await page.getByRole("button", { name: "Check for Updates" }).click();
+  await page.getByRole("button", { name: "Проверить обновления" }).click();
   await expect(page.getByTestId("settings-panel-updates")).toContainText(
-    "Update downloaded. Click to apply.",
+    "Обновление скачано. Нажмите, чтобы применить.",
   );
   await expect
     .poll(() =>
@@ -525,11 +525,11 @@ test("shows a sidebar update card when an update is ready", async ({
 
   const updateCard = page.getByTestId("sidebar-update-card");
   await expect(updateCard).toBeVisible();
-  await expect(updateCard).toContainText("Ready to update!");
-  await expect(updateCard).toContainText("Click to update");
+  await expect(updateCard).toContainText("Обновление готово!");
+  await expect(updateCard).toContainText("Нажмите, чтобы обновить");
   await expect(page.getByTestId("sidebar-update-now")).toBeVisible();
   await page.getByTestId("sidebar-update-now").click();
-  await expect(updateCard).toContainText("Updating");
+  await expect(updateCard).toContainText("Обновление…");
   await expect(page.getByTestId("sidebar-update-now")).toBeDisabled();
 
   await expect
@@ -595,9 +595,9 @@ test("reflects an install started from the header update button on the sidebar c
   await page.getByTestId("sidebar-profile-card").click();
   await page.getByTestId("profile-popover-settings").click();
   await page.getByTestId("settings-nav-updates").click();
-  await page.getByRole("button", { name: "Check for Updates" }).click();
+  await page.getByRole("button", { name: "Проверить обновления" }).click();
   await expect(page.getByTestId("settings-panel-updates")).toContainText(
-    "Update downloaded. Click to apply.",
+    "Обновление скачано. Нажмите, чтобы применить.",
   );
   await page.getByTestId("settings-back-to-app").click();
 
@@ -605,14 +605,14 @@ test("reflects an install started from the header update button on the sidebar c
 
   const updateCard = page.getByTestId("sidebar-update-card");
   await expect(updateCard).toBeVisible();
-  await expect(updateCard).toContainText("Click to update");
+  await expect(updateCard).toContainText("Нажмите, чтобы обновить");
 
   await page
     .getByTestId("chat-header")
-    .getByRole("button", { name: "Update now" })
+    .getByRole("button", { name: "Обновить сейчас" })
     .click();
 
-  await expect(updateCard).toContainText("Updating");
+  await expect(updateCard).toContainText("Обновление…");
   await expect(page.getByTestId("sidebar-update-now")).toBeDisabled();
 });
 
@@ -648,11 +648,11 @@ test("shows manual-required update card and never auto-downloads on non-AppImage
   await page.getByTestId("sidebar-profile-card").click();
   await page.getByTestId("profile-popover-settings").click();
   await page.getByTestId("settings-nav-updates").click();
-  await page.getByRole("button", { name: "Check for Updates" }).click();
+  await page.getByRole("button", { name: "Проверить обновления" }).click();
 
   // Settings panel shows the manual-required state, not "ready".
   await expect(page.getByTestId("settings-panel-updates")).toContainText(
-    "In-app updates aren't supported on this Linux package",
+    "Обновление в приложении не поддерживается для этой сборки",
   );
   await expect(page.getByTestId("settings-panel-updates")).toContainText(
     "AppImage",

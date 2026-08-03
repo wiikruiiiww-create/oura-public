@@ -1,6 +1,8 @@
 /*
- * OURA: анимированные розовые «пятна света» поверх тёмных обоев приложения.
- * Показывается только в тёмной теме при обоях Buzz (data-buzz-sidebar).
+ * OURA: анимированные розовые «пятна света» поверх тёмных обоев.
+ * `.oura-grainient` показывается только в тёмной теме при обоях Buzz
+ * (data-buzz-sidebar); `.oura-onboarding-grainient` включён всегда —
+ * онбординг брендово-тёмный независимо от темы приложения.
  * Переиспользует keyframes buzz-grainient-orbit и @property-регистрации
  * координат из animations.css.
  */
@@ -8,7 +10,8 @@
   display: none;
 }
 
-:root[data-buzz-sidebar].dark .oura-grainient {
+:root[data-buzz-sidebar].dark .oura-grainient,
+.oura-onboarding-grainient {
   animation: buzz-grainient-orbit 24s linear infinite alternate;
   background-image:
     radial-gradient(
@@ -37,7 +40,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root[data-buzz-sidebar].dark .oura-grainient {
+  :root[data-buzz-sidebar].dark .oura-grainient,
+  .oura-onboarding-grainient {
     animation: none;
   }
 }
