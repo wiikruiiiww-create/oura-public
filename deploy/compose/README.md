@@ -41,6 +41,44 @@ keypair.
 
 Run `./run.sh backup-hint` for the backup checklist.
 
+## Backups & restore
+
+`./run.sh backup` (or `backup.sh` directly from cron) snapshots the durable
+state into `backups/` (override with `BUZZ_BACKUP_DIR`): gzipped `pg_dump`
+dumps, a mirror of the MinIO media bucket, and tarballs of the git volume.
+Retention is `BUZZ_BACKUP_KEEP` (default 14) snapshots for pg/git; the MinIO
+mirror is a single rsync-style copy. Redis is deliberately not backed up —
+its state (pub/sub, presence, rate-limit windows) is ephemeral.
+
+`deploy/compose/.env` is NOT captured by the script: it holds
+`BUZZ_RELAY_PRIVATE_KEY` and all infrastructure secrets. Back it up
+separately through a secret store, not alongside the data snapshots.
+
+Restore (stack stopped except the service being restored):
+
+```bash
+# Postgres: recreate schema+data from a dump
+gunzip -c backups/pg/buzz-<stamp>.sql.gz \
+  | docker compose --env-file .env exec -T postgres \
+      psql -U buzz -d buzz
+
+# MinIO: mirror the backup back into the bucket
+docker compose --env-file .env run --rm -T --no-deps \
+  -v "$PWD/backups/minio:/backup:ro" --entrypoint /bin/sh minio-init -euc '
+    mc alias set local http://minio:9000 "$BUZZ_S3_ACCESS_KEY" "$BUZZ_S3_SECRET_KEY"
+    mc mirror --overwrite /backup "local/$BUZZ_S3_BUCKET"
+  '
+
+# Git volume: unpack the tarball into the named volume
+docker run --rm -v buzz-prod_buzz-git-data:/data/git \
+  -v "$PWD/backups/git:/backup:ro" \
+  alpine:3 sh -euc 'rm -rf /data/git/* && tar xzf /backup/git-<stamp>.tar.gz -C /data'
+```
+
+Rehearse a full restore on a scratch host before relying on the schedule —
+an untested backup is not a backup. Take pg + minio + git snapshots from the
+same maintenance window so they stay consistent with each other.
+
 ## Validation
 
 Before sharing an install link publicly, verify a fresh install with:

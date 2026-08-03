@@ -1,5 +1,16 @@
+{
+  email {$CADDY_ACME_EMAIL}
+}
+
 {$BUZZ_DOMAIN} {
   encode zstd gzip
+
+  header Strict-Transport-Security "max-age=31536000"
+
+  # Aligned with the relay's default git pack cap (BUZZ_GIT_MAX_PACK_BYTES, 500 MB).
+  request_body {
+    max_size {$CADDY_MAX_REQUEST_BODY:512MB}
+  }
 
   reverse_proxy relay:3000
 }
