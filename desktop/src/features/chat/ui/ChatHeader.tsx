@@ -5,7 +5,6 @@ import {
   Copy,
   FileText,
   FolderGit2,
-  Hash,
   House,
   Lock,
   Zap,
@@ -38,7 +37,6 @@ type ChatHeaderProps = {
 };
 
 const HEADER_ICON_CLASS = "h-4 w-4 text-muted-foreground";
-const CHANNEL_HASH_ICON_CLASS = "h-4 w-4 translate-y-px";
 
 function ChannelIcon({
   channelType,
@@ -81,7 +79,7 @@ function ChannelIcon({
     return <FileText className={HEADER_ICON_CLASS} />;
   }
 
-  return <Hash className={CHANNEL_HASH_ICON_CLASS} color="gray" />;
+  return null;
 }
 
 export function ChatHeader({

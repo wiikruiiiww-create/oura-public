@@ -507,7 +507,7 @@ export function AppSidebar({
   const resolvedDisplayName =
     profile?.displayName?.trim() ||
     fallbackDisplayName?.trim() ||
-    "Current identity";
+    "Текущий профиль";
   const {
     scrollToNextAbove,
     scrollToNextBelow,
@@ -651,7 +651,7 @@ export function AppSidebar({
                       onSelectChannel={onSelectChannel}
                       onToggleCollapsed={() => toggleCollapsedGroup("starred")}
                       selectedChannelId={selectedChannelId}
-                      title="Starred"
+                      title="Избранное"
                       unreadChannelCounts={unreadChannelCounts}
                       unreadChannelIds={unreadChannelIds}
                       mutedChannelIds={mutedChannelIds}
@@ -747,7 +747,7 @@ export function AppSidebar({
                       }
                       actionsTestId="section-actions-channels"
                       listTestId="stream-list"
-                      quickCreateLabel="Browse channels"
+                      quickCreateLabel="Все каналы"
                       onQuickCreateClick={() => onBrowseChannels?.()}
                       showQuickCreate
                       onMarkAllRead={onMarkAllChannelsRead}
@@ -756,7 +756,7 @@ export function AppSidebar({
                       onSelectChannel={onSelectChannel}
                       onToggleCollapsed={() => toggleCollapsedGroup("channels")}
                       selectedChannelId={selectedChannelId}
-                      title="Channels"
+                      title="Каналы"
                       unreadChannelCounts={unreadChannelCounts}
                       unreadChannelIds={unreadChannelIds}
                       sections={channelSections}
@@ -776,7 +776,7 @@ export function AppSidebar({
                   </SidebarDndContext>
                   <FeatureGate feature="forum">
                     <ChannelGroupSection
-                      createLabel="New forum"
+                      createLabel="Новый форум"
                       hasUnread={unreadChannelIds.size > 0}
                       isCollapsed={collapsedGroups.forums}
                       isActiveChannel={selectedView === "channel"}
@@ -795,7 +795,7 @@ export function AppSidebar({
                       onSelectChannel={onSelectChannel}
                       onToggleCollapsed={() => toggleCollapsedGroup("forums")}
                       selectedChannelId={selectedChannelId}
-                      title="Forums"
+                      title="Форумы"
                       unreadChannelCounts={unreadChannelCounts}
                       unreadChannelIds={unreadChannelIds}
                       mutedChannelIds={mutedChannelIds}
@@ -808,12 +808,12 @@ export function AppSidebar({
                     action={
                       <div className="absolute right-1 top-1/2 z-10 flex -translate-y-1/2 items-center gap-0.5">
                         <SectionQuickAction
-                          label="New message"
+                          label="Новое сообщение"
                           onClick={onNewMessage}
                           testId="section-actions-dms-quick-create"
                         />
                         <SectionActionsMenu
-                          sectionLabel="direct messages"
+                          sectionLabel="личные"
                           testId="section-actions-dms"
                           onOpenChange={setDmActionsMenuOpen}
                           onNewMessage={onNewMessage}
@@ -840,7 +840,7 @@ export function AppSidebar({
                     presenceByChannelId={dmPresenceByChannelId}
                     selectedChannelId={selectedChannelId}
                     testId="dm-list"
-                    title="Direct messages"
+                    title="Личные"
                     sectionActionsOpen={dmActionsMenuOpen}
                     unreadChannelCounts={unreadChannelCounts}
                     unreadChannelIds={unreadChannelIds}

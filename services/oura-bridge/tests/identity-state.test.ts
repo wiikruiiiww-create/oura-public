@@ -1,5 +1,5 @@
 import { mkdtempSync } from "node:fs";
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -94,6 +94,53 @@ describe("StateStore", () => {
     await Promise.all([s.save(), s.save(), s.save()]);
     const s2 = await StateStore.load(path);
     expect(s2.getLead("1")?.channelId).toBe("c1");
+  });
+
+  describe("устойчивость state-файла (этап 0 hotfix)", () => {
+    it("битый JSON роняет load с подсказкой про .bak, а не стартует молча с нуля", async () => {
+      const path = tmpStatePath();
+      await writeFile(path, "{ это не json", "utf8");
+      await expect(StateStore.load(path)).rejects.toThrow(/\.bak/);
+    });
+
+    it("валидный JSON неожиданной формы (без leads) тоже роняет load", async () => {
+      const path = tmpStatePath();
+      await writeFile(path, JSON.stringify(["не", "тот", "формат"]), "utf8");
+      await expect(StateStore.load(path)).rejects.toThrow(/\.bak/);
+    });
+
+    it("отсутствующий файл (ENOENT) — единственный случай пустого старта", async () => {
+      const state = await StateStore.load(tmpStatePath());
+      expect(state.allLeads()).toEqual([]);
+    });
+
+    it("save сохраняет предыдущую версию файла в .bak", async () => {
+      const path = tmpStatePath();
+      const s1 = await StateStore.load(path);
+      s1.putLead({
+        chatId: "1",
+        name: "v1",
+        nsec: "nsec1a",
+        pubkeyHex: "a".repeat(64),
+        channelId: "c1",
+      });
+      await s1.save(); // первой записи предшествовал ENOENT — .bak не обязателен
+      s1.putLead({
+        chatId: "2",
+        name: "v2",
+        nsec: "nsec1b",
+        pubkeyHex: "b".repeat(32 * 2),
+        channelId: "c2",
+      });
+      await s1.save();
+
+      const bak = JSON.parse(await readFile(`${path}.bak`, "utf8")) as {
+        leads: Record<string, unknown>;
+      };
+      expect(Object.keys(bak.leads)).toEqual(["1"]); // .bak = версия ДО последней записи
+      const restored = await StateStore.load(`${path}.bak`);
+      expect(restored.getLead("1")?.channelId).toBe("c1");
+    });
   });
 
   describe("per-lead seen (I4)", () => {

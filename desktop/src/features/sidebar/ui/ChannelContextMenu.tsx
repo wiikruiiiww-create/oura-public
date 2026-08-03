@@ -58,7 +58,7 @@ function MoveToSectionSubmenu({
     <ContextMenuSub>
       <ContextMenuSubTrigger>
         <ContextMenuIconSlot />
-        <span>Move to section</span>
+        <span>Перенести в раздел</span>
       </ContextMenuSubTrigger>
       <ContextMenuSubContent>
         {sections.map((section) => (
@@ -87,14 +87,14 @@ function MoveToSectionSubmenu({
           <ContextMenuIconSlot>
             <Plus className="h-4 w-4" />
           </ContextMenuIconSlot>
-          <span>New section...</span>
+          <span>Новый раздел…</span>
         </ContextMenuItem>
         {currentSectionId ? (
           <ContextMenuItem
             onSelect={() => deferMenuAction(() => onUnassignChannel(channelId))}
           >
             <ContextMenuIconSlot />
-            <span>Remove from section</span>
+            <span>Убрать из раздела</span>
           </ContextMenuItem>
         ) : null}
       </ContextMenuSubContent>
@@ -113,25 +113,22 @@ function CopyChannelSubmenu({ channel }: { channel: Channel }) {
         <ContextMenuIconSlot>
           <Copy className="h-4 w-4" />
         </ContextMenuIconSlot>
-        <span>Copy</span>
+        <span>Копировать</span>
       </ContextMenuSubTrigger>
       <ContextMenuSubContent>
         <ContextMenuItem
           onSelect={() =>
-            copyTextToClipboard(
-              channel.name,
-              "Channel name copied to clipboard",
-            )
+            copyTextToClipboard(channel.name, "Название канала скопировано")
           }
         >
-          <span>Copy channel name</span>
+          <span>Название канала</span>
         </ContextMenuItem>
         <ContextMenuItem
           onSelect={() =>
-            copyTextToClipboard(channel.id, "Channel ID copied to clipboard")
+            copyTextToClipboard(channel.id, "ID канала скопирован")
           }
         >
-          <span>Copy channel ID</span>
+          <span>ID канала</span>
         </ContextMenuItem>
       </ContextMenuSubContent>
     </ContextMenuSub>
@@ -241,7 +238,7 @@ export function ChannelContextMenuItems({
           <ContextMenuIconSlot>
             <CheckCircle2 className="h-4 w-4" />
           </ContextMenuIconSlot>
-          <span>Mark as read</span>
+          <span>Прочитано</span>
         </ContextMenuItem>
       ) : !hasUnread && onMarkChannelUnread ? (
         <ContextMenuItem
@@ -252,7 +249,7 @@ export function ChannelContextMenuItems({
           <ContextMenuIconSlot>
             <CircleDot className="h-4 w-4" />
           </ContextMenuIconSlot>
-          <span>Mark unread</span>
+          <span>Не прочитано</span>
         </ContextMenuItem>
       ) : null}
       {showMuteToggle || showStar ? <ContextMenuSeparator /> : null}
@@ -266,7 +263,7 @@ export function ChannelContextMenuItems({
             <ContextMenuIconSlot>
               <Bell className="h-4 w-4" />
             </ContextMenuIconSlot>
-            <span>Unmute channel</span>
+            <span>Включить уведомления</span>
           </ContextMenuItem>
         ) : (
           <ContextMenuItem
@@ -275,7 +272,7 @@ export function ChannelContextMenuItems({
             <ContextMenuIconSlot>
               <BellOff className="h-4 w-4" />
             </ContextMenuIconSlot>
-            <span>Mute channel</span>
+            <span>Отключить уведомления</span>
           </ContextMenuItem>
         )
       ) : null}
@@ -289,7 +286,7 @@ export function ChannelContextMenuItems({
             <ContextMenuIconSlot>
               <StarOff className="h-4 w-4" />
             </ContextMenuIconSlot>
-            <span>Unstar channel</span>
+            <span>Убрать из избранного</span>
           </ContextMenuItem>
         ) : (
           <ContextMenuItem
@@ -298,7 +295,7 @@ export function ChannelContextMenuItems({
             <ContextMenuIconSlot>
               <Star className="h-4 w-4" />
             </ContextMenuIconSlot>
-            <span>Star channel</span>
+            <span>В избранное</span>
           </ContextMenuItem>
         )
       ) : null}
@@ -311,7 +308,7 @@ export function ChannelContextMenuItems({
           <ContextMenuIconSlot>
             <LogOut className="h-4 w-4" />
           </ContextMenuIconSlot>
-          <span>Leave channel</span>
+          <span>Покинуть канал</span>
         </ContextMenuItem>
       ) : null}
       {ownerActionsLoading ? (
@@ -319,14 +316,14 @@ export function ChannelContextMenuItems({
           <ContextMenuIconSlot>
             <LoaderCircle className="h-4 w-4 animate-spin" />
           </ContextMenuIconSlot>
-          <span>Loading channel actions...</span>
+          <span>Загрузка…</span>
         </ContextMenuItem>
       ) : ownerActionsError ? (
         <ContextMenuItem disabled>
           <ContextMenuIconSlot>
             <TriangleAlert className="h-4 w-4" />
           </ContextMenuIconSlot>
-          <span>Channel actions unavailable</span>
+          <span>Действия недоступны</span>
         </ContextMenuItem>
       ) : null}
       {canManageChannel ? (
@@ -338,7 +335,7 @@ export function ChannelContextMenuItems({
           <ContextMenuIconSlot>
             <Archive className="h-4 w-4" />
           </ContextMenuIconSlot>
-          <span>Archive channel</span>
+          <span>Архивировать канал</span>
         </ContextMenuItem>
       ) : null}
       {canDeleteChannel ? (
@@ -350,7 +347,7 @@ export function ChannelContextMenuItems({
           <ContextMenuIconSlot>
             <Trash2 className="h-4 w-4" />
           </ContextMenuIconSlot>
-          <span>Delete channel</span>
+          <span>Удалить канал</span>
         </ContextMenuItem>
       ) : null}
     </>

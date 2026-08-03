@@ -370,12 +370,12 @@ export function PullRequestDetailHeader({
             <span>linked from</span>
             {sourceChannel ? (
               <button
-                aria-label={`Open author-claimed source channel #${sourceChannel.name}`}
+                aria-label={`Open author-claimed source channel ${sourceChannel.name}`}
                 className="truncate font-medium text-foreground underline-offset-2 hover:underline"
                 onClick={() => void goChannel(sourceChannel.id)}
                 type="button"
               >
-                #{sourceChannel.name}
+                {sourceChannel.name}
               </button>
             ) : (
               <span>an unavailable channel</span>

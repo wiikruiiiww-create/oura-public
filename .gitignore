@@ -68,3 +68,6 @@ identity.key
 
 # Helm dependency tarballs — regenerable from Chart.lock via `helm dependency build`
 deploy/charts/*/charts/*.tgz
+
+# Рабочие планы/разведка — только в приватном репо или локально, в публичный не коммитятся
+/docs/superpowers/

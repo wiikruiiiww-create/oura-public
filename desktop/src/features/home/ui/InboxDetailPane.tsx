@@ -1,4 +1,4 @@
-import { ArrowLeft, Hash, Mail, MoreHorizontal, Trash2 } from "lucide-react";
+import { ArrowLeft, Mail, MoreHorizontal, Trash2 } from "lucide-react";
 import * as React from "react";
 
 import type {
@@ -371,7 +371,6 @@ export function InboxDetailPane({
       ? item.item.channelType
       : null;
   const contextLabel = channelContextName ?? formatInboxTypeLabel(item);
-  const hasChannelContext = Boolean(channelContextName);
   const contextChannelId = item.item.channelId;
   const contextThreadRootId = getThreadReference(item.item.tags).rootId;
 
@@ -424,9 +423,6 @@ export function InboxDetailPane({
                       title={item.fullTimestampLabel}
                       type="button"
                     >
-                      {hasChannelContext ? (
-                        <Hash className="h-4 w-4 shrink-0" color="gray" />
-                      ) : null}
                       <span className="min-w-0 translate-y-px truncate">
                         {contextLabel}
                       </span>
@@ -436,9 +432,6 @@ export function InboxDetailPane({
                       className="flex min-w-0 items-center gap-[4px] text-sm font-semibold leading-5 tracking-tight text-foreground"
                       title={item.fullTimestampLabel}
                     >
-                      {hasChannelContext ? (
-                        <Hash className="h-4 w-4 shrink-0" color="gray" />
-                      ) : null}
                       <span className="min-w-0 translate-y-px truncate">
                         {contextLabel}
                       </span>
@@ -568,7 +561,7 @@ export function InboxDetailPane({
               }
               placeholder={
                 canReply
-                  ? `Send reply to ${item.channelLabel ? `#${item.channelLabel} thread` : "channel thread"}`
+                  ? `Send reply to ${item.channelLabel ? `${item.channelLabel} thread` : "channel thread"}`
                   : (disabledReplyReason ??
                     "Replies are not available for this item.")
               }

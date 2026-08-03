@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Hash, LogIn } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useAppNavigation } from "@/app/navigation/useAppNavigation";
 import { useMediaUpload } from "@/features/messages/lib/useMediaUpload";
@@ -708,11 +708,10 @@ export const ChannelPane = React.memo(function ChannelPane({
               className="flex items-center gap-3 border-t border-border/80 bg-card/50 px-5 py-3"
             >
               <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground">
-                <Hash className="h-4 w-4 shrink-0" />
                 <span className="truncate">
                   Viewing{" "}
                   <span className="font-medium text-foreground">
-                    #{activeChannel?.name}
+                    {activeChannel?.name}
                   </span>
                 </span>
               </div>

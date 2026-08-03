@@ -62,12 +62,7 @@ export function DraftDetailPane({
   const { entry, rootStatus, source } = item;
   const isOrphaned = rootStatus === "deleted";
   const isPrivate = source.channel?.visibility === "private";
-  const isDm = source.channel?.channelType === "dm";
-  const channelLabel = source.channel
-    ? isDm
-      ? source.label
-      : `#${source.label}`
-    : "Unknown channel";
+  const channelLabel = source.channel ? source.label : "Unknown channel";
   const openEnabled = canOpenDraft(entry.draft, source) && !isOrphaned;
   const sendEnabled = canSendDraft(entry.draft, source, rootStatus);
   const content = entry.draft.content.trim();
@@ -172,7 +167,6 @@ export function DraftDetailPane({
       {sendDialogOpen ? (
         <SendConfirmDialog
           channelLabel={source.label}
-          isDm={isDm}
           onCancel={() => setSendDialogOpen(false)}
           onConfirm={() => {
             setSendDialogOpen(false);
