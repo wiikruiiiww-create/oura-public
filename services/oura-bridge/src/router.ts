@@ -11,7 +11,19 @@ export interface RouterDeps {
   servicePubkeyHex: string;
   /** hex-pubkey операторов; пусто = любой участник считается оператором (только дев-стенд) */
   operatorPubkeys: string[];
+  /** окно активности лида (B5): вне окна лид не поллится; дефолт 30 дней */
+  leadActiveWindowMs?: number;
+  /** источник времени — подменяется в тестах */
+  now?: () => number;
+  /**
+   * NIP-43 (этап 2Б): регистрация лид-ключа участником relay при онбординге,
+   * ДО первого события от имени лида. Не задано = регистрация выключена
+   * (relay без membership-гейта).
+   */
+  registerLeadMembership?: (leadPubkeyHex: string) => Promise<void>;
 }
+
+const DEFAULT_LEAD_ACTIVE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 /** Имя канала: только буквы/цифры/дефисы, чтобы не спорить с валидацией relay. */
 function channelName(m: InboundMessage): string {
@@ -25,12 +37,24 @@ function channelName(m: InboundMessage): string {
 
 export class Router {
   private readonly onboarding = new Map<string, Promise<LeadRecord>>();
+  private readonly now: () => number;
+  private readonly leadActiveWindowMs: number;
 
-  constructor(private readonly deps: RouterDeps) {}
+  constructor(private readonly deps: RouterDeps) {
+    this.now = deps.now ?? Date.now;
+    this.leadActiveWindowMs =
+      deps.leadActiveWindowMs ?? DEFAULT_LEAD_ACTIVE_WINDOW_MS;
+  }
 
-  /** Входящее из внешнего канала → сообщение лида в его комнате buzz. */
+  /**
+   * Входящее из внешнего канала → сообщение лида в его комнате buzz.
+   * Активность отмечается до отправки: лид написал нам, значит должен
+   * поллиться, даже если эта конкретная отправка в relay сорвалась.
+   */
   async handleInbound(m: InboundMessage): Promise<void> {
     const lead = await this.ensureLead(m);
+    this.deps.state.touchLead(m.chatId, this.now());
+    await this.deps.state.save();
     await this.deps.buzz.sendMessage(lead.nsec, lead.channelId, m.text);
   }
 
@@ -50,6 +74,11 @@ export class Router {
   private async onboardLead(m: InboundMessage): Promise<LeadRecord> {
     const { buzz, state, serviceNsec, operatorPubkeys } = this.deps;
     const id = mintIdentity();
+    // сбой регистрации валит онбординг целиком — лид не сохраняется,
+    // следующее его сообщение повторит попытку с нуля
+    if (this.deps.registerLeadMembership) {
+      await this.deps.registerLeadMembership(id.pubkeyHex);
+    }
     const channelId = await buzz.createChannel(serviceNsec, channelName(m));
     await buzz.addMember(serviceNsec, channelId, id.pubkeyHex);
     for (const pk of operatorPubkeys) {
@@ -84,7 +113,8 @@ export class Router {
       servicePubkeyHex,
       operatorPubkeys,
     } = this.deps;
-    for (const lead of state.allLeads()) {
+    const activeLeads = state.activeLeads(this.now(), this.leadActiveWindowMs);
+    for (const lead of activeLeads) {
       let dirty = false;
       try {
         try {
@@ -123,6 +153,8 @@ export class Router {
               throw e; // временная ошибка → перехватится per-lead catch, повтор в следующем поллинге
             }
             state.markSeen(lead.chatId, msg.id);
+            // доставленный ответ оператора продлевает окно активности лида
+            state.touchLead(lead.chatId, this.now());
             dirty = true;
           }
         } finally {

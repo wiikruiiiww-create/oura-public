@@ -1,0 +1,61 @@
+# Оверлей OURA: контейнер моста Telegram↔relay. Включается BUZZ_COMPOSE_OURA=true
+# и требует BUZZ_COMPOSE_TLS=true — мост ходит в relay по публичному https-домену
+# (NIP-98 привязан к Host сообщества), который внутри сети резолвится в caddy
+# через network-alias ниже.
+#
+# Обязательные переменные в .env (помимо базовых):
+#   OURA_SERVICE_NSEC, OURA_SERVICE_PUBKEY, OURA_TELEGRAM_TOKEN,
+#   OURA_OPERATOR_PUBKEYS, OURA_REGISTER_LEAD_MEMBERSHIP=true
+services:
+  oura-bridge:
+    build:
+      context: ../..
+      dockerfile: services/oura-bridge/Dockerfile
+    env_file:
+      - .env
+    environment:
+      OURA_SOURCE: ${OURA_SOURCE:-telegram}
+      OURA_RELAY_URL: ${OURA_RELAY_URL:-https://${BUZZ_DOMAIN:?set BUZZ_DOMAIN}}
+      OURA_STATE_FILE: /data/bridge.state.json
+      OURA_HEARTBEAT_FILE: /data/heartbeat
+    volumes:
+      - oura-bridge-state:/data
+    depends_on:
+      relay:
+        condition: service_healthy
+      caddy:
+        condition: service_started
+    restart: unless-stopped
+    # Свежесть heartbeat-файла: поллинг пишет его каждый цикл (OURA_POLL_MS,
+    # дефолт 2s); зависший мост перестаёт обновлять файл.
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "test $$(( $$(date +%s) - $$(cat /data/heartbeat 2>/dev/null || echo 0) )) -lt 60",
+        ]
+      interval: 15s
+      timeout: 3s
+      retries: 4
+      start_period: 45s
+    logging:
+      options:
+        max-size: "20m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: ${OURA_BRIDGE_MEM_LIMIT:-512m}
+    networks:
+      - buzz-net
+
+  caddy:
+    networks:
+      buzz-net:
+        aliases:
+          - ${BUZZ_DOMAIN:?set BUZZ_DOMAIN}
+
+volumes:
+  oura-bridge-state:
+    labels:
+      com.buzz.volume: oura-bridge-state

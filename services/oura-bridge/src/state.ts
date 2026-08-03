@@ -7,6 +7,12 @@ export interface LeadRecord {
   nsec: string;
   pubkeyHex: string;
   channelId: string;
+  /**
+   * epoch-ms последней активности (входящее лида или доставленный ему ответ).
+   * Лиды за пределами окна активности не поллятся (B5); у legacy-записей
+   * метка выставляется временем загрузки state-файла.
+   */
+  lastActivityAt?: number;
 }
 
 interface StateFile {
@@ -38,7 +44,10 @@ export class StateStore {
     );
   }
 
-  static async load(path: string): Promise<StateStore> {
+  static async load(
+    path: string,
+    now: number = Date.now(),
+  ): Promise<StateStore> {
     let raw: string;
     try {
       raw = await readFile(path, "utf8");
@@ -74,7 +83,11 @@ export class StateStore {
         `state-файл ${path} имеет неожиданную форму (нет объекта leads); восстановите файл из ${path}.bak`,
       );
     }
-    return new StateStore(path, parsed as StateFile);
+    const data = parsed as StateFile;
+    for (const lead of Object.values(data.leads)) {
+      lead.lastActivityAt ??= now;
+    }
+    return new StateStore(path, data);
   }
 
   private async writeNow(): Promise<void> {
@@ -119,6 +132,19 @@ export class StateStore {
 
   allLeads(): LeadRecord[] {
     return Object.values(this.data.leads);
+  }
+
+  /** Отмечает активность лида; неизвестный chatId — no-op. */
+  touchLead(chatId: string, now: number): void {
+    const lead = this.data.leads[chatId];
+    if (lead) lead.lastActivityAt = now;
+  }
+
+  /** Лиды с активностью внутри окна — только их поллит роутер (B5). */
+  activeLeads(now: number, windowMs: number): LeadRecord[] {
+    return this.allLeads().filter(
+      (l) => (l.lastActivityAt ?? now) >= now - windowMs,
+    );
   }
 
   hasSeen(chatId: string, eventId: string): boolean {

@@ -1,7 +1,11 @@
 import { resolve } from "node:path";
 import { BuzzCli } from "./buzz/cli-client.js";
 import { parseOperatorPubkeys } from "./identity.js";
+import { acquireLock } from "./lock.js";
+import { registerRelayMember } from "./buzz/nip43.js";
+import { writeHeartbeat } from "./heartbeat.js";
 import { Router } from "./router.js";
+import { decideStartup } from "./startup.js";
 import { StateStore } from "./state.js";
 import { StubTelegram } from "./telegram/stub.js";
 import { TelegramChannel } from "./telegram/real.js";
@@ -34,11 +38,15 @@ async function main(): Promise<void> {
   const statePath =
     env("OURA_STATE_FILE") ?? resolve(process.cwd(), "bridge.state.json");
   const pollMs = Number(env("OURA_POLL_MS") ?? "2000");
+  const leadActiveWindowMs = Number(
+    env("OURA_LEAD_ACTIVE_WINDOW_MS") ?? String(30 * 24 * 60 * 60 * 1000),
+  );
 
+  // B6: гард от второго инстанса над тем же state-файлом — до загрузки state
+  const lock = await acquireLock(`${statePath}.lock`);
   const state = await StateStore.load(statePath);
   const buzz = new BuzzCli({ binPath, relayUrl });
 
-  const sourceKind = env("OURA_SOURCE") ?? "stub";
   const { valid: operatorPubkeys, invalid: invalidOperatorPubkeys } =
     parseOperatorPubkeys(
       env("OURA_OPERATOR_PUBKEYS") ?? env("OURA_OPERATOR_PUBKEY") ?? "",
@@ -50,18 +58,55 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  const startup = decideStartup({
+    source: env("OURA_SOURCE"),
+    operatorPubkeys,
+  });
+  if (!startup.ok) {
+    for (const error of startup.errors) {
+      console.error(`[oura-bridge] ${error}`);
+    }
+    process.exit(1);
+  }
+  for (const warning of startup.warnings) {
+    console.warn(`[oura-bridge] ${warning}`);
+  }
+
   let channel: InboundSource & OutboundSink;
   let stub: StubTelegram | undefined;
-  if (sourceKind === "telegram") {
+  if (startup.source === "telegram") {
     channel = new TelegramChannel(requireEnv("OURA_TELEGRAM_TOKEN"));
-  } else if (sourceKind === "stub") {
+  } else {
     stub = new StubTelegram(stubPort);
     channel = stub;
-  } else {
-    console.error(
-      `[oura-bridge] неизвестный OURA_SOURCE=${sourceKind} (допустимо: stub | telegram)`,
-    );
-    process.exit(1);
+  }
+
+  // NIP-43 (этап 2Б): регистрация лид-ключей участниками relay — обязательна
+  // перед включением BUZZ_REQUIRE_RELAY_MEMBERSHIP=true; сервисный ключ должен
+  // быть admin/owner relay
+  const registerMembership = env("OURA_REGISTER_LEAD_MEMBERSHIP") === "true";
+  const registerLeadMembership = registerMembership
+    ? (leadPubkeyHex: string): Promise<void> =>
+        registerRelayMember({ relayUrl, serviceNsec, leadPubkeyHex })
+    : undefined;
+  if (registerMembership) {
+    // лиды, онбордившиеся до включения флага, регистрируются на старте;
+    // сбой не роняет мост — поллинг переживает недоступность relay, а
+    // незарегистрированный лид виден по этому warn до следующего рестарта
+    for (const lead of state.activeLeads(Date.now(), leadActiveWindowMs)) {
+      try {
+        await registerRelayMember({
+          relayUrl,
+          serviceNsec,
+          leadPubkeyHex: lead.pubkeyHex,
+        });
+      } catch (e) {
+        console.warn(
+          `[oura-bridge] стартовая NIP-43-регистрация лида ${lead.chatId} не удалась:`,
+          e,
+        );
+      }
+    }
   }
 
   const router = new Router({
@@ -71,17 +116,21 @@ async function main(): Promise<void> {
     serviceNsec,
     servicePubkeyHex,
     operatorPubkeys,
+    leadActiveWindowMs,
+    registerLeadMembership,
   });
 
   await channel.start(async (m) => {
     try {
       await router.handleInbound(m);
-      console.log(`[inbound] chat ${m.chatId} (${m.name}) → комната лида`);
+      // имя клиента в лог не пишем — PII; идентификация по chatId
+      console.log(`[inbound] chat ${m.chatId} → комната лида`);
     } catch (e) {
       console.error(`[inbound] ошибка обработки chat ${m.chatId}:`, e);
     }
   });
 
+  const heartbeatPath = env("OURA_HEARTBEAT_FILE");
   let polling = false;
   let pollPromise: Promise<void> = Promise.resolve();
   const timer = setInterval(() => {
@@ -89,6 +138,9 @@ async function main(): Promise<void> {
     polling = true;
     pollPromise = router
       .pollOutbound()
+      .then(() =>
+        heartbeatPath ? writeHeartbeat(heartbeatPath, Date.now()) : undefined,
+      )
       .catch((e) => console.error("[poll] ошибка:", e))
       .finally(() => {
         polling = false;
@@ -101,6 +153,7 @@ async function main(): Promise<void> {
       await pollPromise;
       await channel.stop();
       await state.save();
+      await lock.release();
       process.exit(0);
     } catch (e) {
       console.error("[oura-bridge] ошибка при остановке:", e);
@@ -116,11 +169,6 @@ async function main(): Promise<void> {
     );
   } else {
     console.log("[oura-bridge] источник: Telegram (long-polling)");
-  }
-  if (operatorPubkeys.length === 0) {
-    console.warn(
-      "[oura-bridge] OURA_OPERATOR_PUBKEYS пуст — клиенту ретранслируется любой участник канала (режим дев-стенда)",
-    );
   }
   console.log(
     `[oura-bridge] relay: ${relayUrl}, buzz-cli: ${binPath}, поллинг: ${pollMs}ms`,

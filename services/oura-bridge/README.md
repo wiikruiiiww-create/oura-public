@@ -11,12 +11,14 @@
 | `OURA_RELAY_URL` | `http://localhost:3000` | URL relay (Nostr) |
 | `OURA_BUZZ_BIN` | `<repo>/target/debug/buzz` | Путь к бинарнику buzz-cli |
 | `OURA_STUB_PORT` | `8787` | Порт HTTP-заглушки Telegram |
-| `OURA_STATE_FILE` | `./bridge.state.json` | Путь к файлу состояния |
+| `OURA_STATE_FILE` | `./bridge.state.json` | Путь к файлу состояния. Рядом создаётся `<файл>.lock` — гард от второго инстанса (лок мёртвого процесса перехватывается сам, повреждённый — удалить вручную) |
 | `OURA_OPERATOR_PUBKEY` | (опционально) | Pubkey оператора (для маршрутизации ответов) |
 | `OURA_POLL_MS` | `2000` | Интервал поллинга исходящих (ms) |
-| `OURA_SOURCE` | `stub` | Источник внешнего канала: `stub` (HTTP-заглушка) или `telegram` (реальный бот) |
+| `OURA_SOURCE` | (обязателен) | Источник внешнего канала: `stub` (HTTP-заглушка) или `telegram` (реальный бот). Дефолта нет — источник выбирается явно; при `telegram` пустой `OURA_OPERATOR_PUBKEYS` — отказ старта |
 | `OURA_TELEGRAM_TOKEN` | (обязателен при `OURA_SOURCE=telegram`) | Токен бота от @BotFather |
 | `OURA_OPERATOR_PUBKEYS` | (пусто) | Hex-pubkey операторов через запятую: добавляются в каналы лидов, ТОЛЬКО их ответы уходят клиенту. Пусто = любой участник (допустимо только на дев-стенде). Старое имя `OURA_OPERATOR_PUBKEY` читается как алиас |
+| `OURA_LEAD_ACTIVE_WINDOW_MS` | `2592000000` (30 дней) | Окно активности лида: вне окна лид не поллится (архив). Активность = входящее лида или доставленный ему ответ; новое входящее реактивирует архивного лида |
+| `OURA_REGISTER_LEAD_MEMBERSHIP` | `false` | NIP-43: регистрировать ключ каждого лида участником relay (kind:9030 через `POST /events`, NIP-98-подпись сервисным ключом). Требует, чтобы сервисный ключ был admin/owner relay. **Включить ДО включения `BUZZ_REQUIRE_RELAY_MEMBERSHIP=true` на relay** — активные лиды регистрируются на старте, новые при онбординге |
 
 ## Stand-запуск
 
@@ -42,9 +44,9 @@
    export OURA_SERVICE_PUBKEY=<значение>
    ```
 
-5. Запусти сервис в отдельном терминале:
+5. Запусти сервис в отдельном терминале (источник задаётся явно):
    ```bash
-   pnpm --filter @oura/bridge dev
+   OURA_SOURCE=stub pnpm --filter @oura/bridge dev
    ```
 
 ## Демо-сценарий
@@ -92,12 +94,34 @@ curl -X GET http://127.0.0.1:8787/outbox
 ## Реальный Telegram
 
 1. Создай бота у @BotFather (`/newbot`), получи токен.
-2. `export OURA_SOURCE=telegram OURA_TELEGRAM_TOKEN=<токен>`
+2. `export OURA_SOURCE=telegram OURA_TELEGRAM_TOKEN=<токен> OURA_OPERATOR_PUBKEYS=<hex[,hex…]>` — в режиме `telegram` пустой allow-list операторов роняет старт (fail-fast вместо ретрансляции любого участника клиенту).
 3. Запусти мост: `pnpm --filter @oura/bridge dev`. В логе появится `[telegram] бот @<имя>` и `long-polling запущен`; мёртвый токен уронит процесс сразу (fail-fast).
 4. Напиши боту в Telegram с любого аккаунта → в buzz появится канал `inbox-<имя>-<chat.id>`.
 5. Ответ оператора в канале → приходит в Telegram-чат. Сообщения длиннее 4096 символов режутся на части.
 
 Ограничения первой итерации: только текст (голос/фото/видео/стикеры игнорируются молча), инлайн-кнопок нет, один бот на процесс. Клиент заблокировал бота → сообщение помечается необратимо недоставленным, поллер не зацикливается. Сообщение длиннее 4096 символов при сетевом сбое посреди отправки может частично задублироваться при повторе (низкая вероятность: на каждый кусок уже есть 3 попытки); персистентный курсор отправки придёт с переходом состояния на Postgres. Сбой обработки входящего (например, relay недоступен) теряет это входящее — очереди в Фазе 1 нет, offset у Telegram уходит вперёд.
+
+## Контейнерный деплой (прод)
+
+Мост деплоится сервисом в compose-стеке relay (`deploy/compose/`):
+
+```bash
+BUZZ_COMPOSE_TLS=true BUZZ_COMPOSE_OURA=true ./run.sh start
+```
+
+- Образ собирается из `services/oura-bridge/Dockerfile` (контекст — корень
+  репо): этап 1 — прод-бинарь `buzz-cli` (`cargo build --release`), этап 2 —
+  Node 24 + tsx. Бинарь кладётся в `/usr/local/bin/buzz`.
+- Состояние (`bridge.state.json` + lock + heartbeat) — в томе
+  `oura-bridge-state` (`/data`).
+- Healthcheck — свежесть heartbeat-файла, который пишет каждый цикл поллинга.
+- Мост ходит в relay по `https://$BUZZ_DOMAIN` (NIP-98 привязан к Host
+  сообщества); внутри compose-сети домен резолвится в caddy через
+  network-alias.
+- В `deploy/compose/.env` добавить: `OURA_SERVICE_NSEC`, `OURA_SERVICE_PUBKEY`,
+  `OURA_TELEGRAM_TOKEN`, `OURA_OPERATOR_PUBKEYS`,
+  `OURA_REGISTER_LEAD_MEMBERSHIP=true` (сервисный ключ — admin relay,
+  см. таблицу env выше).
 
 ## Проверено на стенде
 
