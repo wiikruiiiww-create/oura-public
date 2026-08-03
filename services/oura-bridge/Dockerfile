@@ -7,6 +7,7 @@ FROM rust:1.95-bookworm AS cli-builder
 WORKDIR /src
 COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
 COPY crates ./crates
+COPY examples ./examples
 RUN cargo build --release -p buzz-cli
 
 FROM node:24-bookworm-slim
