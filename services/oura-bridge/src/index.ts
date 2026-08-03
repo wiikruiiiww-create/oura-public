@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import { BuzzCli } from "./buzz/cli-client.js";
 import { parseOperatorPubkeys } from "./identity.js";
+import { acquireLock } from "./lock.js";
 import { Router } from "./router.js";
 import { decideStartup } from "./startup.js";
 import { StateStore } from "./state.js";
@@ -35,7 +36,12 @@ async function main(): Promise<void> {
   const statePath =
     env("OURA_STATE_FILE") ?? resolve(process.cwd(), "bridge.state.json");
   const pollMs = Number(env("OURA_POLL_MS") ?? "2000");
+  const leadActiveWindowMs = Number(
+    env("OURA_LEAD_ACTIVE_WINDOW_MS") ?? String(30 * 24 * 60 * 60 * 1000),
+  );
 
+  // B6: гард от второго инстанса над тем же state-файлом — до загрузки state
+  const lock = await acquireLock(`${statePath}.lock`);
   const state = await StateStore.load(statePath);
   const buzz = new BuzzCli({ binPath, relayUrl });
 
@@ -80,6 +86,7 @@ async function main(): Promise<void> {
     serviceNsec,
     servicePubkeyHex,
     operatorPubkeys,
+    leadActiveWindowMs,
   });
 
   await channel.start(async (m) => {
@@ -110,6 +117,7 @@ async function main(): Promise<void> {
       await pollPromise;
       await channel.stop();
       await state.save();
+      await lock.release();
       process.exit(0);
     } catch (e) {
       console.error("[oura-bridge] ошибка при остановке:", e);

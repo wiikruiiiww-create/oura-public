@@ -370,3 +370,61 @@ describe("allow-list операторов (I5)", () => {
     expect(addedMembers).toEqual(expect.arrayContaining(["op-1", "op-2"]));
   });
 });
+
+describe("архивация лидов (B5)", () => {
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  let clock: number;
+
+  function makeClockedRouter(windowMs: number): Router {
+    return new Router({
+      buzz: buzz as unknown as BuzzApi,
+      state,
+      sink: { deliver: async (m) => void delivered.push(m) },
+      serviceNsec: "nsec1service",
+      servicePubkeyHex: "svc".padEnd(64, "0"),
+      operatorPubkeys: [],
+      leadActiveWindowMs: windowMs,
+      now: () => clock,
+    });
+  }
+
+  it("лид без активности дольше окна не поллится", async () => {
+    clock = 0;
+    const r = makeClockedRouter(30 * DAY_MS);
+    await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
+    clock = 31 * DAY_MS;
+    await r.pollOutbound();
+    expect(buzz.getMessages).not.toHaveBeenCalled();
+  });
+
+  it("входящее от архивного лида реактивирует его", async () => {
+    clock = 0;
+    const r = makeClockedRouter(30 * DAY_MS);
+    await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
+    clock = 31 * DAY_MS;
+    await r.handleInbound({ chatId: "42", name: "Иван", text: "я вернулся" });
+    await r.pollOutbound();
+    expect(buzz.getMessages).toHaveBeenCalledTimes(1);
+  });
+
+  it("доставленный ответ оператора продлевает окно активности", async () => {
+    clock = 0;
+    const r = makeClockedRouter(30 * DAY_MS);
+    await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
+    buzz.getMessages.mockResolvedValue([
+      {
+        id: "e-op",
+        authorPubkey: "operator-pk",
+        content: "Добрый день!",
+        createdAt: 1,
+      },
+    ]);
+    clock = 20 * DAY_MS;
+    await r.pollOutbound();
+    expect(delivered.length).toBe(1);
+    // 45-й день: с последней активности (доставка на 20-й) прошло < 30 дней
+    clock = 45 * DAY_MS;
+    await r.pollOutbound();
+    expect(buzz.getMessages).toHaveBeenCalledTimes(2);
+  });
+});
