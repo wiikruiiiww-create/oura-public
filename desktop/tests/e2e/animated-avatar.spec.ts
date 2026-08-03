@@ -84,10 +84,10 @@ test.describe("animated avatar", () => {
       "profile-avatar-animated-preview-slot",
     );
     await expect(
-      page.getByRole("status").filter({ hasText: "Starting camera" }),
+      page.getByRole("status").filter({ hasText: "Запуск камеры" }),
     ).toBeVisible();
     await expect(
-      previewSlot.getByRole("status").filter({ hasText: "Starting camera" }),
+      previewSlot.getByRole("status").filter({ hasText: "Запуск камеры" }),
     ).toBeVisible();
     await expect(page.getByTestId("profile-avatar-preview")).toHaveCount(0);
     await expect(
@@ -195,7 +195,9 @@ test.describe("animated avatar", () => {
     ).toBeVisible();
     await expect(
       page.getByTestId("profile-avatar-animated-review-help"),
-    ).toHaveText("Pick the still shown before hover.");
+    ).toHaveText(
+      "Выберите стоп-кадр, который отображается до наведения курсора.",
+    );
     await expect(
       page.getByTestId("profile-avatar-animated-poster-prev"),
     ).toHaveCount(0);

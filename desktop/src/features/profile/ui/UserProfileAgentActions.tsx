@@ -76,15 +76,17 @@ export function UserProfileAgentSettingsMenu({
     return null;
   }
 
-  const archiveLabel = isBot ? "Archive agent" : "Archive identity";
-  const unarchiveLabel = isBot ? "Unarchive agent" : "Unarchive identity";
+  const archiveLabel = isBot ? "Архивировать агента" : "Архивировать личность";
+  const unarchiveLabel = isBot
+    ? "Разархивировать агента"
+    : "Разархивировать личность";
 
   return (
     <>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
-            aria-label="Open profile settings"
+            aria-label="Открыть настройки профиля"
             data-testid="user-profile-settings-menu-trigger"
             size="icon"
             type="button"
@@ -109,10 +111,10 @@ export function UserProfileAgentSettingsMenu({
             >
               <Power className="h-4 w-4 text-muted-foreground" />
               <span className="min-w-0 flex-1 text-sm font-medium">
-                Auto-start
+                Автозапуск
               </span>
               <Switch
-                aria-label="Auto-start"
+                aria-label="Автозапуск"
                 checked={managedAgent.startOnAppLaunch}
                 data-testid={autoStartSwitchId}
                 disabled={isPending}
@@ -129,7 +131,7 @@ export function UserProfileAgentSettingsMenu({
               onClick={onDuplicatePersona}
             >
               <CopyPlus className="h-4 w-4" />
-              Duplicate
+              Дублировать
             </DropdownMenuItem>
           ) : null}
           {onExportPersona ? (
@@ -139,7 +141,7 @@ export function UserProfileAgentSettingsMenu({
               onClick={onExportPersona}
             >
               <Download className="h-4 w-4" />
-              Export
+              Экспортировать
             </DropdownMenuItem>
           ) : null}
           {hasManageActions && (canToggleAutoStart || hasPrimaryActions) ? (
@@ -153,7 +155,7 @@ export function UserProfileAgentSettingsMenu({
                 onClick={archiveActions.unarchive}
               >
                 <ArchiveRestore className="h-4 w-4" />
-                {archiveActions.isPending ? "Unarchiving…" : unarchiveLabel}
+                {archiveActions.isPending ? "Разархивация…" : unarchiveLabel}
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem
@@ -162,7 +164,7 @@ export function UserProfileAgentSettingsMenu({
                 onSelect={() => setArchiveConfirmOpen(true)}
               >
                 <Archive className="h-4 w-4" />
-                {archiveActions.isPending ? "Archiving…" : archiveLabel}
+                {archiveActions.isPending ? "Архивация…" : archiveLabel}
               </DropdownMenuItem>
             )
           ) : null}
@@ -181,7 +183,7 @@ export function UserProfileAgentSettingsMenu({
               }}
             >
               <Trash2 className="h-4 w-4" />
-              Delete agent
+              Удалить агента
             </DropdownMenuItem>
           ) : null}
         </DropdownMenuContent>
@@ -310,32 +312,33 @@ function AgentDeleteConfirmDialog({
     <AlertDialog onOpenChange={onOpenChange} open={open}>
       <AlertDialogContent data-testid="agent-delete-confirm-dialog">
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete this agent?</AlertDialogTitle>
+          <AlertDialogTitle>Удалить этого агента?</AlertDialogTitle>
           <AlertDialogDescription>
-            Deleting this agent stops and removes the agent from this community.
+            Удаление этого агента останавливает его и удаляет из этого
+            сообщества.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <ul className="list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
-          <li>Removes the local management record and saved agent key</li>
-          <li>Removes the agent from every channel it belongs to</li>
+          <li>Удаляет локальную запись управления и сохранённый ключ агента</li>
+          <li>Удаляет агента из всех каналов, в которых он состоит</li>
           <li>
-            Archives the agent&apos;s identity on the relay so it no longer
-            appears in member lists or mention suggestions
+            Архивирует личность агента на релее, чтобы он больше не отображался
+            в списках участников и подсказках упоминаний
           </li>
           <li>
             {isProviderAgent
-              ? "Requests remote deletion; if it is online, Buzz first sends a shutdown command when possible. If the deployment cannot be reached through a channel, the remote process may keep running without local management."
-              : "Stops any local agent process before deleting the record"}
+              ? "Запрашивает удалённое удаление; если агент в сети, OURA сначала по возможности отправляет команду остановки. Если связаться с развёртыванием через канал не удаётся, удалённый процесс может продолжить работу без локального управления."
+              : "Останавливает локальный процесс агента перед удалением записи"}
           </li>
         </ul>
         <p className="text-sm text-muted-foreground">
-          You can also archive this agent from the profile settings menu if you
-          want to hide the agent instead of removing it.
+          Вы также можете архивировать этого агента через меню настроек профиля,
+          если хотите скрыть агента, а не удалять его.
         </p>
         <AlertDialogFooter>
           <AlertDialogCancel asChild>
             <Button type="button" variant="outline">
-              Cancel
+              Отмена
             </Button>
           </AlertDialogCancel>
           <AlertDialogAction
@@ -344,7 +347,7 @@ function AgentDeleteConfirmDialog({
             disabled={isPending}
             onClick={onConfirm}
           >
-            {isPending ? "Deleting..." : "Delete agent"}
+            {isPending ? "Удаление…" : "Удалить агента"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

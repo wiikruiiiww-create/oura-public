@@ -33,7 +33,7 @@ test("sharing but nothing served yet -> idle, no detail", () => {
   assert.equal(i.show, true);
   assert.equal(i.active, false);
   assert.equal(i.hasRemoteConsumers, false);
-  assert.match(i.label, /Idle/);
+  assert.match(i.label, /Ожидание/);
 });
 
 test("only local agent traffic -> not a remote consumer", () => {
@@ -42,8 +42,8 @@ test("only local agent traffic -> not a remote consumer", () => {
     true,
   );
   assert.equal(i.hasRemoteConsumers, false);
-  assert.match(i.label, /Idle/); // served earlier, none live now
-  assert.match(i.detail, /4 requests served/);
+  assert.match(i.label, /Ожидание/); // served earlier, none live now
+  assert.match(i.detail, /Обработано запросов за сессию: 4/);
 });
 
 test("local agent live now -> serving your agent", () => {
@@ -53,8 +53,8 @@ test("local agent live now -> serving your agent", () => {
   );
   assert.equal(i.active, true);
   assert.equal(i.hasRemoteConsumers, false);
-  assert.match(i.label, /Serving your agent/);
-  assert.match(i.label, /1 live/);
+  assert.match(i.label, /Обслуживает вашего агента/);
+  assert.match(i.label, /1 в работе/);
 });
 
 test("remote consumer, not live -> used by another member (headline case)", () => {
@@ -69,9 +69,9 @@ test("remote consumer, not live -> used by another member (headline case)", () =
   );
   assert.equal(i.hasRemoteConsumers, true);
   assert.equal(i.active, false);
-  assert.match(i.label, /another member/);
-  assert.match(i.label, /7 requests/); // remote+endpoint = 7
-  assert.match(i.detail, /2 peers/);
+  assert.match(i.label, /другим участником/);
+  assert.match(i.label, /7 запросов/); // remote+endpoint = 7
+  assert.match(i.detail, /2 узла/);
 });
 
 test("remote consumer live now -> in use now, singular peer/request grammar", () => {
@@ -81,6 +81,6 @@ test("remote consumer live now -> in use now, singular peer/request grammar", ()
   );
   assert.equal(i.active, true);
   assert.equal(i.hasRemoteConsumers, true);
-  assert.match(i.label, /In use now by another member/);
-  assert.match(i.detail, /1 peer\b/); // singular
+  assert.match(i.label, /Сейчас используется другим участником/);
+  assert.match(i.detail, /1 узел/); // singular
 });

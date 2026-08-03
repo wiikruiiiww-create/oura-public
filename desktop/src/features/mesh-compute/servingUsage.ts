@@ -1,3 +1,4 @@
+import { pluralRu } from "@/shared/lib/pluralRu";
 import type { MeshServingUsage } from "@/shared/api/tauriMesh";
 
 /**
@@ -28,8 +29,12 @@ export type MeshServingIndicator = {
   detail: string | null;
 };
 
-function plural(n: number, one: string, many = `${one}s`): string {
-  return n === 1 ? one : many;
+function requestsRu(n: number): string {
+  return pluralRu(n, "запрос", "запроса", "запросов");
+}
+
+function peersRu(n: number): string {
+  return pluralRu(n, "узел", "узла", "узлов");
 }
 
 /**
@@ -61,12 +66,12 @@ export function deriveServingIndicator(
   if (hasRemoteConsumers) {
     const remote = usage.remoteAttempts + usage.endpointAttempts;
     const label = active
-      ? `In use now by another member · ${usage.inflight} live`
-      : `Used by another member · ${remote} ${plural(remote, "request")}`;
+      ? `Сейчас используется другим участником · ${usage.inflight} в работе`
+      : `Использовалось другим участником · ${remote} ${requestsRu(remote)}`;
     const detail =
       usage.peers > 0
-        ? `${usage.peers} ${plural(usage.peers, "peer")} on the mesh · ${Math.round(usage.tokensPerSecond)} tok/s`
-        : `${Math.round(usage.tokensPerSecond)} tok/s`;
+        ? `${usage.peers} ${peersRu(usage.peers)} в сети · ${Math.round(usage.tokensPerSecond)} токенов/с`
+        : `${Math.round(usage.tokensPerSecond)} токенов/с`;
     return { show: true, active, hasRemoteConsumers: true, label, detail };
   }
 
@@ -76,8 +81,8 @@ export function deriveServingIndicator(
       show: true,
       active: true,
       hasRemoteConsumers: false,
-      label: `Serving your agent · ${usage.inflight} live`,
-      detail: `${Math.round(usage.tokensPerSecond)} tok/s`,
+      label: `Обслуживает вашего агента · ${usage.inflight} в работе`,
+      detail: `${Math.round(usage.tokensPerSecond)} токенов/с`,
     };
   }
   if (usage.requestsServed > 0) {
@@ -85,8 +90,8 @@ export function deriveServingIndicator(
       show: true,
       active: false,
       hasRemoteConsumers: false,
-      label: "Idle · no one using it right now",
-      detail: `${usage.requestsServed} ${plural(usage.requestsServed, "request")} served this session`,
+      label: "Ожидание · сейчас никто не использует",
+      detail: `Обработано запросов за сессию: ${usage.requestsServed}`,
     };
   }
 
@@ -95,7 +100,7 @@ export function deriveServingIndicator(
     show: true,
     active: false,
     hasRemoteConsumers: false,
-    label: "Idle · no one using it yet",
+    label: "Ожидание · пока никто не использует",
     detail: null,
   };
 }

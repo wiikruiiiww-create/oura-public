@@ -34,6 +34,7 @@ import type {
   UpdateChannelTemplateInput,
 } from "@/shared/api/types";
 import { cn } from "@/shared/lib/cn";
+import { pluralRu } from "@/shared/lib/pluralRu";
 import { SettingsSectionHeader } from "./SettingsSectionHeader";
 import {
   AlertDialog,
@@ -224,13 +225,14 @@ function TemplateRow({
           {personaCount > 0 ? (
             <span className="flex items-center gap-1">
               <Bot className="h-4 w-4" />
-              {personaCount} {personaCount === 1 ? "агент" : "агентов"}
+              {personaCount}{" "}
+              {pluralRu(personaCount, "агент", "агента", "агентов")}
             </span>
           ) : null}
           {teamCount > 0 ? (
             <span className="flex items-center gap-1">
               <Users className="h-4 w-4" />
-              {teamCount} {teamCount === 1 ? "команда" : "команд"}
+              {teamCount} {pluralRu(teamCount, "команда", "команды", "команд")}
             </span>
           ) : null}
           {template.canvasTemplate ? (

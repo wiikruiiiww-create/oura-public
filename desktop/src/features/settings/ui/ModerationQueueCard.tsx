@@ -31,6 +31,7 @@ import {
   type SeverityTier,
 } from "@/features/settings/lib/moderationQueue";
 import { cn } from "@/shared/lib/cn";
+import { pluralRu } from "@/shared/lib/pluralRu";
 import { truncatePubkey } from "@/shared/lib/pubkey";
 import { Button } from "@/shared/ui/button";
 import {
@@ -314,7 +315,7 @@ function QueueGroupCard({
             </span>
             <span className="text-xs text-muted-foreground">
               · {group.reports.length}{" "}
-              {group.reports.length === 1 ? "жалоба" : "жалоб"}
+              {pluralRu(group.reports.length, "жалоба", "жалобы", "жалоб")}
             </span>
           </div>
         </div>
@@ -345,9 +346,12 @@ function QueueGroupCard({
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>
             {group.priorActions.length}{" "}
-            {group.priorActions.length === 1
-              ? "предыдущее действие"
-              : "предыдущих действий"}{" "}
+            {pluralRu(
+              group.priorActions.length,
+              "предыдущее действие",
+              "предыдущих действия",
+              "предыдущих действий",
+            )}{" "}
             в отношении этой цели
             {" — "}
             {group.priorActions
