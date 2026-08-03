@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { BuzzCli } from "./buzz/cli-client.js";
 import { parseOperatorPubkeys } from "./identity.js";
 import { Router } from "./router.js";
+import { decideStartup } from "./startup.js";
 import { StateStore } from "./state.js";
 import { StubTelegram } from "./telegram/stub.js";
 import { TelegramChannel } from "./telegram/real.js";
@@ -38,7 +39,6 @@ async function main(): Promise<void> {
   const state = await StateStore.load(statePath);
   const buzz = new BuzzCli({ binPath, relayUrl });
 
-  const sourceKind = env("OURA_SOURCE") ?? "stub";
   const { valid: operatorPubkeys, invalid: invalidOperatorPubkeys } =
     parseOperatorPubkeys(
       env("OURA_OPERATOR_PUBKEYS") ?? env("OURA_OPERATOR_PUBKEY") ?? "",
@@ -50,18 +50,27 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  const startup = decideStartup({
+    source: env("OURA_SOURCE"),
+    operatorPubkeys,
+  });
+  if (!startup.ok) {
+    for (const error of startup.errors) {
+      console.error(`[oura-bridge] ${error}`);
+    }
+    process.exit(1);
+  }
+  for (const warning of startup.warnings) {
+    console.warn(`[oura-bridge] ${warning}`);
+  }
+
   let channel: InboundSource & OutboundSink;
   let stub: StubTelegram | undefined;
-  if (sourceKind === "telegram") {
+  if (startup.source === "telegram") {
     channel = new TelegramChannel(requireEnv("OURA_TELEGRAM_TOKEN"));
-  } else if (sourceKind === "stub") {
+  } else {
     stub = new StubTelegram(stubPort);
     channel = stub;
-  } else {
-    console.error(
-      `[oura-bridge] неизвестный OURA_SOURCE=${sourceKind} (допустимо: stub | telegram)`,
-    );
-    process.exit(1);
   }
 
   const router = new Router({
@@ -116,11 +125,6 @@ async function main(): Promise<void> {
     );
   } else {
     console.log("[oura-bridge] источник: Telegram (long-polling)");
-  }
-  if (operatorPubkeys.length === 0) {
-    console.warn(
-      "[oura-bridge] OURA_OPERATOR_PUBKEYS пуст — клиенту ретранслируется любой участник канала (режим дев-стенда)",
-    );
   }
   console.log(
     `[oura-bridge] relay: ${relayUrl}, buzz-cli: ${binPath}, поллинг: ${pollMs}ms`,
