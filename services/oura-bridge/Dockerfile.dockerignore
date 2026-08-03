@@ -1,0 +1,19 @@
+# Per-Dockerfile ignore (BuildKit): режет контекст сборки моста, не влияя
+# на другие сборки репозитория.
+.git
+**/node_modules
+**/target
+desktop/*
+!desktop/package.json
+web/*
+!web/package.json
+admin-web/*
+!admin-web/package.json
+mobile
+docs
+scripts
+migrations
+deploy
+test-results
+services/oura-bridge/bridge.state.json*
+services/oura-bridge/.env

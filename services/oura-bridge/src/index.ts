@@ -3,6 +3,7 @@ import { BuzzCli } from "./buzz/cli-client.js";
 import { parseOperatorPubkeys } from "./identity.js";
 import { acquireLock } from "./lock.js";
 import { registerRelayMember } from "./buzz/nip43.js";
+import { writeHeartbeat } from "./heartbeat.js";
 import { Router } from "./router.js";
 import { decideStartup } from "./startup.js";
 import { StateStore } from "./state.js";
@@ -122,12 +123,14 @@ async function main(): Promise<void> {
   await channel.start(async (m) => {
     try {
       await router.handleInbound(m);
-      console.log(`[inbound] chat ${m.chatId} (${m.name}) → комната лида`);
+      // имя клиента в лог не пишем — PII; идентификация по chatId
+      console.log(`[inbound] chat ${m.chatId} → комната лида`);
     } catch (e) {
       console.error(`[inbound] ошибка обработки chat ${m.chatId}:`, e);
     }
   });
 
+  const heartbeatPath = env("OURA_HEARTBEAT_FILE");
   let polling = false;
   let pollPromise: Promise<void> = Promise.resolve();
   const timer = setInterval(() => {
@@ -135,6 +138,9 @@ async function main(): Promise<void> {
     polling = true;
     pollPromise = router
       .pollOutbound()
+      .then(() =>
+        heartbeatPath ? writeHeartbeat(heartbeatPath, Date.now()) : undefined,
+      )
       .catch((e) => console.error("[poll] ошибка:", e))
       .finally(() => {
         polling = false;

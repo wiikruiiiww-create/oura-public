@@ -101,6 +101,28 @@ curl -X GET http://127.0.0.1:8787/outbox
 
 Ограничения первой итерации: только текст (голос/фото/видео/стикеры игнорируются молча), инлайн-кнопок нет, один бот на процесс. Клиент заблокировал бота → сообщение помечается необратимо недоставленным, поллер не зацикливается. Сообщение длиннее 4096 символов при сетевом сбое посреди отправки может частично задублироваться при повторе (низкая вероятность: на каждый кусок уже есть 3 попытки); персистентный курсор отправки придёт с переходом состояния на Postgres. Сбой обработки входящего (например, relay недоступен) теряет это входящее — очереди в Фазе 1 нет, offset у Telegram уходит вперёд.
 
+## Контейнерный деплой (прод)
+
+Мост деплоится сервисом в compose-стеке relay (`deploy/compose/`):
+
+```bash
+BUZZ_COMPOSE_TLS=true BUZZ_COMPOSE_OURA=true ./run.sh start
+```
+
+- Образ собирается из `services/oura-bridge/Dockerfile` (контекст — корень
+  репо): этап 1 — прод-бинарь `buzz-cli` (`cargo build --release`), этап 2 —
+  Node 24 + tsx. Бинарь кладётся в `/usr/local/bin/buzz`.
+- Состояние (`bridge.state.json` + lock + heartbeat) — в томе
+  `oura-bridge-state` (`/data`).
+- Healthcheck — свежесть heartbeat-файла, который пишет каждый цикл поллинга.
+- Мост ходит в relay по `https://$BUZZ_DOMAIN` (NIP-98 привязан к Host
+  сообщества); внутри compose-сети домен резолвится в caddy через
+  network-alias.
+- В `deploy/compose/.env` добавить: `OURA_SERVICE_NSEC`, `OURA_SERVICE_PUBKEY`,
+  `OURA_TELEGRAM_TOKEN`, `OURA_OPERATOR_PUBKEYS`,
+  `OURA_REGISTER_LEAD_MEMBERSHIP=true` (сервисный ключ — admin relay,
+  см. таблицу env выше).
+
 ## Проверено на стенде
 
 Дата: 2026-07-31. Сквозное демо пройдено полностью на локальном стенде (relay `cargo run -p buzz-relay` дев-сборка, Docker: postgres:17-alpine + redis:7-alpine + minio).
