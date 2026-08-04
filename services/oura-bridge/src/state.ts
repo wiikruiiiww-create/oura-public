@@ -122,41 +122,54 @@ export class StateStore {
     return next;
   }
 
-  getLead(chatId: string): LeadRecord | undefined {
-    return this.data.leads[chatId];
+  /**
+   * `key` — ключ записи в state. В легаси-режиме (один бот) это сырой chatId;
+   * в мульти-бот режиме роутер источника передаёт составной ключ
+   * `tg:<agentId>:<chatId>`, чтобы один человек в двух ботах был двумя лидами.
+   */
+  getLead(key: string): LeadRecord | undefined {
+    return this.data.leads[key];
   }
 
-  putLead(lead: LeadRecord): void {
-    this.data.leads[lead.chatId] = lead;
+  putLead(lead: LeadRecord, key: string = lead.chatId): void {
+    this.data.leads[key] = lead;
   }
 
   allLeads(): LeadRecord[] {
     return Object.values(this.data.leads);
   }
 
-  /** Отмечает активность лида; неизвестный chatId — no-op. */
-  touchLead(chatId: string, now: number): void {
-    const lead = this.data.leads[chatId];
+  /** Отмечает активность лида; неизвестный ключ — no-op. */
+  touchLead(key: string, now: number): void {
+    const lead = this.data.leads[key];
     if (lead) lead.lastActivityAt = now;
   }
 
   /** Лиды с активностью внутри окна — только их поллит роутер (B5). */
   activeLeads(now: number, windowMs: number): LeadRecord[] {
-    return this.allLeads().filter(
-      (l) => (l.lastActivityAt ?? now) >= now - windowMs,
-    );
+    return this.activeLeadEntries(now, windowMs).map((e) => e.lead);
   }
 
-  hasSeen(chatId: string, eventId: string): boolean {
+  /** То же с ключами записей — роутер фильтрует по своему префиксу. */
+  activeLeadEntries(
+    now: number,
+    windowMs: number,
+  ): Array<{ key: string; lead: LeadRecord }> {
+    return Object.entries(this.data.leads)
+      .filter(([, l]) => (l.lastActivityAt ?? now) >= now - windowMs)
+      .map(([key, lead]) => ({ key, lead }));
+  }
+
+  hasSeen(key: string, eventId: string): boolean {
     if (this.legacySeen.has(eventId)) return true;
-    return this.seenByLead.get(chatId)?.has(eventId) ?? false;
+    return this.seenByLead.get(key)?.has(eventId) ?? false;
   }
 
-  markSeen(chatId: string, eventId: string): void {
-    let ids = this.seenByLead.get(chatId);
+  markSeen(key: string, eventId: string): void {
+    let ids = this.seenByLead.get(key);
     if (!ids) {
       ids = new Set();
-      this.seenByLead.set(chatId, ids);
+      this.seenByLead.set(key, ids);
     }
     ids.add(eventId);
     if (ids.size > PER_LEAD_SEEN_CAP) {
