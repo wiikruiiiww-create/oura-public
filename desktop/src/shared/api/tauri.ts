@@ -1112,6 +1112,24 @@ export async function nip44EncryptToPubkey(
   });
 }
 
+// ── Telegram bot token validation ───────────────────────────────────────────
+
+export interface BotIdentity {
+  username: string;
+  botId: number;
+}
+
+/**
+ * Verify a bot token with Telegram before it is saved, so a typo surfaces in
+ * the form instead of in the lead service logs. The token never appears in the
+ * returned error text.
+ */
+export async function validateTelegramBotToken(
+  token: string,
+): Promise<BotIdentity> {
+  return invokeTauri<BotIdentity>("validate_telegram_bot_token", { token });
+}
+
 // ── NIP-AB device pairing ───────────────────────────────────────────────────
 
 export async function startPairing(): Promise<string> {

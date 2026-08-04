@@ -714,6 +714,7 @@ pub fn run() {
             create_auth_event,
             nip44_encrypt_to_self,
             nip44_encrypt_to_pubkey,
+            validate_telegram_bot_token,
             nip44_decrypt_from_self,
             get_channels,
             create_channel,
