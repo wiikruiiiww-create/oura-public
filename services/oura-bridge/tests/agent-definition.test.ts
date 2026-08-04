@@ -103,9 +103,7 @@ describe("parseExternalAgentDef", () => {
 describe("latestByAgentId", () => {
   it("дубли одного агента схлопываются в самый свежий по created_at", () => {
     const older = parseExternalAgentDef(evt({ created_at: 1000 }));
-    const newer = parseExternalAgentDef(
-      evt({ id: "e2", created_at: 2000 }),
-    );
+    const newer = parseExternalAgentDef(evt({ id: "e2", created_at: 2000 }));
     if (!older || !newer) throw new Error("фикстуры не распарсились");
     expect(latestByAgentId([older, newer])).toEqual([newer]);
     expect(latestByAgentId([newer, older])).toEqual([newer]);

@@ -52,7 +52,7 @@ export class SourceManager {
     // остановить исчезнувших и выключенных
     for (const [agentId, entry] of [...this.running]) {
       const next = desired.get(agentId);
-      if (next && next.isActive && next.botTokenEnc === entry.def.botTokenEnc) {
+      if (next?.isActive && next.botTokenEnc === entry.def.botTokenEnc) {
         continue;
       }
       await this.stopEntry(agentId, entry);
@@ -110,7 +110,10 @@ export class SourceManager {
     }
   }
 
-  private async startEntry(def: ExternalAgentDef, token: string): Promise<void> {
+  private async startEntry(
+    def: ExternalAgentDef,
+    token: string,
+  ): Promise<void> {
     try {
       const source = await this.deps.factory.create(def, token);
       this.running.set(def.agentId, { def, source, token });

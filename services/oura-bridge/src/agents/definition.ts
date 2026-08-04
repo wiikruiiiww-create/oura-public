@@ -78,7 +78,9 @@ export function parseExternalAgentDef(
   const c = content as Record<string, unknown>;
 
   const profile =
-    typeof c.profile === "object" && c.profile !== null && !Array.isArray(c.profile)
+    typeof c.profile === "object" &&
+    c.profile !== null &&
+    !Array.isArray(c.profile)
       ? (c.profile as Record<string, unknown>)
       : {};
 

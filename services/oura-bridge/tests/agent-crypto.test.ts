@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mintIdentity } from "../src/identity.js";
-import {
-  decryptFromPubkey,
-  encryptForPubkey,
-} from "../src/agents/crypto.js";
+import { decryptFromPubkey, encryptForPubkey } from "../src/agents/crypto.js";
 
 describe("NIP-44 шифрование токена бота", () => {
   it("roundtrip: клиент шифрует мосту, мост расшифровывает", () => {
