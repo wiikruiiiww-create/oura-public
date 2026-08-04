@@ -1,10 +1,14 @@
 import { resolve } from "node:path";
+import { decryptFromPubkey } from "./agents/crypto.js";
+import type { ExternalAgentDef } from "./agents/definition.js";
+import { fetchExternalAgentDefs } from "./agents/definitions-poller.js";
 import { BuzzCli } from "./buzz/cli-client.js";
 import { parseOperatorPubkeys } from "./identity.js";
 import { acquireLock } from "./lock.js";
 import { registerRelayMember } from "./buzz/nip43.js";
 import { writeHeartbeat } from "./heartbeat.js";
-import { Router } from "./router.js";
+import { Router, sourceLeadKeyPrefix } from "./router.js";
+import { SourceManager, type StartedSource } from "./sources/source-manager.js";
 import { decideStartup } from "./startup.js";
 import { StateStore } from "./state.js";
 import { StubTelegram } from "./telegram/stub.js";
@@ -38,9 +42,11 @@ async function main(): Promise<void> {
   const statePath =
     env("OURA_STATE_FILE") ?? resolve(process.cwd(), "bridge.state.json");
   const pollMs = Number(env("OURA_POLL_MS") ?? "2000");
+  const defsPollMs = Number(env("OURA_DEFS_POLL_MS") ?? "30000");
   const leadActiveWindowMs = Number(
     env("OURA_LEAD_ACTIVE_WINDOW_MS") ?? String(30 * 24 * 60 * 60 * 1000),
   );
+  const sourcesFromUi = env("OURA_SOURCES_FROM_UI") === "true";
 
   // B6: гард от второго инстанса над тем же state-файлом — до загрузки state
   const lock = await acquireLock(`${statePath}.lock`);
@@ -61,6 +67,7 @@ async function main(): Promise<void> {
   const startup = decideStartup({
     source: env("OURA_SOURCE"),
     operatorPubkeys,
+    sourcesFromUi,
   });
   if (!startup.ok) {
     for (const error of startup.errors) {
@@ -70,15 +77,6 @@ async function main(): Promise<void> {
   }
   for (const warning of startup.warnings) {
     console.warn(`[oura-bridge] ${warning}`);
-  }
-
-  let channel: InboundSource & OutboundSink;
-  let stub: StubTelegram | undefined;
-  if (startup.source === "telegram") {
-    channel = new TelegramChannel(requireEnv("OURA_TELEGRAM_TOKEN"));
-  } else {
-    stub = new StubTelegram(stubPort);
-    channel = stub;
   }
 
   // NIP-43 (этап 2Б): регистрация лид-ключей участниками relay — обязательна
@@ -109,26 +107,111 @@ async function main(): Promise<void> {
     }
   }
 
-  const router = new Router({
-    buzz,
-    state,
-    sink: channel,
-    serviceNsec,
-    servicePubkeyHex,
-    operatorPubkeys,
-    leadActiveWindowMs,
-    registerLeadMembership,
-  });
+  // Роутеры, которые обходит цикл pollOutbound: легаси (если поднят) + по
+  // одному на каждого запущенного бота внешнего агента.
+  const routers = new Map<string, Router>();
 
-  await channel.start(async (m) => {
-    try {
-      await router.handleInbound(m);
-      // имя клиента в лог не пишем — PII; идентификация по chatId
-      console.log(`[inbound] chat ${m.chatId} → комната лида`);
-    } catch (e) {
-      console.error(`[inbound] ошибка обработки chat ${m.chatId}:`, e);
+  // --- легаси-канал из env (OURA_SOURCE), как раньше ---
+  let legacyChannel: (InboundSource & OutboundSink) | undefined;
+  let stub: StubTelegram | undefined;
+  if (startup.source !== undefined) {
+    if (startup.source === "telegram") {
+      legacyChannel = new TelegramChannel(requireEnv("OURA_TELEGRAM_TOKEN"));
+    } else {
+      stub = new StubTelegram(stubPort);
+      legacyChannel = stub;
     }
-  });
+    const legacyRouter = new Router({
+      buzz,
+      state,
+      sink: legacyChannel,
+      serviceNsec,
+      servicePubkeyHex,
+      operatorPubkeys,
+      leadActiveWindowMs,
+      registerLeadMembership,
+    });
+    routers.set("", legacyRouter);
+    await legacyChannel.start(async (m) => {
+      try {
+        await legacyRouter.handleInbound(m);
+        // имя клиента в лог не пишем — PII; идентификация по chatId
+        console.log(`[inbound] chat ${m.chatId} → комната лида`);
+      } catch (e) {
+        console.error(`[inbound] ошибка обработки chat ${m.chatId}:`, e);
+      }
+    });
+  }
+
+  // --- источники из UI: боты внешних агентов из описаний на relay ---
+  let sourceManager: SourceManager | undefined;
+  let defsTimer: NodeJS.Timeout | undefined;
+  if (sourcesFromUi) {
+    sourceManager = new SourceManager({
+      decryptToken: (def: ExternalAgentDef): string => {
+        if (
+          def.encTargetPubkey.toLowerCase() !== servicePubkeyHex.toLowerCase()
+        ) {
+          throw new Error(
+            `токен шифрован для ${def.encTargetPubkey.slice(0, 8)}…, а не для сервиса моста`,
+          );
+        }
+        return decryptFromPubkey(serviceNsec, def.ownerPubkey, def.botTokenEnc);
+      },
+      factory: {
+        async create(
+          def: ExternalAgentDef,
+          token: string,
+        ): Promise<StartedSource> {
+          const channel = new TelegramChannel(token);
+          const router = new Router({
+            buzz,
+            state,
+            sink: channel,
+            serviceNsec,
+            servicePubkeyHex,
+            operatorPubkeys,
+            leadActiveWindowMs,
+            registerLeadMembership,
+            leadKeyPrefix: sourceLeadKeyPrefix(def.agentId),
+          });
+          // start() делает getMe fail-fast: мёртвый токен = ошибка старта
+          await channel.start(async (m) => {
+            try {
+              await router.handleInbound(m);
+              console.log(
+                `[inbound:${def.agentId}] chat ${m.chatId} → комната лида`,
+              );
+            } catch (e) {
+              console.error(
+                `[inbound:${def.agentId}] ошибка обработки chat ${m.chatId}:`,
+                e,
+              );
+            }
+          });
+          routers.set(def.agentId, router);
+          return {
+            async stop() {
+              routers.delete(def.agentId);
+              await channel.stop();
+            },
+          };
+        },
+      },
+    });
+
+    const syncDefs = async (): Promise<void> => {
+      try {
+        const defs = await fetchExternalAgentDefs({ relayUrl, serviceNsec });
+        await sourceManager?.reconcile(defs);
+      } catch (e) {
+        // relay недоступен — работаем со старым набором ботов до следующего цикла
+        console.warn("[sources] снапшот описаний агентов не получен:", e);
+      }
+    };
+    await syncDefs();
+    defsTimer = setInterval(() => void syncDefs(), defsPollMs);
+  }
 
   const heartbeatPath = env("OURA_HEARTBEAT_FILE");
   let polling = false;
@@ -136,11 +219,12 @@ async function main(): Promise<void> {
   const timer = setInterval(() => {
     if (polling) return;
     polling = true;
-    pollPromise = router
-      .pollOutbound()
-      .then(() =>
-        heartbeatPath ? writeHeartbeat(heartbeatPath, Date.now()) : undefined,
-      )
+    pollPromise = (async () => {
+      for (const router of routers.values()) {
+        await router.pollOutbound();
+      }
+      if (heartbeatPath) await writeHeartbeat(heartbeatPath, Date.now());
+    })()
       .catch((e) => console.error("[poll] ошибка:", e))
       .finally(() => {
         polling = false;
@@ -149,9 +233,11 @@ async function main(): Promise<void> {
 
   const shutdown = async (): Promise<void> => {
     clearInterval(timer);
+    if (defsTimer) clearInterval(defsTimer);
     try {
       await pollPromise;
-      await channel.stop();
+      await legacyChannel?.stop();
+      await sourceManager?.stopAll();
       await state.save();
       await lock.release();
       process.exit(0);
@@ -167,8 +253,13 @@ async function main(): Promise<void> {
     console.log(
       `[oura-bridge] заглушка Telegram: http://127.0.0.1:${stub.port} (POST /simulate, GET /outbox)`,
     );
-  } else {
+  } else if (startup.source === "telegram") {
     console.log("[oura-bridge] источник: Telegram (long-polling)");
+  }
+  if (sourcesFromUi) {
+    console.log(
+      `[oura-bridge] источники из UI включены (поллинг описаний: ${defsPollMs}ms)`,
+    );
   }
   console.log(
     `[oura-bridge] relay: ${relayUrl}, buzz-cli: ${binPath}, поллинг: ${pollMs}ms`,

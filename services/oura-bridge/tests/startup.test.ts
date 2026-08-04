@@ -51,3 +51,38 @@ describe("decideStartup", () => {
     }
   });
 });
+
+describe("decideStartup: источники из UI (OURA_SOURCES_FROM_UI)", () => {
+  it("без OURA_SOURCE при sourcesFromUi=true стартует без легаси-канала", () => {
+    const d = decideStartup({
+      source: undefined,
+      operatorPubkeys: ["a".repeat(64)],
+      sourcesFromUi: true,
+    });
+    expect(d).toEqual({ ok: true, source: undefined, warnings: [] });
+  });
+
+  it("sourcesFromUi=true с пустыми операторами — отказ (fail-open недопустим)", () => {
+    const d = decideStartup({
+      source: undefined,
+      operatorPubkeys: [],
+      sourcesFromUi: true,
+    });
+    expect(d.ok).toBe(false);
+    if (!d.ok) expect(d.errors.join(" ")).toMatch(/OPERATOR_PUBKEYS/);
+  });
+
+  it("sourcesFromUi=true совместим с легаси-каналом (source=stub)", () => {
+    const d = decideStartup({
+      source: "stub",
+      operatorPubkeys: ["a".repeat(64)],
+      sourcesFromUi: true,
+    });
+    expect(d).toEqual({ ok: true, source: "stub", warnings: [] });
+  });
+
+  it("без sourcesFromUi отсутствие OURA_SOURCE — по-прежнему отказ", () => {
+    const d = decideStartup({ source: undefined, operatorPubkeys: [] });
+    expect(d.ok).toBe(false);
+  });
+});

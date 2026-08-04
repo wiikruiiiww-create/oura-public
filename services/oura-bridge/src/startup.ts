@@ -5,10 +5,13 @@ export interface StartupInput {
   source: string | undefined;
   /** валидные pubkey операторов из OURA_OPERATOR_PUBKEYS */
   operatorPubkeys: string[];
+  /** OURA_SOURCES_FROM_UI=true — боты внешних агентов из описаний на relay */
+  sourcesFromUi?: boolean;
 }
 
 export type StartupDecision =
-  | { ok: true; source: SourceKind; warnings: string[] }
+  /** source undefined = легаси-канал не поднимается (только источники из UI) */
+  | { ok: true; source: SourceKind | undefined; warnings: string[] }
   | { ok: false; errors: string[] };
 
 /**
@@ -16,9 +19,23 @@ export type StartupDecision =
  * allow-list операторов — отказ старта: иначе исходящее сообщение любого
  * участника лид-комнаты ретранслировалось бы клиенту (fail-open). В режиме
  * `stub` (дев-стенд) пустой список допустим, но с предупреждением.
+ * При sourcesFromUi легаси-канал необязателен, но операторы обязательны:
+ * боты источников ретранслируют ответы по тому же allow-list.
  */
 export function decideStartup(input: StartupInput): StartupDecision {
+  if (input.sourcesFromUi && input.operatorPubkeys.length === 0) {
+    return {
+      ok: false,
+      errors: [
+        "OURA_OPERATOR_PUBKEYS пуст при OURA_SOURCES_FROM_UI=true — клиенту " +
+          "ретранслировался бы любой участник канала; задай pubkey операторов",
+      ],
+    };
+  }
   if (input.source === undefined) {
+    if (input.sourcesFromUi) {
+      return { ok: true, source: undefined, warnings: [] };
+    }
     return {
       ok: false,
       errors: ["не задан OURA_SOURCE (допустимо: stub | telegram)"],
