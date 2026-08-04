@@ -7,7 +7,9 @@ import {
   expandTilde,
   normalizeRelayUrl,
 } from "@/features/communities/communityStorage";
+import { parseLeadServiceKey } from "@/features/communities/leadServiceKey";
 import { validateReposDir } from "@/shared/api/tauri";
+import { safeNpub } from "@/shared/lib/nostrUtils";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,
@@ -25,7 +27,10 @@ type EditCommunityDialogProps = {
   onSave: (
     id: string,
     updates: Partial<
-      Pick<Community, "name" | "relayUrl" | "token" | "reposDir">
+      Pick<
+        Community,
+        "name" | "relayUrl" | "token" | "reposDir" | "leadServicePubkey"
+      >
     >,
   ) => void;
   onRemove?: (id: string) => void;
@@ -47,6 +52,10 @@ export function EditCommunityDialog({
   const [token, setToken] = React.useState("");
   const [reposDir, setReposDir] = React.useState("");
   const [reposDirError, setReposDirError] = React.useState<string | null>(null);
+  const [leadService, setLeadService] = React.useState("");
+  const [leadServiceError, setLeadServiceError] = React.useState<string | null>(
+    null,
+  );
   const membershipQuery = useMyRelayMembershipLookupQuery();
   const activeRole = membershipQuery.data?.membership?.role;
   const canEditIcon =
@@ -63,6 +72,13 @@ export function EditCommunityDialog({
       setToken(community.token ?? "");
       setReposDir(community.reposDir ?? "");
       setReposDirError(null);
+      setLeadService(
+        community.leadServicePubkey
+          ? (safeNpub(community.leadServicePubkey) ??
+              community.leadServicePubkey)
+          : "",
+      );
+      setLeadServiceError(null);
     }
   }, [community, open]);
 
@@ -78,7 +94,10 @@ export function EditCommunityDialog({
       }
 
       const updates: Partial<
-        Pick<Community, "name" | "relayUrl" | "token" | "reposDir">
+        Pick<
+          Community,
+          "name" | "relayUrl" | "token" | "reposDir" | "leadServicePubkey"
+        >
       > = {};
 
       const trimmedName = name.trim();
@@ -113,13 +132,35 @@ export function EditCommunityDialog({
         updates.reposDir = expandedReposDir;
       }
 
+      // Пустое поле очищает настройку; ошибочный ключ отклоняется здесь —
+      // иначе токен бота зашифруется на несуществующий ключ и сервис лидов
+      // молча не сможет его прочитать.
+      const leadServiceResult = parseLeadServiceKey(leadService);
+      if ("error" in leadServiceResult) {
+        setLeadServiceError(leadServiceResult.error);
+        return;
+      }
+      const nextLeadService = leadServiceResult.hex ?? undefined;
+      if (nextLeadService !== community.leadServicePubkey) {
+        updates.leadServicePubkey = nextLeadService;
+      }
+
       if (Object.keys(updates).length > 0) {
         onSave(community.id, updates);
       }
 
       handleClose();
     },
-    [community, name, relayUrl, token, reposDir, onSave, handleClose],
+    [
+      community,
+      name,
+      relayUrl,
+      token,
+      reposDir,
+      leadService,
+      onSave,
+      handleClose,
+    ],
   );
 
   const handleRemove = React.useCallback(() => {
@@ -233,6 +274,35 @@ export function EditCommunityDialog({
               Point the agent's <code>REPOS</code> directory at an existing
               folder so agents work in your local checkouts. Leave blank to use
               the default location.
+            </p>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label
+              className="text-sm font-medium text-foreground"
+              htmlFor="edit-ws-lead-service"
+            >
+              Сервис лидов
+              <span className="ml-1 text-xs font-normal text-muted-foreground">
+                (необязательно)
+              </span>
+            </label>
+            <Input
+              id="edit-ws-lead-service"
+              onChange={(e) => {
+                setLeadService(e.target.value);
+                setLeadServiceError(null);
+              }}
+              placeholder="npub1…"
+              type="text"
+              value={leadService}
+            />
+            {leadServiceError ? (
+              <p className="text-xs text-destructive">{leadServiceError}</p>
+            ) : null}
+            <p className="text-xs text-muted-foreground">
+              Публичный ключ сервиса, который обслуживает внешних агентов.
+              Токены ботов шифруются на этот ключ — без него внешнего агента
+              создать нельзя.
             </p>
           </div>
           <div className="flex items-center justify-between pt-2">
