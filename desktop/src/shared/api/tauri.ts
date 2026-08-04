@@ -1097,6 +1097,21 @@ export async function nip44DecryptFromSelf(
   return invokeTauri<string>("nip44_decrypt_from_self", { ciphertext });
 }
 
+/**
+ * Encrypt a secret for another party's key (hex or npub). Unlike
+ * encrypt-to-self, the sender cannot read the result back — used for secrets
+ * published to the relay for one specific service to consume.
+ */
+export async function nip44EncryptToPubkey(
+  recipientPubkey: string,
+  plaintext: string,
+): Promise<string> {
+  return invokeTauri<string>("nip44_encrypt_to_pubkey", {
+    recipientPubkey,
+    plaintext,
+  });
+}
+
 // ── NIP-AB device pairing ───────────────────────────────────────────────────
 
 export async function startPairing(): Promise<string> {

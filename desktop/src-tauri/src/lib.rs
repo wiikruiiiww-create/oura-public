@@ -713,6 +713,7 @@ pub fn run() {
             build_observer_control_event,
             create_auth_event,
             nip44_encrypt_to_self,
+            nip44_encrypt_to_pubkey,
             nip44_decrypt_from_self,
             get_channels,
             create_channel,
