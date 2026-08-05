@@ -3,8 +3,10 @@ import { decryptFromPubkey } from "./agents/crypto.js";
 import type { ExternalAgentDef } from "./agents/definition.js";
 import { fetchExternalAgentDefs } from "./agents/definitions-poller.js";
 import { BuzzCli } from "./buzz/cli-client.js";
+import { fetchCompanyInfo } from "./company/company-info.js";
 import { parseAgentProfile } from "./engine/agent-profile.js";
 import { completeReply } from "./engine/llm.js";
+import type { CompanyInfo } from "./engine/prompt.js";
 import { AgentRuntime, type RuntimeAgent } from "./engine/runtime.js";
 import { parseOperatorPubkeys } from "./identity.js";
 import { acquireLock } from "./lock.js";
@@ -169,6 +171,9 @@ async function main(): Promise<void> {
   // берёт свежее описание агента из последнего снапшота.
   const runtimes = new Map<string, AgentRuntime>();
   const agentDefs = new Map<string, ExternalAgentDef>();
+  // Общие сведения о компании из настроек сообщества: одни на всех агентов,
+  // обновляются тем же циклом, что и описания агентов.
+  let companyInfo: CompanyInfo | undefined;
   let sourceManager: SourceManager | undefined;
   let defsTimer: NodeJS.Timeout | undefined;
   if (sourcesFromUi) {
@@ -257,6 +262,15 @@ async function main(): Promise<void> {
         agentDefs.clear();
         for (const def of defs) agentDefs.set(def.agentId, def);
         await sourceManager?.reconcile(defs);
+        if (agentEngine) {
+          try {
+            companyInfo =
+              (await fetchCompanyInfo({ relayUrl, serviceNsec })) ?? undefined;
+          } catch (e) {
+            // без описания компании агент работает, просто без общих сведений
+            console.warn("[sources] описание компании не получено:", e);
+          }
+        }
       } catch (e) {
         // relay недоступен — работаем со старым набором ботов до следующего цикла
         console.warn("[sources] снапшот описаний агентов не получен:", e);
@@ -284,6 +298,7 @@ async function main(): Promise<void> {
           name: def.name,
           isActive: def.isActive,
           profile: parseAgentProfile(def.profile),
+          company: companyInfo,
         };
         try {
           await runtime.tick(agent);

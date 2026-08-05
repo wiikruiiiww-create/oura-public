@@ -37,6 +37,8 @@ export interface RuntimeAgent {
   name: string;
   profile: AgentProfile;
   isActive: boolean;
+  /** общие сведения о компании — попадают в промпт каждого агента */
+  company?: CompanyInfo;
 }
 
 export interface RuntimeDeps {
@@ -65,7 +67,6 @@ export interface RuntimeDeps {
   servicePubkeyHex: string;
   operatorPubkeys: string[];
   complete(call: CompleteCall): Promise<CompleteResult>;
-  company?: CompanyInfo;
   /** ответ уходит клиенту без одобрения человеком */
   autoReply?: boolean;
   /** NIP-43: регистрация ключа агента участником relay */
@@ -91,7 +92,6 @@ export class AgentRuntime {
       serviceNsec: deps.serviceNsec,
       servicePubkeyHex: deps.servicePubkeyHex,
       complete: deps.complete,
-      company: deps.company,
       fetchLimit: deps.fetchLimit,
       now: deps.now,
     });
