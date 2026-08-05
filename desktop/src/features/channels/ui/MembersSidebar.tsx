@@ -7,6 +7,8 @@ import {
   useChannelMembersQuery,
 } from "@/features/channels/hooks";
 import { attachManagedAgentToChannel } from "@/features/agents/channelAgents";
+import { isExternalAgentPubkey } from "@/features/agents/external/externalAgentGuards";
+import { useExternalAgentsQuery } from "@/features/agents/external/useExternalAgents";
 import {
   coalesceAgentAutocompleteCandidates,
   isAgentIdentityInManagedList,
@@ -184,6 +186,7 @@ export function MembersSidebar({
     managedAgentsQuery,
     relayAgentsQuery,
   } = useClassifiedMembers(rawMembers, currentPubkey);
+  const externalAgents = useExternalAgentsQuery().data ?? [];
   const activeMembers = React.useMemo(
     () =>
       [...people, ...bots].sort((left, right) =>
@@ -282,7 +285,10 @@ export function MembersSidebar({
           )) ||
         memberPubkeys.has(pubkey) ||
         isArchivedDiscovery(pubkey) ||
-        !isAgentIdentityInManagedList(candidate, managedAgentPubkeys)
+        !isAgentIdentityInManagedList(candidate, managedAgentPubkeys) ||
+        // Внешние агенты работают только в комнатах обращений — в командный
+        // канал их не предлагаем (и не пускаем, см. гард на добавлении).
+        isExternalAgentPubkey(pubkey, externalAgents)
       ) {
         return;
       }
@@ -361,6 +367,7 @@ export function MembersSidebar({
     });
   }, [
     canAddMembers,
+    externalAgents,
     isArchivedDiscovery,
     currentPubkey,
     managedAgentsQuery.data,

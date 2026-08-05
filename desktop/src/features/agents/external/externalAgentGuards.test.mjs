@@ -3,7 +3,10 @@ import test from "node:test";
 
 import { externalAgentsFromEvents } from "./externalAgentApi.ts";
 import { buildExternalAgentEventInput } from "./externalAgent.ts";
-import { isExternalAgentPubkey } from "./externalAgentGuards.ts";
+import {
+  assertNotExternalAgent,
+  isExternalAgentPubkey,
+} from "./externalAgentGuards.ts";
 
 const BRIDGE = "c".repeat(64);
 const OWNER = "a".repeat(64);
@@ -85,4 +88,30 @@ test("внешний агент опознаётся по своему иден�
   assert.equal(isExternalAgentPubkey("другой-агент", records), false);
   assert.equal(isExternalAgentPubkey(null, records), false);
   assert.equal(isExternalAgentPubkey("agent-1", []), false);
+});
+
+test("агент опознаётся и по ключу, которым он пишет в комнатах обращений", () => {
+  const AGENT_PUBKEY = "f".repeat(64);
+  const withKey = {
+    ...externalEvent("agent-1"),
+    tags: [...externalEvent("agent-1").tags, ["agent-pubkey", AGENT_PUBKEY]],
+  };
+  const records = externalAgentsFromEvents([withKey]);
+
+  assert.equal(records[0].agentPubkey, AGENT_PUBKEY);
+  assert.equal(isExternalAgentPubkey(AGENT_PUBKEY, records), true);
+  assert.equal(
+    isExternalAgentPubkey(AGENT_PUBKEY.toUpperCase(), records),
+    true,
+    "регистр hex-ключа не должен обходить блокировку",
+  );
+});
+
+test("блокировка добавления в канал бросает понятную ошибку", () => {
+  const records = externalAgentsFromEvents([externalEvent("agent-1")]);
+  assert.throws(
+    () => assertNotExternalAgent("agent-1", records),
+    /комнатах обращений/,
+  );
+  assert.doesNotThrow(() => assertNotExternalAgent("внутренний", records));
 });

@@ -67,6 +67,12 @@ export interface ExternalAgentRecord extends ExternalAgentDraft {
   /** автор события — под его ключом шифровался токен */
   ownerPubkey: string;
   createdAt: number;
+  /**
+   * Ключ, под которым агент пишет в комнатах обращений. Появляется, когда
+   * сервис лидов его выдаст (тег `agent-pubkey`); до этого агента опознают
+   * только по `agentId`.
+   */
+  agentPubkey?: string;
 }
 
 /** Nostr-событие в том виде, в каком его отдаёт relay. */
@@ -231,6 +237,8 @@ export function parseExternalAgentEvent(
   }
   const content = parsed as Record<string, unknown>;
 
+  const agentPubkey = findTag(event.tags, "agent-pubkey")?.[1];
+
   return {
     agentId,
     ownerPubkey: event.pubkey,
@@ -240,5 +248,6 @@ export function parseExternalAgentEvent(
     profile: normalizeProfile(content.profile),
     botTokenEnc,
     bridgePubkey,
+    ...(agentPubkey ? { agentPubkey } : {}),
   };
 }

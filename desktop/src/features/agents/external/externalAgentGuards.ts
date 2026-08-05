@@ -12,7 +12,11 @@ export function isExternalAgentPubkey(
   externalAgents: ExternalAgentRecord[],
 ): boolean {
   if (!candidate) return false;
-  return externalAgents.some((agent) => agent.agentId === candidate);
+  const value = candidate.toLowerCase();
+  return externalAgents.some(
+    (agent) =>
+      agent.agentId === candidate || agent.agentPubkey?.toLowerCase() === value,
+  );
 }
 
 export const EXTERNAL_AGENT_CHANNEL_BLOCK_MESSAGE =

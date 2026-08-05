@@ -21,6 +21,8 @@ import { SecretRevealDialog } from "./SecretRevealDialog";
 import { TeamDeleteDialog } from "./TeamDeleteDialog";
 import { TeamDialog } from "./TeamDialog";
 import { TeamsSection } from "./TeamsSection";
+import { ExternalAgentsSection } from "../external/ExternalAgentsSection";
+import { useExternalAgentsQuery } from "../external/useExternalAgents";
 import { UnifiedAgentsSection } from "./UnifiedAgentsSection";
 import { useManagedAgentActions } from "./useManagedAgentActions";
 import { usePersonaActions } from "./usePersonaActions";
@@ -40,6 +42,7 @@ export function AgentsView() {
   const inheritedDefaults = getInheritedAgentDefaults(globalConfig, bakedEnv);
   const agents = useManagedAgentActions();
   const personas = usePersonaActions();
+  const externalAgentsQuery = useExternalAgentsQuery();
   const teamImportInputRef = React.useRef<HTMLInputElement | null>(null);
   const aiDefaultsTriggerRef = React.useRef<HTMLButtonElement>(null);
   const [isAiDefaultsOpen, setIsAiDefaultsOpen] = React.useState(false);
@@ -202,6 +205,8 @@ export function AgentsView() {
                 void personas.handleImportSnapshotFile(fileBytes, fileName);
               }}
             />
+
+            <ExternalAgentsSection agents={externalAgentsQuery.data ?? []} />
 
             <TeamsSection
               error={
