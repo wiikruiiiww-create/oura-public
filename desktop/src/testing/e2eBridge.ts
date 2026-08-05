@@ -10764,6 +10764,15 @@ export function maybeInstallE2eTauriMocks() {
         );
       case "nip44_encrypt_to_self":
         return (payload as { plaintext: string }).plaintext;
+      case "nip44_encrypt_to_pubkey":
+        return `enc:${(payload as { plaintext: string }).plaintext}`;
+      case "validate_telegram_bot_token": {
+        const token = (payload as { token: string }).token;
+        if (!/^\d+:[A-Za-z0-9_-]{20,}$/.test(token.trim())) {
+          throw new Error("токен не похож на выданный @BotFather");
+        }
+        return { username: "oura_sales_bot", botId: 4242 };
+      }
       case "nip44_decrypt_from_self":
         return (payload as { ciphertext: string }).ciphertext;
       case "create_auth_event":

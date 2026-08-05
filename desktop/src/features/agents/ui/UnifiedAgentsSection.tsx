@@ -10,6 +10,7 @@ import type { ProfilePanelOpenOptions } from "@/shared/context/ProfilePanelConte
 import { useFeedbackToasts } from "@/shared/hooks/useToastEffect";
 import { useFileImportZone } from "@/shared/hooks/useFileImportZone";
 import { Badge } from "@/shared/ui/badge";
+import { AgentKindBadge } from "../external/ExternalAgentsSection";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -322,12 +323,15 @@ function AgentPersonaCard({
         onOpenPersonaProfile(persona);
       }}
       statusBadge={
-        agent?.needsRestart ? (
-          <Badge className="gap-1" variant="warning">
-            <RefreshCw className="h-3 w-3" />
-            Restart required
-          </Badge>
-        ) : null
+        <div className="flex items-center gap-1.5">
+          <AgentKindBadge kind="internal" />
+          {agent?.needsRestart ? (
+            <Badge className="gap-1" variant="warning">
+              <RefreshCw className="h-3 w-3" />
+              Restart required
+            </Badge>
+          ) : null}
+        </div>
       }
     />
   );

@@ -18,6 +18,12 @@ export type Community = {
    */
   reposDir?: string;
   /**
+   * Hex pubkey of the lead service that runs this community's external agents.
+   * Bot tokens entered in the agent form are NIP-44-encrypted to this key, so
+   * external agents cannot be created until it is set.
+   */
+  leadServicePubkey?: string;
+  /**
    * @deprecated Never read. Kept on the type so old localStorage entries
    * deserialise without errors. New entries never set this field, and
    * `loadCommunities()` strips it on read so it cannot leak forward. The

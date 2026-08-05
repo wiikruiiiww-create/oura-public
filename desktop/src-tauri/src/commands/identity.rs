@@ -484,6 +484,43 @@ pub async fn nip44_encrypt_to_self(
     .map_err(|e| format!("spawn_blocking failed: {e}"))?
 }
 
+/// Шифрует текст NIP-44 на чужой pubkey (получатель расшифрует своим ключом).
+///
+/// Нужно для секретов, которые владелец публикует адресно одному сервису:
+/// значение живёт на релее только шифртекстом, а отправитель после публикации
+/// прочитать его уже не может (в отличие от encrypt-to-self).
+#[tauri::command]
+pub async fn nip44_encrypt_to_pubkey(
+    recipient_pubkey: String,
+    plaintext: String,
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    let keys = state.signing_keys()?;
+
+    tauri::async_runtime::spawn_blocking(move || {
+        let recipient = parse_recipient_pubkey(&recipient_pubkey)?;
+        nip44::encrypt(
+            keys.secret_key(),
+            &recipient,
+            &plaintext,
+            nip44::Version::V2,
+        )
+        .map_err(|e| format!("nip44 encrypt failed: {e}"))
+    })
+    .await
+    .map_err(|e| format!("spawn_blocking failed: {e}"))?
+}
+
+/// Принимает hex-pubkey или bech32 `npub`; сообщение об ошибке не содержит
+/// исходной строки, чтобы опечатка в секрете не утекла в логи UI.
+fn parse_recipient_pubkey(raw: &str) -> Result<PublicKey, String> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return Err("recipient pubkey is empty".to_string());
+    }
+    PublicKey::parse(trimmed).map_err(|_| "recipient pubkey is not valid hex or npub".to_string())
+}
+
 #[tauri::command]
 pub async fn nip44_decrypt_from_self(
     ciphertext: String,
@@ -581,5 +618,64 @@ mod nostr_identity_binding_tests {
         .unwrap_err();
 
         assert_eq!(error, "expires_at is expired");
+    }
+}
+
+#[cfg(test)]
+mod nip44_recipient_tests {
+    use super::parse_recipient_pubkey;
+    use nostr::{nips::nip44, Keys, ToBech32};
+
+    #[test]
+    fn parse_recipient_pubkey_accepts_hex_and_npub() {
+        let keys = Keys::generate();
+        let hex = keys.public_key().to_hex();
+        let npub = keys.public_key().to_bech32().unwrap();
+
+        assert_eq!(parse_recipient_pubkey(&hex).unwrap(), keys.public_key());
+        assert_eq!(parse_recipient_pubkey(&npub).unwrap(), keys.public_key());
+        assert_eq!(
+            parse_recipient_pubkey(&format!("  {hex}  ")).unwrap(),
+            keys.public_key(),
+            "surrounding whitespace from a paste must not break the key"
+        );
+    }
+
+    #[test]
+    fn parse_recipient_pubkey_rejects_garbage_without_echoing_input() {
+        let error = parse_recipient_pubkey("npub-not-a-key").unwrap_err();
+        assert_eq!(error, "recipient pubkey is not valid hex or npub");
+        assert!(
+            !error.contains("npub-not-a-key"),
+            "error must not echo the input"
+        );
+        assert_eq!(
+            parse_recipient_pubkey("   ").unwrap_err(),
+            "recipient pubkey is empty"
+        );
+    }
+
+    #[test]
+    fn ciphertext_for_recipient_decrypts_with_recipient_key_only() {
+        let sender = Keys::generate();
+        let recipient = Keys::generate();
+        let stranger = Keys::generate();
+
+        let ciphertext = nip44::encrypt(
+            sender.secret_key(),
+            &parse_recipient_pubkey(&recipient.public_key().to_hex()).unwrap(),
+            "bot-token",
+            nip44::Version::V2,
+        )
+        .unwrap();
+
+        let plaintext =
+            nip44::decrypt(recipient.secret_key(), &sender.public_key(), &ciphertext).unwrap();
+        assert_eq!(plaintext, "bot-token");
+
+        assert!(
+            nip44::decrypt(stranger.secret_key(), &sender.public_key(), &ciphertext).is_err(),
+            "a third party must not be able to read the secret"
+        );
     }
 }

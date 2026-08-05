@@ -11,6 +11,8 @@ import {
   ensureChannelAgentPresetInChannel,
   provisionChannelManagedAgent,
 } from "@/features/agents/channelAgents";
+import { assertNotExternalAgent } from "@/features/agents/external/externalAgentGuards";
+import { useExternalAgentsQuery } from "@/features/agents/external/useExternalAgents";
 import { resolveSnapshotAvatarPng } from "@/features/agents/ui/snapshotAvatarPng";
 import {
   channelsQueryKey,
@@ -591,6 +593,7 @@ export function useAttachManagedAgentToChannelMutation(
   channelId: string | null,
 ) {
   const queryClient = useQueryClient();
+  const externalAgents = useExternalAgentsQuery().data ?? [];
 
   return useMutation({
     mutationFn: async (
@@ -601,6 +604,10 @@ export function useAttachManagedAgentToChannelMutation(
       if (!effectiveChannelId) {
         throw new Error("No channel selected.");
       }
+
+      // Списки кандидатов внешних агентов не показывают, но добавление
+      // достижимо и другими путями — запрет живёт здесь, на самом действии.
+      assertNotExternalAgent(rest.agent.pubkey, externalAgents);
 
       return attachManagedAgentToChannel(effectiveChannelId, rest);
     },
