@@ -137,7 +137,10 @@ test("неизвестные поля профиля не ломают разб�
       ["source", "telegram"],
       ["bot-token-enc", "enc", BRIDGE_PUBKEY],
     ],
-    content: JSON.stringify({ name: "X", profile: { goal: "цель", лишнее: 1 } }),
+    content: JSON.stringify({
+      name: "X",
+      profile: { goal: "цель", лишнее: 1 },
+    }),
   });
 
   assert.ok(record);

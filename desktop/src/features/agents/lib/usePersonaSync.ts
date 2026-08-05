@@ -2,6 +2,7 @@ import * as React from "react";
 
 import { relayClient } from "@/shared/api/relayClient";
 import { reconcileInboundPersonaEvent } from "@/shared/api/tauriPersonas";
+import { isExternalAgentEvent } from "@/features/agents/external/externalAgent";
 import type { RelayEvent } from "@/shared/api/types";
 import {
   KIND_DELETION,
@@ -20,6 +21,20 @@ const PERSONA_SYNC_KINDS = [
   KIND_DELETION,
 ];
 
+/**
+ * Whether an incoming event belongs in this device's local persona/agent
+ * registry. External agents share kind 30177 but have no local process — they
+ * belong in the external-agent list, not in the registry of agents this
+ * device runs.
+ */
+export function shouldReconcilePersonaEvent(
+  event: RelayEvent,
+  pubkey: string,
+): boolean {
+  if (event.pubkey !== pubkey) return false;
+  return !isExternalAgentEvent(event);
+}
+
 // Start the persona/team/agent/deletion sync for `pubkey`: one-shot backfill
 // of existing heads + tombstones, then a live subscription. Returns a disposer
 // that closes the live subscription. Extracted from the hook so the wiring is
@@ -29,7 +44,7 @@ export function startPersonaSync(
   onCancelled: () => boolean,
 ): () => Promise<void> {
   const reconcile = (event: RelayEvent) => {
-    if (event.pubkey !== pubkey) return;
+    if (!shouldReconcilePersonaEvent(event, pubkey)) return;
     void reconcileInboundPersonaEvent(JSON.stringify(event)).catch((error) => {
       console.warn("[usePersonaSync] reconcile failed:", error);
     });

@@ -29,11 +29,7 @@ export type ExternalAgentRole =
 
 export type ExternalAgentFormality = "formal" | "friendly" | "casual";
 
-export type ExternalAgentLength =
-  | "very_short"
-  | "short"
-  | "medium"
-  | "long";
+export type ExternalAgentLength = "very_short" | "short" | "medium" | "long";
 
 export interface ExternalAgentTone {
   formality: ExternalAgentFormality;
@@ -103,11 +99,7 @@ const ROLES: ExternalAgentRole[] = [
   "recruiter",
   "support",
 ];
-const FORMALITIES: ExternalAgentFormality[] = [
-  "formal",
-  "friendly",
-  "casual",
-];
+const FORMALITIES: ExternalAgentFormality[] = ["formal", "friendly", "casual"];
 const LENGTHS: ExternalAgentLength[] = [
   "very_short",
   "short",
@@ -141,17 +133,12 @@ export function buildExternalAgentEventInput(
   };
 }
 
-function findTag(
-  tags: string[][],
-  name: string,
-): string[] | undefined {
+function findTag(tags: string[][], name: string): string[] | undefined {
   return tags.find((tag) => tag[0] === name);
 }
 
 /** Событие описывает внешнего агента (а не локального/чужого внутреннего). */
-export function isExternalAgentEvent(
-  event: ExternalAgentSourceEvent,
-): boolean {
+export function isExternalAgentEvent(event: ExternalAgentSourceEvent): boolean {
   return (
     event.kind === KIND_MANAGED_AGENT &&
     findTag(event.tags, "agent-type")?.[1] === EXTERNAL_AGENT_TYPE
@@ -224,9 +211,7 @@ export function parseExternalAgentEvent(
   const agentId = findTag(event.tags, "d")?.[1];
   if (!agentId) return null;
 
-  if (
-    findTag(event.tags, "source")?.[1] !== EXTERNAL_AGENT_SOURCE_TELEGRAM
-  ) {
+  if (findTag(event.tags, "source")?.[1] !== EXTERNAL_AGENT_SOURCE_TELEGRAM) {
     return null;
   }
 

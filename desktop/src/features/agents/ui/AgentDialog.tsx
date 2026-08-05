@@ -10,6 +10,9 @@ import type { BackendIntent } from "../lib/instanceInputForDefinition";
 import type { AgentCreateIntent } from "./agentCreateIntent";
 import type { EditAgentFocusTarget } from "@/features/agents/openEditAgentEvent";
 import { AgentInstanceEditDialog } from "./AgentInstanceEditDialog";
+import type { AgentKind } from "../external/AgentKindSelector";
+import { AgentKindSelector } from "../external/AgentKindSelector";
+import { ExternalAgentCreateDialog } from "../external/ExternalAgentCreateDialog";
 import { createPersonaDialogState } from "./personaDialogState";
 import { AgentDefinitionDialog } from "./AgentDefinitionDialog";
 import { WhereToRunSection } from "./WhereToRunSection";
@@ -111,6 +114,7 @@ function AgentCreateDialogRouter({
   onSubmitDefinition,
 }: AgentDialogCreateProps) {
   const [runDraft, setRunDraft] = React.useState(emptyWhereToRunDraft);
+  const [agentKind, setAgentKind] = React.useState<AgentKind>("internal");
   const initialValues = React.useMemo(
     () => providedInitialValues ?? createPersonaDialogState().initialValues,
     [providedInitialValues],
@@ -118,14 +122,31 @@ function AgentCreateDialogRouter({
 
   const copy = createPersonaDialogState();
 
+  if (agentKind === "external") {
+    return (
+      <ExternalAgentCreateDialog
+        agentKind={agentKind}
+        onAgentKindChange={setAgentKind}
+        onOpenChange={onOpenChange}
+      />
+    );
+  }
+
   return (
     <AgentDefinitionDialog
       createRunSection={
-        <WhereToRunSection
-          draft={runDraft}
-          isPending={isDefinitionPending}
-          onDraftChange={setRunDraft}
-        />
+        <div className="space-y-4">
+          <AgentKindSelector
+            disabled={isDefinitionPending}
+            onChange={setAgentKind}
+            value={agentKind}
+          />
+          <WhereToRunSection
+            draft={runDraft}
+            isPending={isDefinitionPending}
+            onDraftChange={setRunDraft}
+          />
+        </div>
       }
       createSubmitBlocked={!canSubmitWhereToRun(runDraft)}
       description={copy.description}

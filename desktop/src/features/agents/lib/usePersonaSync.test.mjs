@@ -8,7 +8,10 @@ import {
   KIND_PERSONA,
   KIND_TEAM,
 } from "@/shared/constants/kinds";
-import { startPersonaSync } from "./usePersonaSync.ts";
+import {
+  shouldReconcilePersonaEvent,
+  startPersonaSync,
+} from "./usePersonaSync.ts";
 
 const EXPECTED_KINDS = [
   KIND_PERSONA,
@@ -57,4 +60,42 @@ test("startPersonaSync backfills history including the deletion kind", () => {
   );
 
   mock.reset();
+});
+
+// Внешние агенты живут в том же kind 30177, но локального процесса не имеют —
+// реконсиляция затащила бы их в реестр агентов, запускаемых на этом устройстве.
+test("описания внешних агентов не попадают в локальный реестр", () => {
+  const base = {
+    pubkey: "owner-pubkey",
+    kind: KIND_MANAGED_AGENT,
+    created_at: 10,
+    content: JSON.stringify({ name: "Агент" }),
+    sig: "",
+  };
+  const external = {
+    ...base,
+    id: "external-1",
+    tags: [
+      ["d", "agent-1"],
+      ["agent-type", "external"],
+      ["source", "telegram"],
+      ["bot-token-enc", "enc", "c".repeat(64)],
+    ],
+  };
+  const internal = {
+    ...base,
+    id: "internal-1",
+    tags: [["d", "b".repeat(64)]],
+  };
+
+  assert.equal(shouldReconcilePersonaEvent(internal, "owner-pubkey"), true);
+  assert.equal(shouldReconcilePersonaEvent(external, "owner-pubkey"), false);
+  assert.equal(
+    shouldReconcilePersonaEvent(
+      { ...internal, pubkey: "someone-else" },
+      "owner-pubkey",
+    ),
+    false,
+    "чужие события по-прежнему игнорируются",
+  );
 });
