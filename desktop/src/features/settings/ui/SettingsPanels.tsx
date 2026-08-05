@@ -5,6 +5,7 @@ import {
   BellRing,
   Bot,
   Check,
+  Building2,
   ChevronDown,
   Cpu,
   Download,
@@ -29,6 +30,7 @@ import type {
 } from "@/features/notifications/hooks";
 import type { SoundName, SoundSlot } from "@/features/notifications/lib/sound";
 import { CommunityMembersSettingsCard } from "@/features/community-members/ui/CommunityMembersSettingsCard";
+import { CompanyInfoCard } from "@/features/company/ui/CompanyInfoCard";
 import { CustomEmojiSettingsCard } from "@/features/custom-emoji/ui/CustomEmojiSettingsCard";
 import { LocalArchiveSettingsCard } from "@/features/local-archive/ui/LocalArchiveSettingsCard";
 import {
@@ -87,6 +89,7 @@ import { SettingsSectionHeader } from "./SettingsSectionHeader";
 
 export type SettingsSection =
   | "profile"
+  | "company"
   | "notifications"
   | "experimental"
   | "agents"
@@ -106,6 +109,7 @@ export const DEFAULT_SETTINGS_SECTION: SettingsSection = "profile";
 
 const SETTINGS_SECTION_VALUES: readonly SettingsSection[] = [
   "profile",
+  "company",
   "notifications",
   "experimental",
   "agents",
@@ -162,6 +166,11 @@ export const settingsSections: SettingsSectionDescriptor[] = [
     value: "profile",
     label: "Profile",
     icon: UserRound,
+  },
+  {
+    value: "company",
+    label: "О компании",
+    icon: Building2,
   },
   {
     value: "notifications",
@@ -791,6 +800,8 @@ export function renderSettingsSection(
           fallbackDisplayName={props.fallbackDisplayName}
         />
       );
+    case "company":
+      return <CompanyInfoCard />;
     case "notifications":
       return (
         <NotificationSettingsCard
