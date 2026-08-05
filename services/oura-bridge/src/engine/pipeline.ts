@@ -44,6 +44,8 @@ export interface EngineAgent {
   profile: AgentProfile;
   /** выключён владельцем в интерфейсе — стоп-кран, отвечать нельзя */
   isActive?: boolean;
+  /** общие сведения о компании из настроек сообщества */
+  company?: CompanyInfo;
 }
 
 export interface EngineLead {
@@ -96,7 +98,6 @@ export interface PipelineDeps {
   /** сообщения сервисного ключа — служебные, в диалог не входят */
   servicePubkeyHex: string;
   complete(call: CompleteCall): Promise<CompleteResult>;
-  company?: CompanyInfo;
   historyWindow?: number;
   fetchLimit?: number;
   rateLimit?: { maxCalls: number; windowMs: number };
@@ -197,7 +198,7 @@ export class AgentPipeline {
         systemPrompt: buildSystemPrompt({
           name: agent.name,
           profile: agent.profile,
-          company: this.deps.company,
+          company: agent.company,
         }),
         history: this.history(messages.slice(0, firstNewIndex), lead),
         userMessage: fresh.map((m) => m.content).join("\n"),
