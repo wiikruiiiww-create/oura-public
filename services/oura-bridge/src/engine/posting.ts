@@ -78,18 +78,26 @@ export async function ensureAgentInRoom(
   await deps.state.save();
 }
 
-/** Публикует черновик и запоминает его до одобрения оператором. */
-export async function postDraft(
+/**
+ * `draft` — ответ ждёт одобрения человека, `auto` — уходит клиенту сразу.
+ * В обоих режимах реплика сначала появляется в комнате: команда видит, что
+ * агент ответил, а доставка идёт из одного места и переживает сбой связи.
+ */
+export type ReplyMode = "draft" | "auto";
+
+/** Публикует ответ агента в комнату и ставит его в очередь на доставку. */
+export async function postAgentReply(
   deps: PostingDeps,
   agent: PostingAgent,
   lead: EngineLead,
   text: string,
+  mode: ReplyMode = "draft",
 ): Promise<PendingDraft> {
   await ensureAgentInRoom(deps, agent, lead);
   const eventId = await deps.buzz.sendMessage(
     agent.nsec,
     lead.channelId,
-    wrapDraft(text),
+    mode === "draft" ? wrapDraft(text) : text,
   );
   if (!eventId) {
     throw new Error(
@@ -117,13 +125,11 @@ export async function postDraft(
   return draft;
 }
 
-/** Публикует сообщение агента в комнату как есть (режим без одобрения). */
-export async function postAsAgent(
+/** Служебное сообщение команде в комнату — от имени моста, не агента. */
+export async function postServiceNotice(
   deps: PostingDeps,
-  agent: PostingAgent,
   lead: EngineLead,
   text: string,
-): Promise<string | null> {
-  await ensureAgentInRoom(deps, agent, lead);
-  return deps.buzz.sendMessage(agent.nsec, lead.channelId, text);
+): Promise<void> {
+  await deps.buzz.sendMessage(deps.serviceNsec, lead.channelId, text);
 }

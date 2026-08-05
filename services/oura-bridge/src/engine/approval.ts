@@ -50,6 +50,11 @@ export interface ApprovalDeps {
   now?: () => number;
   /** сколько ждём одобрения, прежде чем считать черновик устаревшим */
   draftTtlMs?: number;
+  /**
+   * Режим без одобрения: ответ агента уходит клиенту сразу. Очередь и повторы
+   * при сбое связи те же, что и у черновиков, — relay о реакциях не спрашиваем.
+   */
+  autoApprove?: boolean;
 }
 
 interface RelayReaction {
@@ -136,18 +141,22 @@ export async function deliverApprovedDrafts(
 
   const delivered: PendingDraft[] = [];
   if (pending.length > 0) {
-    const reactions = await fetchReactions(
-      deps,
-      pending.map((d) => d.eventId),
-    );
     const approved = new Set<string>();
-    for (const r of reactions) {
-      const author = (r.pubkey ?? "").toLowerCase();
-      // одобряет человек: реакции агента и самого клиента не считаются
-      if (author === agentPubkeyHex.toLowerCase()) continue;
-      if (author === lead.pubkeyHex.toLowerCase()) continue;
-      if (!APPROVAL_CONTENT.has(normalizeReaction(r.content ?? ""))) continue;
-      for (const id of targetEventIds(r)) approved.add(id);
+    if (deps.autoApprove) {
+      for (const d of pending) approved.add(d.eventId);
+    } else {
+      const reactions = await fetchReactions(
+        deps,
+        pending.map((d) => d.eventId),
+      );
+      for (const r of reactions) {
+        const author = (r.pubkey ?? "").toLowerCase();
+        // одобряет человек: реакции агента и самого клиента не считаются
+        if (author === agentPubkeyHex.toLowerCase()) continue;
+        if (author === lead.pubkeyHex.toLowerCase()) continue;
+        if (!APPROVAL_CONTENT.has(normalizeReaction(r.content ?? ""))) continue;
+        for (const id of targetEventIds(r)) approved.add(id);
+      }
     }
 
     const keep: PendingDraft[] = [];

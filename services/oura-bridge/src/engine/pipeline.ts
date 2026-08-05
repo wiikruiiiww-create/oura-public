@@ -129,11 +129,19 @@ export class AgentPipeline {
     this.rateLimit = deps.rateLimit ?? DEFAULT_RATE_LIMIT;
   }
 
-  async run(agent: EngineAgent, lead: EngineLead): Promise<PipelineOutcome> {
+  /**
+   * `roomMessages` — уже прочитанные сообщения комнаты. Рантайм читает их один
+   * раз за цикл и делит между командами, одобрением и ответом.
+   */
+  async run(
+    agent: EngineAgent,
+    lead: EngineLead,
+    roomMessages?: BuzzMessage[],
+  ): Promise<PipelineOutcome> {
     if (this.inFlight.has(lead.key)) return skip("in_flight");
     this.inFlight.add(lead.key);
     try {
-      return await this.runExclusive(agent, lead);
+      return await this.runExclusive(agent, lead, roomMessages);
     } finally {
       this.inFlight.delete(lead.key);
     }
@@ -142,6 +150,7 @@ export class AgentPipeline {
   private async runExclusive(
     agent: EngineAgent,
     lead: EngineLead,
+    roomMessages?: BuzzMessage[],
   ): Promise<PipelineOutcome> {
     const { state } = this.deps;
     if (agent.isActive === false) return skip("inactive");
@@ -150,11 +159,12 @@ export class AgentPipeline {
     if (record.silenced) return skip("silenced");
 
     const messages = chronological(
-      await this.deps.buzz.getMessages(
-        this.deps.serviceNsec,
-        lead.channelId,
-        this.fetchLimit,
-      ),
+      roomMessages ??
+        (await this.deps.buzz.getMessages(
+          this.deps.serviceNsec,
+          lead.channelId,
+          this.fetchLimit,
+        )),
     );
 
     const processed = new Set(record.processedEventIds);

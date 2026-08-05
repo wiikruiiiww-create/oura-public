@@ -7,7 +7,7 @@ import type { EngineLead } from "../src/engine/pipeline.js";
 import {
   DRAFT_HINT,
   ensureAgentInRoom,
-  postDraft,
+  postAgentReply,
   type PostingDeps,
 } from "../src/engine/posting.js";
 import { StateStore } from "../src/state.js";
@@ -106,7 +106,7 @@ describe("вход агента в комнату", () => {
 describe("черновик ответа", () => {
   it("уходит в комнату под ключом агента с подсказкой оператору", async () => {
     const a = await agent();
-    await postDraft(deps(), a, LEAD, "Здравствуйте! Подскажу по ценам.");
+    await postAgentReply(deps(), a, LEAD, "Здравствуйте! Подскажу по ценам.");
     expect(buzz.sendMessage).toHaveBeenCalledWith(
       a.nsec,
       "chan-1",
@@ -116,7 +116,7 @@ describe("черновик ответа", () => {
 
   it("запоминается с чистым текстом — клиент подсказку не увидит", async () => {
     const a = await agent();
-    const draft = await postDraft(deps(), a, LEAD, "Работаем с 9 до 18.");
+    const draft = await postAgentReply(deps(), a, LEAD, "Работаем с 9 до 18.");
     expect(draft).toEqual({
       eventId: "evt-1",
       text: "Работаем с 9 до 18.",
@@ -130,8 +130,8 @@ describe("черновик ответа", () => {
     buzz.sendMessage
       .mockResolvedValueOnce("evt-1")
       .mockResolvedValueOnce("evt-2");
-    await postDraft(deps(), a, LEAD, "первый");
-    await postDraft(deps(), a, LEAD, "второй");
+    await postAgentReply(deps(), a, LEAD, "первый");
+    await postAgentReply(deps(), a, LEAD, "второй");
     const record = state.getAgentLead(LEAD.key);
     expect(record?.pendingDrafts?.map((d) => d.eventId)).toEqual(["evt-2"]);
     expect(record?.undeliveredDraftEventIds).toEqual(["evt-1"]);
@@ -140,7 +140,7 @@ describe("черновик ответа", () => {
   it("без id события черновик не сохраняется — одобрить его было бы нечем", async () => {
     buzz.sendMessage.mockResolvedValueOnce(null);
     const a = await agent();
-    await expect(postDraft(deps(), a, LEAD, "текст")).rejects.toThrow(
+    await expect(postAgentReply(deps(), a, LEAD, "текст")).rejects.toThrow(
       /id события/i,
     );
     expect(state.getAgentLead(LEAD.key)?.pendingDrafts ?? []).toHaveLength(0);
