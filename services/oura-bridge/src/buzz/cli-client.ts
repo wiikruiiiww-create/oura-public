@@ -131,15 +131,18 @@ export class BuzzCli implements BuzzApi {
     nsec: string,
     channelId: string,
     content: string,
-  ): Promise<void> {
+  ): Promise<string | null> {
     // Текст лида/оператора никогда не попадает в argv: сообщение `-` там
     // означало бы «читать stdin» (зависание до таймаута), а `-размер` и
     // подобные отвергал бы clap. `--content -` + stdin покрывает любой текст.
-    await this.exec(
+    const res = (await this.exec(
       nsec,
       ["messages", "send", "--channel", channelId, "--content", "-"],
       content,
-    );
+    )) as { event_id?: string } | null;
+    // id нужен только движку (одобрение черновика реакцией на это событие);
+    // остальным вызовам достаточно того, что отправка не бросила
+    return res?.event_id ?? null;
   }
 
   async getMessages(

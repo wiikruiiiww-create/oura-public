@@ -28,6 +28,12 @@ export interface RouterDeps {
    * своих лидов — один человек в двух ботах не смешивается в одну комнату.
    */
   leadKeyPrefix?: string;
+  /**
+   * Ключ внешнего агента этого источника. Его сообщения — черновики и реплики
+   * движка — роутер клиенту не ретранслирует: черновик до одобрения клиенту не
+   * предназначен, а одобренный текст доставляет сам движок.
+   */
+  agentPubkeyHex?: string;
 }
 
 const DEFAULT_LEAD_ACTIVE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
@@ -156,7 +162,8 @@ export class Router {
           for (const msg of msgs) {
             if (
               msg.authorPubkey === lead.pubkeyHex ||
-              msg.authorPubkey === servicePubkeyHex
+              msg.authorPubkey === servicePubkeyHex ||
+              msg.authorPubkey === this.deps.agentPubkeyHex
             )
               continue;
             if (

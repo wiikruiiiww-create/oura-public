@@ -34,6 +34,17 @@ export interface AgentLeadRecord {
   silenced?: boolean;
   /** черновики, ожидающие одобрения оператором */
   pendingDrafts?: PendingDraft[];
+  /** агент уже добавлен в комнату — повторно relay не дёргаем */
+  agentInRoom?: boolean;
+}
+
+/**
+ * Ключ, под которым агент пишет в комнаты. Свой ключ, а не сервисный: реплики
+ * агента должны отличаться от служебных сообщений моста и от реплик операторов.
+ */
+export interface AgentKeyRecord {
+  nsec: string;
+  pubkeyHex: string;
 }
 
 /** Расход модели по агенту — основа для счетов и лимитов. */
@@ -53,6 +64,8 @@ interface StateFile {
   agentLeads?: Record<string, AgentLeadRecord>;
   /** движок внешних агентов: расход по agentId */
   agentUsage?: Record<string, AgentUsageRecord>;
+  /** движок внешних агентов: ключи агентов по agentId */
+  agentKeys?: Record<string, AgentKeyRecord>;
 }
 
 const PER_LEAD_SEEN_CAP = 500;
@@ -203,6 +216,15 @@ export class StateStore {
   putAgentLead(key: string, record: AgentLeadRecord): void {
     this.data.agentLeads ??= {};
     this.data.agentLeads[key] = record;
+  }
+
+  getAgentKey(agentId: string): AgentKeyRecord | undefined {
+    return this.data.agentKeys?.[agentId];
+  }
+
+  putAgentKey(agentId: string, record: AgentKeyRecord): void {
+    this.data.agentKeys ??= {};
+    this.data.agentKeys[agentId] = record;
   }
 
   getAgentUsage(agentId: string): AgentUsageRecord | undefined {

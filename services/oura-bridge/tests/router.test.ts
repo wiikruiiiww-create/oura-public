@@ -113,6 +113,38 @@ describe("pollOutbound", () => {
     await r.pollOutbound(); // повторный поллинг не должен дублировать
     expect(delivered).toEqual([{ chatId: "42", text: "Добрый день!" }]);
   });
+
+  it("сообщения агента клиенту не уходят — их доставляет движок после одобрения", async () => {
+    const agentPubkeyHex = "a9e7".padEnd(64, "0");
+    const r = new Router({
+      buzz: buzz as unknown as BuzzApi,
+      state,
+      sink: { deliver: async (m) => void delivered.push(m) },
+      serviceNsec: "nsec1service",
+      servicePubkeyHex: "svc".padEnd(64, "0"),
+      // список операторов пуст: без явного исключения агента его черновик
+      // прошёл бы как «сообщение участника» и улетел клиенту
+      operatorPubkeys: [],
+      agentPubkeyHex,
+    });
+    await r.handleInbound({ chatId: "42", name: "Иван", text: "вопрос" });
+    buzz.getMessages.mockResolvedValue([
+      {
+        id: "e1",
+        authorPubkey: agentPubkeyHex,
+        content: "🤖 Черновик ответа. Поставьте 👍…",
+        createdAt: 2,
+      },
+      {
+        id: "e2",
+        authorPubkey: "operator-pk",
+        content: "Добрый день!",
+        createdAt: 3,
+      },
+    ]);
+    await r.pollOutbound();
+    expect(delivered).toEqual([{ chatId: "42", text: "Добрый день!" }]);
+  });
 });
 
 describe("устойчивость", () => {
