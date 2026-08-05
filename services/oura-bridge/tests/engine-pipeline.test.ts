@@ -8,6 +8,7 @@ import type {
   EngineLead,
 } from "../src/engine/pipeline.js";
 import { AgentPipeline } from "../src/engine/pipeline.js";
+import { DRAFT_HINT } from "../src/engine/posting.js";
 import type { AgentProfile } from "../src/engine/prompt.js";
 import { StateStore } from "../src/state.js";
 import type { BuzzMessage } from "../src/types.js";
@@ -194,6 +195,42 @@ describe("история диалога", () => {
     await makePipeline({ historyWindow: 20 }).run(AGENT, LEAD);
     expect(calls[0].history).toHaveLength(20);
     expect(calls[0].history[0].content).toBe("реплика 10");
+  });
+
+  it("одобренный черновик входит в историю без подсказки оператору", async () => {
+    messages = [
+      msg("m1", LEAD_PK, "Привет", 10),
+      msg("d1", AGENT_PK, `${DRAFT_HINT}\n\nЗдравствуйте!`, 11),
+      msg("m2", LEAD_PK, "Сколько стоит?", 12),
+    ];
+    state.putAgentLead(LEAD.key, {
+      processedEventIds: ["m1"],
+      replyAtMs: [],
+    });
+    await makePipeline().run(AGENT, LEAD);
+    expect(calls[0].history).toEqual([
+      { role: "user", content: "Привет" },
+      { role: "assistant", content: "Здравствуйте!" },
+    ]);
+  });
+
+  it("черновики, которых клиент не видел, в историю не попадают", async () => {
+    messages = [
+      msg("m1", LEAD_PK, "Привет", 10),
+      msg("d1", AGENT_PK, `${DRAFT_HINT}\n\nЖдёт одобрения`, 11),
+      msg("d2", AGENT_PK, `${DRAFT_HINT}\n\nОтменён`, 12),
+      msg("m2", LEAD_PK, "Сколько стоит?", 13),
+    ];
+    state.putAgentLead(LEAD.key, {
+      processedEventIds: ["m1"],
+      replyAtMs: [],
+      pendingDrafts: [
+        { eventId: "d1", text: "Ждёт одобрения", createdAtMs: 1 },
+      ],
+      undeliveredDraftEventIds: ["d2"],
+    });
+    await makePipeline().run(AGENT, LEAD);
+    expect(calls[0].history).toEqual([{ role: "user", content: "Привет" }]);
   });
 
   it("сообщения лида в истории считаются прочитанными и не отвечаются повторно", async () => {

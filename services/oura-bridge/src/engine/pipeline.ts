@@ -25,6 +25,7 @@ import {
 } from "./agent-state.js";
 import type { HistoryTurn } from "./llm.js";
 import { parseAgentReply, type ParsedReply } from "./parser.js";
+import { stripDraftHint } from "./posting.js";
 import {
   buildSystemPrompt,
   type AgentProfile,
@@ -216,20 +217,19 @@ export class AgentPipeline {
    * в историю не попадают — иначе агент считал бы их уже сказанными.
    */
   private history(earlier: BuzzMessage[], lead: EngineLead): HistoryTurn[] {
-    const undelivered = new Set(
-      (this.deps.state.getAgentLead(lead.key)?.pendingDrafts ?? []).map(
-        (d) => d.eventId,
-      ),
-    );
+    const record = this.deps.state.getAgentLead(lead.key);
+    const unseenByLead = new Set([
+      ...(record?.pendingDrafts ?? []).map((d) => d.eventId),
+      ...(record?.undeliveredDraftEventIds ?? []),
+    ]);
     const turns: HistoryTurn[] = [];
     for (const m of earlier) {
       if (m.authorPubkey === this.deps.servicePubkeyHex) continue;
-      if (undelivered.has(m.id)) continue;
-      if (!m.content.trim()) continue;
-      turns.push({
-        role: m.authorPubkey === lead.pubkeyHex ? "user" : "assistant",
-        content: m.content,
-      });
+      if (unseenByLead.has(m.id)) continue;
+      const isLead = m.authorPubkey === lead.pubkeyHex;
+      const content = isLead ? m.content : stripDraftHint(m.content);
+      if (!content.trim()) continue;
+      turns.push({ role: isLead ? "user" : "assistant", content });
     }
     return turns.slice(-this.historyWindow);
   }

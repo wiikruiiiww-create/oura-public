@@ -125,6 +125,18 @@ describe("черновик ответа", () => {
     expect(state.getAgentLead(LEAD.key)?.pendingDrafts).toEqual([draft]);
   });
 
+  it("новый черновик отменяет предыдущий — одобрить устаревший ответ нельзя", async () => {
+    const a = await agent();
+    buzz.sendMessage
+      .mockResolvedValueOnce("evt-1")
+      .mockResolvedValueOnce("evt-2");
+    await postDraft(deps(), a, LEAD, "первый");
+    await postDraft(deps(), a, LEAD, "второй");
+    const record = state.getAgentLead(LEAD.key);
+    expect(record?.pendingDrafts?.map((d) => d.eventId)).toEqual(["evt-2"]);
+    expect(record?.undeliveredDraftEventIds).toEqual(["evt-1"]);
+  });
+
   it("без id события черновик не сохраняется — одобрить его было бы нечем", async () => {
     buzz.sendMessage.mockResolvedValueOnce(null);
     const a = await agent();

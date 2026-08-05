@@ -45,6 +45,16 @@ export function wrapDraft(text: string): string {
   return `${DRAFT_HINT}\n\n${text}`;
 }
 
+/**
+ * Снимает подсказку с одобренного черновика. В истории диалога должна остаться
+ * реплика агента, а не обращённая к оператору служебная строка.
+ */
+export function stripDraftHint(content: string): string {
+  return content.startsWith(DRAFT_HINT)
+    ? content.slice(DRAFT_HINT.length).trimStart()
+    : content;
+}
+
 /** Добавляет агента в комнату лида; повторные вызовы бесплатны. */
 export async function ensureAgentInRoom(
   deps: PostingDeps,
@@ -92,9 +102,16 @@ export async function postDraft(
     createdAtMs: (deps.now ?? Date.now)(),
   };
   const record = deps.state.getAgentLead(lead.key) ?? emptyAgentLead();
+  // предыдущий черновик отменяется: разговор ушёл вперёд, и одобрение старого
+  // отправило бы клиенту ответ на уже неактуальный вопрос
+  const superseded = (record.pendingDrafts ?? []).map((d) => d.eventId);
   deps.state.putAgentLead(lead.key, {
     ...record,
-    pendingDrafts: [...(record.pendingDrafts ?? []), draft],
+    pendingDrafts: [draft],
+    undeliveredDraftEventIds: [
+      ...(record.undeliveredDraftEventIds ?? []),
+      ...superseded,
+    ],
   });
   await deps.state.save();
   return draft;
