@@ -34,6 +34,11 @@ if (process.env.FAKE_BUZZ_HANG === "1") {
   } else if (group === "messages" && sub === "get") {
     const f = process.env.FAKE_BUZZ_MESSAGES;
     process.stdout.write(f && existsSync(f) ? readFileSync(f, "utf8") : "[]");
+  } else if (group === "messages" && sub === "send") {
+    // Конвенция buzz-cli: запись возвращает {event_id, accepted, message}.
+    process.stdout.write(
+      JSON.stringify({ event_id: "evt-fake-1", accepted: true, message: "" }),
+    );
   } else {
     process.stdout.write("{}");
   }

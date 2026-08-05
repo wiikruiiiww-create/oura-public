@@ -15,12 +15,65 @@ export interface LeadRecord {
   lastActivityAt?: number;
 }
 
+/** Черновик ответа агента: событие в комнате и текст, который уйдёт клиенту после одобрения. */
+export interface PendingDraft {
+  /** id события черновика в комнате — на него оператор ставит реакцию */
+  eventId: string;
+  /** текст без служебной обёртки — ровно то, что получит клиент */
+  text: string;
+  createdAtMs: number;
+}
+
+/** Состояние движка по одному лиду. Заводится только когда агент работает с этим лидом. */
+export interface AgentLeadRecord {
+  /** id сообщений лида, уже взятых движком в работу (защита от двойного ответа) */
+  processedEventIds: string[];
+  /** epoch-ms вызовов модели — окно для ограничения частоты */
+  replyAtMs: number[];
+  /** диалог передан человеку: агент молчит до возобновления */
+  silenced?: boolean;
+  /** черновики, ожидающие одобрения оператором */
+  pendingDrafts?: PendingDraft[];
+  /**
+   * Черновики, которые клиенту уже не уйдут (устарели, отменены новым ответом
+   * или недоставимы). Клиент их не видел, поэтому в историю диалога они не
+   * входят — иначе агент считал бы сказанным то, чего не говорил.
+   */
+  undeliveredDraftEventIds?: string[];
+  /** агент уже добавлен в комнату — повторно relay не дёргаем */
+  agentInRoom?: boolean;
+  /** id исполненных команд управления агентом — второй раз не срабатывают */
+  handledCommandEventIds?: string[];
+}
+
+/**
+ * Ключ, под которым агент пишет в комнаты. Свой ключ, а не сервисный: реплики
+ * агента должны отличаться от служебных сообщений моста и от реплик операторов.
+ */
+export interface AgentKeyRecord {
+  nsec: string;
+  pubkeyHex: string;
+}
+
+/** Расход модели по агенту — основа для счетов и лимитов. */
+export interface AgentUsageRecord {
+  calls: number;
+  inputTokens: number;
+  outputTokens: number;
+}
+
 interface StateFile {
   leads: Record<string, LeadRecord>;
   /** legacy Фазы 0: глобальный список; читаем и сохраняем как есть для обратной совместимости */
   seenEventIds?: string[];
   /** Фаза 1 (I4): id доставленных сообщений по каждому лиду (chatId → event ids) */
   seenByLead?: Record<string, string[]>;
+  /** движок внешних агентов: состояние по ключу лида */
+  agentLeads?: Record<string, AgentLeadRecord>;
+  /** движок внешних агентов: расход по agentId */
+  agentUsage?: Record<string, AgentUsageRecord>;
+  /** движок внешних агентов: ключи агентов по agentId */
+  agentKeys?: Record<string, AgentKeyRecord>;
 }
 
 const PER_LEAD_SEEN_CAP = 500;
@@ -158,6 +211,37 @@ export class StateStore {
     return Object.entries(this.data.leads)
       .filter(([, l]) => (l.lastActivityAt ?? now) >= now - windowMs)
       .map(([key, lead]) => ({ key, lead }));
+  }
+
+  /**
+   * Состояние движка по лиду. Хранилище только читает и пишет запись целиком —
+   * вся логика (заявка, окно частоты, черновики) живёт в модулях движка.
+   */
+  getAgentLead(key: string): AgentLeadRecord | undefined {
+    return this.data.agentLeads?.[key];
+  }
+
+  putAgentLead(key: string, record: AgentLeadRecord): void {
+    this.data.agentLeads ??= {};
+    this.data.agentLeads[key] = record;
+  }
+
+  getAgentKey(agentId: string): AgentKeyRecord | undefined {
+    return this.data.agentKeys?.[agentId];
+  }
+
+  putAgentKey(agentId: string, record: AgentKeyRecord): void {
+    this.data.agentKeys ??= {};
+    this.data.agentKeys[agentId] = record;
+  }
+
+  getAgentUsage(agentId: string): AgentUsageRecord | undefined {
+    return this.data.agentUsage?.[agentId];
+  }
+
+  putAgentUsage(agentId: string, record: AgentUsageRecord): void {
+    this.data.agentUsage ??= {};
+    this.data.agentUsage[agentId] = record;
   }
 
   hasSeen(key: string, eventId: string): boolean {

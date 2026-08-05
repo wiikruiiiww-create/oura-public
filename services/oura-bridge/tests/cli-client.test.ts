@@ -62,6 +62,11 @@ describe("BuzzCli", () => {
     expect(call.stdin).toBe("Здравствуйте!");
   });
 
+  it("sendMessage возвращает id события — по нему одобряется черновик агента", async () => {
+    const eventId = await makeCli().sendMessage("nsec1bbb", "chan-1", "текст");
+    expect(eventId).toBe("evt-fake-1");
+  });
+
   it('сообщение "-" не вешает мост: это контент в stdin, а не маркер в argv (B1)', async () => {
     await makeCli().sendMessage("nsec1bbb", "chan-1", "-");
     const call = JSON.parse(readFileSync(logFile, "utf8").trim());

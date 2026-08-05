@@ -52,7 +52,12 @@ export interface BuzzMessage {
 export interface BuzzApi {
   createChannel(nsec: string, name: string): Promise<string>;
   addMember(nsec: string, channelId: string, pubkeyHex: string): Promise<void>;
-  sendMessage(nsec: string, channelId: string, content: string): Promise<void>;
+  /** Возвращает id опубликованного события; null — если relay его не сообщил. */
+  sendMessage(
+    nsec: string,
+    channelId: string,
+    content: string,
+  ): Promise<string | null>;
   getMessages(
     nsec: string,
     channelId: string,

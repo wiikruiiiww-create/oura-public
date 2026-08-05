@@ -3,6 +3,9 @@ import { decryptFromPubkey } from "./agents/crypto.js";
 import type { ExternalAgentDef } from "./agents/definition.js";
 import { fetchExternalAgentDefs } from "./agents/definitions-poller.js";
 import { BuzzCli } from "./buzz/cli-client.js";
+import { parseAgentProfile } from "./engine/agent-profile.js";
+import { completeReply } from "./engine/llm.js";
+import { AgentRuntime, type RuntimeAgent } from "./engine/runtime.js";
 import { parseOperatorPubkeys } from "./identity.js";
 import { acquireLock } from "./lock.js";
 import { registerRelayMember } from "./buzz/nip43.js";
@@ -47,6 +50,24 @@ async function main(): Promise<void> {
     env("OURA_LEAD_ACTIVE_WINDOW_MS") ?? String(30 * 24 * 60 * 60 * 1000),
   );
   const sourcesFromUi = env("OURA_SOURCES_FROM_UI") === "true";
+  // Движок отвечает клиентам вместо оператора. Работает только вместе с
+  // источниками из UI: агент без описания на relay — это некому отвечать.
+  const agentEngine = env("OURA_AGENT_ENGINE") === "true" && sourcesFromUi;
+  const agentAutoReply = env("OURA_AGENT_AUTO_REPLY") === "true";
+  const agentModel = env("OURA_AGENT_MODEL") ?? "claude-sonnet-5";
+  const agentApiKey = env("OURA_AGENT_API_KEY") ?? env("ANTHROPIC_API_KEY");
+  if (agentEngine && !agentApiKey) {
+    console.error(
+      "[oura-bridge] OURA_AGENT_ENGINE=true, но не задан OURA_AGENT_API_KEY — отвечать нечем",
+    );
+    process.exit(1);
+  }
+  if (env("OURA_AGENT_ENGINE") === "true" && !sourcesFromUi) {
+    console.error(
+      "[oura-bridge] OURA_AGENT_ENGINE требует OURA_SOURCES_FROM_UI=true",
+    );
+    process.exit(1);
+  }
 
   // B6: гард от второго инстанса над тем же state-файлом — до загрузки state
   const lock = await acquireLock(`${statePath}.lock`);
@@ -144,6 +165,10 @@ async function main(): Promise<void> {
   }
 
   // --- источники из UI: боты внешних агентов из описаний на relay ---
+  // Движок держит по рантайму на бота (у каждого свой канал доставки) и
+  // берёт свежее описание агента из последнего снапшота.
+  const runtimes = new Map<string, AgentRuntime>();
+  const agentDefs = new Map<string, ExternalAgentDef>();
   let sourceManager: SourceManager | undefined;
   let defsTimer: NodeJS.Timeout | undefined;
   if (sourcesFromUi) {
@@ -190,9 +215,35 @@ async function main(): Promise<void> {
             }
           });
           routers.set(def.agentId, router);
+          if (agentEngine && agentApiKey) {
+            runtimes.set(
+              def.agentId,
+              new AgentRuntime({
+                buzz,
+                state,
+                sink: channel,
+                relayUrl,
+                serviceNsec,
+                servicePubkeyHex,
+                operatorPubkeys,
+                leadActiveWindowMs,
+                autoReply: agentAutoReply,
+                registerMember: registerLeadMembership,
+                complete: (call) =>
+                  completeReply({
+                    apiKey: agentApiKey,
+                    model: agentModel,
+                    systemPrompt: call.systemPrompt,
+                    history: call.history,
+                    userMessage: call.userMessage,
+                  }),
+              }),
+            );
+          }
           return {
             async stop() {
               routers.delete(def.agentId);
+              runtimes.delete(def.agentId);
               await channel.stop();
             },
           };
@@ -203,6 +254,8 @@ async function main(): Promise<void> {
     const syncDefs = async (): Promise<void> => {
       try {
         const defs = await fetchExternalAgentDefs({ relayUrl, serviceNsec });
+        agentDefs.clear();
+        for (const def of defs) agentDefs.set(def.agentId, def);
         await sourceManager?.reconcile(defs);
       } catch (e) {
         // relay недоступен — работаем со старым набором ботов до следующего цикла
@@ -222,6 +275,22 @@ async function main(): Promise<void> {
     pollPromise = (async () => {
       for (const router of routers.values()) {
         await router.pollOutbound();
+      }
+      for (const [agentId, runtime] of runtimes) {
+        const def = agentDefs.get(agentId);
+        if (!def) continue;
+        const agent: RuntimeAgent = {
+          agentId: def.agentId,
+          name: def.name,
+          isActive: def.isActive,
+          profile: parseAgentProfile(def.profile),
+        };
+        try {
+          await runtime.tick(agent);
+        } catch (e) {
+          // сбой одного агента не должен останавливать поллинг остальных
+          console.error(`[движок] агент ${agentId}: цикл не выполнен:`, e);
+        }
       }
       if (heartbeatPath) await writeHeartbeat(heartbeatPath, Date.now());
     })()
@@ -259,6 +328,11 @@ async function main(): Promise<void> {
   if (sourcesFromUi) {
     console.log(
       `[oura-bridge] источники из UI включены (поллинг описаний: ${defsPollMs}ms)`,
+    );
+  }
+  if (agentEngine) {
+    console.log(
+      `[oura-bridge] движок агентов включён: модель ${agentModel}, режим ${agentAutoReply ? "без одобрения" : "черновики"}`,
     );
   }
   console.log(
