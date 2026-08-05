@@ -1,12 +1,12 @@
+//! Проверка токена Telegram-бота перед сохранением агента: пользователь видит
+//! имя бота ещё в форме, а не узнаёт об опечатке из логов сервиса лидов.
+//!
+//! Токен — секрет: он не попадает ни в текст ошибок, ни в логи. Ошибки
+//! формулируются по смыслу («токен отклонён Telegram»), без эха значения.
+
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
-
-/// Проверка токена Telegram-бота перед сохранением агента: пользователь видит
-/// имя бота ещё в форме, а не узнаёт об опечатке из логов сервиса лидов.
-///
-/// Токен — секрет: он не попадает ни в текст ошибок, ни в логи. Ошибки
-/// формулируются по смыслу («токен отклонён Telegram»), без эха значения.
 
 const GET_ME_TIMEOUT: Duration = Duration::from_secs(10);
 const MAX_GET_ME_BYTES: usize = 64 * 1024;
@@ -139,7 +139,9 @@ mod tests {
 
     #[test]
     fn plausible_token_gate_runs_before_any_network_call() {
-        assert!(is_plausible_token("123456789:AAF-abcdefghijklmnopqrstuvwxyz01"));
+        assert!(is_plausible_token(
+            "123456789:AAF-abcdefghijklmnopqrstuvwxyz01"
+        ));
         assert!(!is_plausible_token("нет-двоеточия"));
         assert!(!is_plausible_token("abc:AAF-abcdefghijklmnopqrstuvwxyz01"));
         assert!(!is_plausible_token("123456789:short"));

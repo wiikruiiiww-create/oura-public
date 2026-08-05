@@ -499,8 +499,13 @@ pub async fn nip44_encrypt_to_pubkey(
 
     tauri::async_runtime::spawn_blocking(move || {
         let recipient = parse_recipient_pubkey(&recipient_pubkey)?;
-        nip44::encrypt(keys.secret_key(), &recipient, &plaintext, nip44::Version::V2)
-            .map_err(|e| format!("nip44 encrypt failed: {e}"))
+        nip44::encrypt(
+            keys.secret_key(),
+            &recipient,
+            &plaintext,
+            nip44::Version::V2,
+        )
+        .map_err(|e| format!("nip44 encrypt failed: {e}"))
     })
     .await
     .map_err(|e| format!("spawn_blocking failed: {e}"))?
