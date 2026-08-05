@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { completeReply, LlmError } from "../src/engine/llm.js";
 
 function jsonResponse(body: unknown, status = 200): Response {
