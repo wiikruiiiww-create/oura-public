@@ -42,6 +42,8 @@ export interface AgentLeadRecord {
   undeliveredDraftEventIds?: string[];
   /** агент уже добавлен в комнату — повторно relay не дёргаем */
   agentInRoom?: boolean;
+  /** id исполненных команд управления агентом — второй раз не срабатывают */
+  handledCommandEventIds?: string[];
 }
 
 /**

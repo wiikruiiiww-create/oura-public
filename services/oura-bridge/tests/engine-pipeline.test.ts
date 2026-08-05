@@ -89,6 +89,30 @@ beforeEach(async () => {
   });
 });
 
+describe("стоп-краны", () => {
+  it("после передачи человеку агент молчит", async () => {
+    messages = [msg("m1", LEAD_PK, "Привет", 10)];
+    state.putAgentLead(LEAD.key, {
+      processedEventIds: [],
+      replyAtMs: [],
+      silenced: true,
+    });
+    const outcome = await makePipeline().run(AGENT, LEAD);
+    expect(outcome.kind === "skip" && outcome.reason).toBe("silenced");
+    expect(complete).not.toHaveBeenCalled();
+  });
+
+  it("выключенный агент не отвечает", async () => {
+    messages = [msg("m1", LEAD_PK, "Привет", 10)];
+    const outcome = await makePipeline().run(
+      { ...AGENT, isActive: false },
+      LEAD,
+    );
+    expect(outcome.kind === "skip" && outcome.reason).toBe("inactive");
+    expect(complete).not.toHaveBeenCalled();
+  });
+});
+
 describe("новые сообщения лида", () => {
   it("нечего отвечать — модель не вызывается", async () => {
     messages = [msg("m1", AGENT_PK, "Здравствуйте!", 10)];

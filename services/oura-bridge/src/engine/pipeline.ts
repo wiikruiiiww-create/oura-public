@@ -42,6 +42,8 @@ export interface EngineAgent {
   /** ключ, под которым агент пишет в комнату — его реплики становятся историей */
   pubkeyHex: string;
   profile: AgentProfile;
+  /** выключён владельцем в интерфейсе — стоп-кран, отвечать нельзя */
+  isActive?: boolean;
 }
 
 export interface EngineLead {
@@ -67,7 +69,9 @@ export type SkipReason =
   | "no_new_messages"
   | "in_flight"
   | "rate_limited"
-  | "llm_error";
+  | "llm_error"
+  | "silenced"
+  | "inactive";
 
 export type PipelineOutcome =
   | { kind: "skip"; reason: SkipReason }
@@ -140,7 +144,10 @@ export class AgentPipeline {
     lead: EngineLead,
   ): Promise<PipelineOutcome> {
     const { state } = this.deps;
+    if (agent.isActive === false) return skip("inactive");
     const record = state.getAgentLead(lead.key) ?? emptyAgentLead();
+    // диалог ведёт человек — агент в него не вмешивается
+    if (record.silenced) return skip("silenced");
 
     const messages = chronological(
       await this.deps.buzz.getMessages(
